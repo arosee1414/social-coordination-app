@@ -1,1 +1,0 @@
-# social-coordination-app
