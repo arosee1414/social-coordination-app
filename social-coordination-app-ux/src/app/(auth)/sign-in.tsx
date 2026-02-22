@@ -16,6 +16,7 @@ import { isClerkAPIResponseError, useSignIn, useSSO } from '@clerk/clerk-expo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import GoogleLogo from '@/src/components/GoogleLogo';
 import { ClerkAPIError } from '@clerk/types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -157,11 +158,7 @@ export default function SignInPage() {
                                 onPress={() => onSelectAuth(Strategy.Google)}
                                 activeOpacity={0.7}
                             >
-                                <Ionicons
-                                    name='logo-google'
-                                    size={20}
-                                    color={colors.socialButtonIcon}
-                                />
+                                <GoogleLogo size={20} />
                                 <Text
                                     style={[
                                         s.socialBtnText,
