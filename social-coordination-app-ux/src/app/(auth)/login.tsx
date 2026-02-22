@@ -69,7 +69,16 @@ export default function LoginPage() {
                             alignItems: 'center',
                         }}
                     >
-                        <Text style={styles.title}>Welcome</Text>
+                        <Text
+                            style={{
+                                fontFamily: 'Pacifico_400Regular',
+                                fontSize: 48,
+                                color: colors.primary,
+                                marginBottom: 8,
+                            }}
+                        >
+                            Meet up
+                        </Text>
                         <Text style={styles.subtitle}>
                             Sign in or create an account to get started
                         </Text>

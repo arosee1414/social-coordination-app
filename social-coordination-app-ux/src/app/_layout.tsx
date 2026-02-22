@@ -9,9 +9,18 @@ import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { tokenCache } from './utils/tokenCache';
 import React from 'react';
+import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
+import { View } from 'react-native';
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
+    const [fontsLoaded] = useFonts({
+        Pacifico_400Regular,
+    });
+
+    if (!fontsLoaded) {
+        return <View style={{ flex: 1 }} />;
+    }
 
     return (
         <ThemeProvider
