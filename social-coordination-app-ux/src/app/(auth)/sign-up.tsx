@@ -277,33 +277,23 @@ export default function SignUpPage() {
                                 {errorMessage}
                             </Text>
                         )}
-
-                        {/* Toggle to sign in */}
-                        <View style={s.toggleSection}>
-                            <TouchableOpacity
-                                onPress={() => router.replace('/sign-in')}
-                            >
-                                <Text
-                                    style={[
-                                        s.toggleText,
-                                        { color: colors.textSecondary },
-                                    ]}
-                                >
-                                    Already have an account?{' '}
-                                    <Text
-                                        style={[
-                                            s.toggleLink,
-                                            { color: colors.primary },
-                                        ]}
-                                    >
-                                        Sign In
-                                    </Text>
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
                     </ScrollView>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
+
+            {/* Toggle to sign in - fixed at bottom */}
+            <View style={s.toggleSection}>
+                <TouchableOpacity onPress={() => router.replace('/sign-in')}>
+                    <Text
+                        style={[s.toggleText, { color: colors.textSecondary }]}
+                    >
+                        Already have an account?{' '}
+                        <Text style={[s.toggleLink, { color: colors.primary }]}>
+                            Sign In
+                        </Text>
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 }
