@@ -42,14 +42,20 @@ function RootLayoutNav(): React.JSX.Element {
 
     useEffect(() => {
         if (isLoaded && isSignedIn) {
-            //router.navigate('/dashboard');
+            console.log('user is signed in');
+            router.navigate('/');
         } else if (isLoaded && !isSignedIn) {
-            //router.navigate('/login-page');
+            console.log('user is not signed in');
+            router.navigate('/login');
         }
     }, []);
 
     return (
-        <Stack>
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen
+                name='(auth)'
+                options={{ headerShown: false, animation: 'fade' }}
+            />
             <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
             <Stack.Screen
                 name='modal'
