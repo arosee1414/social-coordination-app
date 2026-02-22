@@ -23,6 +23,7 @@ export default function NotificationsScreen() {
         ...mockNotifications,
     ]);
     const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
+    const openSwipeableRef = useRef<Swipeable | null>(null);
 
     const handleDelete = useCallback((id: string) => {
         const ref = swipeableRefs.current.get(id);
@@ -139,6 +140,29 @@ export default function NotificationsScreen() {
                                     notification.id,
                                 )
                             }
+                            onSwipeableWillOpen={() => {
+                                if (
+                                    openSwipeableRef.current &&
+                                    openSwipeableRef.current !==
+                                        swipeableRefs.current.get(
+                                            notification.id,
+                                        )
+                                ) {
+                                    openSwipeableRef.current.close();
+                                }
+                                openSwipeableRef.current =
+                                    swipeableRefs.current.get(
+                                        notification.id,
+                                    ) ?? null;
+                            }}
+                            onSwipeableClose={() => {
+                                if (
+                                    openSwipeableRef.current ===
+                                    swipeableRefs.current.get(notification.id)
+                                ) {
+                                    openSwipeableRef.current = null;
+                                }
+                            }}
                             rightThreshold={40}
                             overshootRight={false}
                             friction={2}
