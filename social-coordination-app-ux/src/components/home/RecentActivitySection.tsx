@@ -33,6 +33,7 @@ export function RecentActivitySection({
                             styles.card,
                             {
                                 backgroundColor: colors.card,
+                                borderColor: colors.cardBorder,
                                 shadowColor: '#000',
                             },
                         ]}
@@ -84,6 +85,7 @@ const styles = StyleSheet.create({
         width: 200,
         borderRadius: 12,
         padding: 14,
+        borderWidth: 1,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 3,
