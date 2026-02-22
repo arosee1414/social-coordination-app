@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Hangout } from '@/src/types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
+import { PulsingDot } from '@/src/components/PulsingDot';
 
 interface HappeningNowSectionProps {
     hangouts: Hangout[];
@@ -49,12 +50,7 @@ export function HappeningNowSection({
                     >
                         {/* LIVE Badge */}
                         <View style={shared.liveBadge}>
-                            <View
-                                style={[
-                                    styles.pulseDot,
-                                    { backgroundColor: colors.livePulse },
-                                ]}
-                            />
+                            <PulsingDot color={colors.livePulse} />
                             <Text style={shared.liveBadgeText}>LIVE</Text>
                         </View>
 
@@ -221,10 +217,5 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: 'bold',
         color: '#007AFF',
-    },
-    pulseDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
     },
 });

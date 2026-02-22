@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { mockHangouts } from '@/src/data/mock-data';
+import { PulsingDot } from '@/src/components/PulsingDot';
 
 export default function HangoutsScreen() {
     const colors = useThemeColors();
@@ -103,11 +104,22 @@ export default function HangoutsScreen() {
                                             </View>
                                         )}
                                     </View>
-                                    <View style={shared.timeBadge}>
-                                        <Text style={shared.timeBadgeText}>
-                                            {hangout.timeUntil}
-                                        </Text>
-                                    </View>
+                                    {hangout.status === 'live' ? (
+                                        <View style={shared.liveBadge}>
+                                            <PulsingDot
+                                                color={colors.livePulse}
+                                            />
+                                            <Text style={shared.liveBadgeText}>
+                                                LIVE
+                                            </Text>
+                                        </View>
+                                    ) : (
+                                        <View style={shared.timeBadge}>
+                                            <Text style={shared.timeBadgeText}>
+                                                {hangout.timeUntil}
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
 
                                 <View
