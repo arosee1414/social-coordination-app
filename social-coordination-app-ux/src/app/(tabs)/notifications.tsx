@@ -25,6 +25,10 @@ export default function NotificationsScreen() {
     const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
     const openSwipeableRef = useRef<Swipeable | null>(null);
 
+    const markAllAsRead = useCallback(() => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    }, []);
+
     const handleDelete = useCallback((id: string) => {
         const ref = swipeableRefs.current.get(id);
         if (ref) {
@@ -106,7 +110,7 @@ export default function NotificationsScreen() {
             <View style={shared.screenHeaderBordered}>
                 <View style={s.headerRow}>
                     <Text style={shared.screenTitle}>Notifications</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={markAllAsRead}>
                         <Text style={[s.markRead, { color: colors.primary }]}>
                             Mark all read
                         </Text>
