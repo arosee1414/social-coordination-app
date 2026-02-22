@@ -9,13 +9,16 @@ import {
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
-    withSpring,
     withTiming,
     runOnJS,
 } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
+
+const CLOSE_THRESHOLD = 50;
+const SHEET_HIDDEN_Y = 300;
 
 interface FABBottomSheetProps {
     onCreateHangout: () => void;
@@ -30,31 +33,56 @@ export function FABBottomSheet({
     const shared = createSharedStyles(colors);
     const [isOpen, setIsOpen] = useState(false);
 
-    const sheetTranslateY = useSharedValue(300);
+    const sheetTranslateY = useSharedValue(SHEET_HIDDEN_Y);
     const overlayOpacity = useSharedValue(0);
 
     const open = useCallback(() => {
         setIsOpen(true);
         overlayOpacity.value = withTiming(1, { duration: 200 });
-        sheetTranslateY.value = withSpring(0, {
-            damping: 20,
-            stiffness: 200,
-        });
+        sheetTranslateY.value = withTiming(0, { duration: 250 });
     }, [overlayOpacity, sheetTranslateY]);
 
     const close = useCallback(() => {
         overlayOpacity.value = withTiming(0, { duration: 200 });
-        sheetTranslateY.value = withSpring(
-            300,
-            {
-                damping: 20,
-                stiffness: 200,
-            },
+        sheetTranslateY.value = withTiming(
+            SHEET_HIDDEN_Y,
+            { duration: 250 },
             () => {
                 runOnJS(setIsOpen)(false);
             },
         );
     }, [overlayOpacity, sheetTranslateY]);
+
+    // Pan gesture for swipe-down-to-close
+    const panGesture = Gesture.Pan()
+        .onUpdate((event) => {
+            // Only allow dragging downward (positive translationY)
+            if (event.translationY > 0) {
+                sheetTranslateY.value = event.translationY;
+                // Fade overlay proportionally
+                overlayOpacity.value = Math.max(
+                    0,
+                    1 - event.translationY / SHEET_HIDDEN_Y,
+                );
+            }
+        })
+        .onEnd((event) => {
+            if (event.translationY > CLOSE_THRESHOLD) {
+                // Past threshold — close
+                overlayOpacity.value = withTiming(0, { duration: 200 });
+                sheetTranslateY.value = withTiming(
+                    SHEET_HIDDEN_Y,
+                    { duration: 200 },
+                    () => {
+                        runOnJS(setIsOpen)(false);
+                    },
+                );
+            } else {
+                // Snap back open
+                sheetTranslateY.value = withTiming(0, { duration: 200 });
+                overlayOpacity.value = withTiming(1, { duration: 200 });
+            }
+        });
 
     const handleCreateHangout = useCallback(() => {
         close();
@@ -103,109 +131,112 @@ export function FABBottomSheet({
                     </Animated.View>
 
                     {/* Sheet */}
-                    <Animated.View
-                        style={[
-                            shared.bottomSheetContainer,
-                            sheetAnimatedStyle,
-                        ]}
-                    >
-                        {/* Handle */}
-                        <View style={shared.bottomSheetHandle} />
-
-                        {/* Title */}
-                        <Text
-                            style={[styles.sheetTitle, { color: colors.text }]}
+                    <GestureDetector gesture={panGesture}>
+                        <Animated.View
+                            style={[
+                                shared.bottomSheetContainer,
+                                sheetAnimatedStyle,
+                            ]}
                         >
-                            Create New
-                        </Text>
+                            {/* Handle */}
+                            <View style={shared.bottomSheetHandle} />
 
-                        {/* Create Hangout */}
-                        <TouchableOpacity
-                            style={shared.bottomSheetActionRow}
-                            activeOpacity={0.7}
-                            onPress={handleCreateHangout}
-                        >
-                            <View style={shared.bottomSheetActionIcon}>
-                                <Ionicons
-                                    name='calendar-outline'
-                                    size={20}
-                                    color={colors.primary}
-                                />
-                            </View>
-                            <View style={styles.actionTextContainer}>
-                                <Text
-                                    style={[
-                                        styles.actionTitle,
-                                        { color: colors.text },
-                                    ]}
-                                >
-                                    Create Hangout
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.actionSubtitle,
-                                        { color: colors.subtitle },
-                                    ]}
-                                >
-                                    Plan a new event with friends
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-
-                        {/* Invite Group */}
-                        <TouchableOpacity
-                            style={shared.bottomSheetActionRow}
-                            activeOpacity={0.7}
-                            onPress={handleInviteGroup}
-                        >
-                            <View style={shared.bottomSheetActionIcon}>
-                                <Ionicons
-                                    name='people-outline'
-                                    size={20}
-                                    color={colors.primary}
-                                />
-                            </View>
-                            <View style={styles.actionTextContainer}>
-                                <Text
-                                    style={[
-                                        styles.actionTitle,
-                                        { color: colors.text },
-                                    ]}
-                                >
-                                    Invite Group
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.actionSubtitle,
-                                        { color: colors.subtitle },
-                                    ]}
-                                >
-                                    Quick invite from saved groups
-                                </Text>
-                            </View>
-                        </TouchableOpacity>
-
-                        {/* Cancel */}
-                        <TouchableOpacity
-                            style={styles.cancelBtn}
-                            activeOpacity={0.7}
-                            onPress={close}
-                        >
-                            <Ionicons
-                                name='close'
-                                size={20}
-                                color={colors.subtitle}
-                            />
+                            {/* Title */}
                             <Text
                                 style={[
-                                    styles.cancelText,
-                                    { color: colors.textSecondary },
+                                    styles.sheetTitle,
+                                    { color: colors.text },
                                 ]}
                             >
-                                Cancel
+                                Create New
                             </Text>
-                        </TouchableOpacity>
-                    </Animated.View>
+
+                            {/* Create Hangout */}
+                            <TouchableOpacity
+                                style={shared.bottomSheetActionRow}
+                                activeOpacity={0.7}
+                                onPress={handleCreateHangout}
+                            >
+                                <View style={shared.bottomSheetActionIcon}>
+                                    <Ionicons
+                                        name='calendar-outline'
+                                        size={20}
+                                        color={colors.primary}
+                                    />
+                                </View>
+                                <View style={styles.actionTextContainer}>
+                                    <Text
+                                        style={[
+                                            styles.actionTitle,
+                                            { color: colors.text },
+                                        ]}
+                                    >
+                                        Create Hangout
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.actionSubtitle,
+                                            { color: colors.subtitle },
+                                        ]}
+                                    >
+                                        Plan a new event with friends
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Invite Group */}
+                            <TouchableOpacity
+                                style={shared.bottomSheetActionRow}
+                                activeOpacity={0.7}
+                                onPress={handleInviteGroup}
+                            >
+                                <View style={shared.bottomSheetActionIcon}>
+                                    <Ionicons
+                                        name='people-outline'
+                                        size={20}
+                                        color={colors.primary}
+                                    />
+                                </View>
+                                <View style={styles.actionTextContainer}>
+                                    <Text
+                                        style={[
+                                            styles.actionTitle,
+                                            { color: colors.text },
+                                        ]}
+                                    >
+                                        Invite Group
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.actionSubtitle,
+                                            { color: colors.subtitle },
+                                        ]}
+                                    >
+                                        Quick invite from saved groups
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+
+                            {/* Cancel */}
+                            <TouchableOpacity
+                                style={[
+                                    styles.cancelBtn,
+                                    { backgroundColor: colors.surfaceTertiary },
+                                ]}
+                                activeOpacity={0.7}
+                                onPress={close}
+                            >
+                                <Text
+                                    style={[
+                                        styles.cancelText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </GestureDetector>
                 </View>
             )}
         </>
@@ -230,11 +261,11 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     cancelBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        width: '100%',
+        height: 56,
+        borderRadius: 12,
         justifyContent: 'center',
-        gap: 8,
-        paddingVertical: 14,
+        alignItems: 'center',
         marginTop: 8,
     },
     cancelText: {

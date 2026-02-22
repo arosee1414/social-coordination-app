@@ -11,6 +11,7 @@ import { tokenCache } from './utils/tokenCache';
 import React from 'react';
 import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -23,20 +24,22 @@ export default function RootLayout() {
     }
 
     return (
-        <ThemeProvider
-            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-        >
-            <ClerkProvider
-                tokenCache={tokenCache}
-                publishableKey={
-                    'pk_test_ZHluYW1pYy1oZXJtaXQtMTguY2xlcmsuYWNjb3VudHMuZGV2JA'
-                }
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <ThemeProvider
+                value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
             >
-                <ClerkLoaded>
-                    <RootLayoutNav />
-                </ClerkLoaded>
-            </ClerkProvider>
-        </ThemeProvider>
+                <ClerkProvider
+                    tokenCache={tokenCache}
+                    publishableKey={
+                        'pk_test_ZHluYW1pYy1oZXJtaXQtMTguY2xlcmsuYWNjb3VudHMuZGV2JA'
+                    }
+                >
+                    <ClerkLoaded>
+                        <RootLayoutNav />
+                    </ClerkLoaded>
+                </ClerkProvider>
+            </ThemeProvider>
+        </GestureHandlerRootView>
     );
 }
 
