@@ -3,16 +3,9 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
 import { ComponentProps } from 'react';
-import {
-    OpaqueColorValue,
-    type StyleProp,
-    type TextStyle,
-} from 'react-native';
+import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<
-    string,
-    ComponentProps<typeof MaterialIcons>['name']
->;
+type IconMapping = Record<string, ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
@@ -26,30 +19,30 @@ const MAPPING: IconMapping = {
     'chevron.right': 'chevron-right',
 
     // Navigation tabs
-    'calendar': 'event',
-    'people': 'people',
-    'notifications': 'notifications',
-    'person': 'person',
+    calendar: 'event',
+    'person.2.fill': 'group',
+    'bell.fill': 'notifications',
+    person: 'person',
 
     // Actions
-    'add': 'add',
+    add: 'add',
     'arrow-back': 'arrow-back',
-    'share': 'share',
+    share: 'share',
     'more-vert': 'more-vert',
-    'search': 'search',
-    'settings': 'settings',
-    'close': 'close',
+    search: 'search',
+    settings: 'settings',
+    close: 'close',
 
     // Content icons
-    'place': 'place',
-    'schedule': 'schedule',
-    'chat': 'chat',
-    'help': 'help-outline',
-    'logout': 'logout',
+    place: 'place',
+    schedule: 'schedule',
+    chat: 'chat',
+    help: 'help-outline',
+    logout: 'logout',
     'person-add': 'person-add',
-    'check': 'check',
+    check: 'check',
     'content-copy': 'content-copy',
-    'edit': 'edit',
+    edit: 'edit',
 };
 
 /**

@@ -46,7 +46,11 @@ export default function TabLayout() {
                 options={{
                     title: 'Groups',
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol size={28} name='people' color={color} />
+                        <IconSymbol
+                            size={32}
+                            name='person.2.fill'
+                            color={color}
+                        />
                     ),
                 }}
             />
@@ -55,11 +59,7 @@ export default function TabLayout() {
                 options={{
                     title: 'Alerts',
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol
-                            size={28}
-                            name='notifications'
-                            color={color}
-                        />
+                        <IconSymbol size={26} name='bell.fill' color={color} />
                     ),
                 }}
             />
@@ -68,7 +68,7 @@ export default function TabLayout() {
                 options={{
                     title: 'Profile',
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol size={28} name='person' color={color} />
+                        <IconSymbol size={26} name='person' color={color} />
                     ),
                 }}
             />
