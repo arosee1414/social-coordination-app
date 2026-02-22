@@ -43,7 +43,7 @@ export function HangoutsListScreen() {
           <h1 className="text-3xl font-bold">Hangouts</h1>
           <Link 
             to="/create-hangout"
-            className="p-2 bg-[#4F46E5] text-white rounded-full active:bg-[#4338CA] transition-colors"
+            className="p-2 bg-[#007AFF] text-white rounded-full active:bg-[#0066CC] transition-colors"
           >
             <Plus className="w-5 h-5" />
           </Link>
@@ -73,7 +73,7 @@ export function HangoutsListScreen() {
                           </div>
                         )}
                       </div>
-                      <div className="bg-[#4F46E5]/10 text-[#4F46E5] px-3 py-1.5 rounded-full text-xs font-semibold">
+                      <div className="bg-[#007AFF]/10 text-[#007AFF] px-3 py-1.5 rounded-full text-xs font-semibold">
                         {hangout.timeUntil}
                       </div>
                     </div>
@@ -115,7 +115,7 @@ export function HangoutsListScreen() {
             </p>
             <Link 
               to="/create-hangout"
-              className="bg-[#4F46E5] text-white px-8 py-4 rounded-xl font-semibold text-lg active:bg-[#4338CA] transition-colors"
+              className="bg-[#007AFF] text-white px-8 py-4 rounded-xl font-semibold text-lg active:bg-[#0066CC] transition-colors"
             >
               Create Hangout
             </Link>

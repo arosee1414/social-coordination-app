@@ -28,7 +28,7 @@ export function BottomNav() {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${
-                active ? 'text-[#4F46E5]' : 'text-gray-500'
+                active ? 'text-[#007AFF]' : 'text-gray-500'
               }`}
             >
               <Icon 

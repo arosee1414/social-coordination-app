@@ -89,7 +89,7 @@ export function HangoutDetailScreen() {
           </div>
 
           {/* Countdown Timer */}
-          <div className="bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-2xl p-5 text-white shadow-lg">
+          <div className="bg-gradient-to-br from-[#007AFF] to-[#3B82F6] rounded-2xl p-5 text-white shadow-lg">
             <div className="text-center">
               <div className="text-sm opacity-90 mb-2">Hangout starting in</div>
               <div className="text-4xl font-bold mb-1">4:30:22</div>
@@ -140,7 +140,7 @@ export function HangoutDetailScreen() {
             <h3 className="text-lg font-bold mb-3">Invited Groups</h3>
             <div className="space-y-2">
               {mockInvitedGroups.map((group) => (
-                <div key={group.id} className="bg-gradient-to-br from-[#4F46E5]/5 to-[#4F46E5]/10 rounded-xl p-4">
+                <div key={group.id} className="bg-gradient-to-br from-[#007AFF]/5 to-[#007AFF]/10 rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm">
                       {group.icon}
@@ -150,7 +150,7 @@ export function HangoutDetailScreen() {
                       <div className="text-sm text-gray-600">{group.memberCount} members invited</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#4F46E5]/10">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#007AFF]/10">
                     <div className="flex -space-x-2">
                       {group.membersPreview.map((avatar, index) => (
                         <div 
@@ -208,7 +208,7 @@ export function HangoutDetailScreen() {
                     <div className="font-semibold">{person.name}</div>
                     <div className="text-sm text-gray-500">
                       {person.time}
-                      {person.fromGroup && <span className="text-[#4F46E5]"> · from {person.fromGroup}</span>}
+                      {person.fromGroup && <span className="text-[#007AFF]"> · from {person.fromGroup}</span>}
                     </div>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export function HangoutDetailScreen() {
                     <div className="font-semibold">{person.name}</div>
                     <div className="text-sm text-gray-500">
                       {person.time}
-                      {person.fromGroup && <span className="text-[#4F46E5]"> · from {person.fromGroup}</span>}
+                      {person.fromGroup && <span className="text-[#007AFF]"> · from {person.fromGroup}</span>}
                     </div>
                   </div>
                 </div>

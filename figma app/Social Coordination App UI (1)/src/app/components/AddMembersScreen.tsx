@@ -53,7 +53,7 @@ export function AddMembersScreen() {
           <input 
             type="text" 
             placeholder="Search friends..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20 focus:outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 focus:outline-none transition-all"
           />
         </div>
       </div>
@@ -67,7 +67,7 @@ export function AddMembersScreen() {
               onClick={() => toggleMember(friend.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                 selectedMembers.has(friend.id)
-                  ? 'border-[#4F46E5] bg-[#4F46E5]/5'
+                  ? 'border-[#007AFF] bg-[#007AFF]/5'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
@@ -76,7 +76,7 @@ export function AddMembersScreen() {
               </div>
               <span className="flex-1 text-left font-medium">{friend.name}</span>
               {selectedMembers.has(friend.id) && (
-                <div className="w-6 h-6 bg-[#4F46E5] rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-[#007AFF] rounded-full flex items-center justify-center">
                   <span className="text-white text-sm">✓</span>
                 </div>
               )}
@@ -89,13 +89,13 @@ export function AddMembersScreen() {
       <div className="p-6 border-t border-gray-100 bg-white">
         {selectedMembers.size > 0 && (
           <div className="text-center mb-3 text-sm text-gray-600">
-            <span className="font-semibold text-[#4F46E5]">{selectedMembers.size}</span> members selected
+            <span className="font-semibold text-[#007AFF]">{selectedMembers.size}</span> members selected
           </div>
         )}
         <button 
           onClick={handleCreate}
           disabled={selectedMembers.size === 0}
-          className="w-full bg-[#4F46E5] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#4338CA] transition-colors"
+          className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#0066CC] transition-colors"
         >
           Create Group
         </button>

@@ -86,7 +86,7 @@ export function NotificationsScreen() {
     }
 
     return (
-      <div className="w-12 h-12 bg-[#4F46E5] rounded-full flex items-center justify-center shadow-sm">
+      <div className="w-12 h-12 bg-[#007AFF] rounded-full flex items-center justify-center shadow-sm">
         <Bell className="w-6 h-6 text-white" />
       </div>
     );
@@ -98,7 +98,7 @@ export function NotificationsScreen() {
       <div className="px-6 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold">Notifications</h1>
-          <button className="text-[#4F46E5] font-semibold text-sm">
+          <button className="text-[#007AFF] font-semibold text-sm">
             Mark all read
           </button>
         </div>
@@ -112,7 +112,7 @@ export function NotificationsScreen() {
             <button
               key={notification.id}
               className={`w-full flex items-start gap-3 p-4 active:bg-gray-50 transition-colors ${
-                notification.unread ? 'bg-[#4F46E5]/5' : ''
+                notification.unread ? 'bg-[#007AFF]/5' : ''
               }`}
             >
               {getNotificationIcon(notification)}
@@ -121,7 +121,7 @@ export function NotificationsScreen() {
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <h3 className="font-semibold">{notification.title}</h3>
                   {notification.unread && (
-                    <div className="w-2 h-2 bg-[#4F46E5] rounded-full mt-1.5 flex-shrink-0"></div>
+                    <div className="w-2 h-2 bg-[#007AFF] rounded-full mt-1.5 flex-shrink-0"></div>
                   )}
                 </div>
                 <p className="text-sm text-gray-600 mb-1">{notification.message}</p>

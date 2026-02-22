@@ -100,7 +100,7 @@ export function InviteSelectionScreen() {
           <input 
             type="text" 
             placeholder={`Search ${activeTab}...`}
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#4F46E5]/20 focus:outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:bg-white focus:ring-2 focus:ring-[#007AFF]/20 focus:outline-none transition-all"
           />
         </div>
       </div>
@@ -115,7 +115,7 @@ export function InviteSelectionScreen() {
                 onClick={() => toggleFriend(friend.id)}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                   selectedFriends.has(friend.id)
-                    ? 'border-[#4F46E5] bg-[#4F46E5]/5'
+                    ? 'border-[#007AFF] bg-[#007AFF]/5'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
@@ -124,7 +124,7 @@ export function InviteSelectionScreen() {
                 </div>
                 <span className="flex-1 text-left font-medium">{friend.name}</span>
                 {selectedFriends.has(friend.id) && (
-                  <div className="w-6 h-6 bg-[#4F46E5] rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-[#007AFF] rounded-full flex items-center justify-center">
                     <span className="text-white text-sm">✓</span>
                   </div>
                 )}
@@ -141,11 +141,11 @@ export function InviteSelectionScreen() {
                 onClick={() => toggleGroup(group.id)}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                   selectedGroups.has(group.id)
-                    ? 'border-[#4F46E5] bg-[#4F46E5]/5'
+                    ? 'border-[#007AFF] bg-[#007AFF]/5'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-[#4F46E5]/10 to-[#4F46E5]/20 rounded-full flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#007AFF]/10 to-[#007AFF]/20 rounded-full flex items-center justify-center text-2xl">
                   {group.icon}
                 </div>
                 <div className="flex-1 text-left">
@@ -153,7 +153,7 @@ export function InviteSelectionScreen() {
                   <div className="text-sm text-gray-500">{group.memberCount} members</div>
                 </div>
                 {selectedGroups.has(group.id) && (
-                  <div className="w-6 h-6 bg-[#4F46E5] rounded-full flex items-center justify-center">
+                  <div className="w-6 h-6 bg-[#007AFF] rounded-full flex items-center justify-center">
                     <span className="text-white text-sm">✓</span>
                   </div>
                 )}
@@ -167,7 +167,7 @@ export function InviteSelectionScreen() {
       <div className="p-6 border-t border-gray-100 bg-white">
         {totalSelected > 0 && (
           <div className="text-center mb-3 text-sm text-gray-600">
-            <span className="font-semibold text-[#4F46E5]">{totalSelected}</span> selected
+            <span className="font-semibold text-[#007AFF]">{totalSelected}</span> selected
             {selectedFriends.size > 0 && selectedGroups.size > 0 && (
               <span> ({selectedFriends.size} friends, {selectedGroups.size} groups)</span>
             )}
@@ -176,7 +176,7 @@ export function InviteSelectionScreen() {
         <button 
           onClick={handleCreate}
           disabled={totalSelected === 0}
-          className="w-full bg-[#4F46E5] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#4338CA] transition-colors"
+          className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#0066CC] transition-colors"
         >
           Create Hangout
         </button>

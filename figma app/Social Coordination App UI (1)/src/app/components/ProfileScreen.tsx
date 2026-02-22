@@ -40,7 +40,7 @@ export function ProfileScreen() {
       <div className="flex-1 overflow-y-auto">
         {/* Profile Card */}
         <div className="px-6 py-6">
-          <div className="bg-gradient-to-br from-[#4F46E5] to-[#6366F1] rounded-2xl p-6 text-white shadow-lg">
+          <div className="bg-gradient-to-br from-[#007AFF] to-[#3B82F6] rounded-2xl p-6 text-white shadow-lg">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl shadow-lg">
                 👤

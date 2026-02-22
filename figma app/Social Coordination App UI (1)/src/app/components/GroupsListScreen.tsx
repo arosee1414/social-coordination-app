@@ -41,7 +41,7 @@ export function GroupsListScreen() {
           <h1 className="text-3xl font-bold">Groups</h1>
           <Link 
             to="/create-group"
-            className="p-2 bg-[#4F46E5] text-white rounded-full active:bg-[#4338CA] transition-colors"
+            className="p-2 bg-[#007AFF] text-white rounded-full active:bg-[#0066CC] transition-colors"
           >
             <Plus className="w-5 h-5" />
           </Link>
@@ -84,7 +84,7 @@ export function GroupsListScreen() {
             </p>
             <Link 
               to="/create-group"
-              className="bg-[#4F46E5] text-white px-8 py-4 rounded-xl font-semibold text-lg active:bg-[#4338CA] transition-colors"
+              className="bg-[#007AFF] text-white px-8 py-4 rounded-xl font-semibold text-lg active:bg-[#0066CC] transition-colors"
             >
               Create Group
             </Link>

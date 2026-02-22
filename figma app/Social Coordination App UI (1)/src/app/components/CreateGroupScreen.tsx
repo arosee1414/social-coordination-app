@@ -32,7 +32,7 @@ export function CreateGroupScreen() {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="space-y-6">
           {/* Info */}
-          <div className="bg-[#4F46E5]/5 border-2 border-[#4F46E5]/10 rounded-xl p-4">
+          <div className="bg-[#007AFF]/5 border-2 border-[#007AFF]/10 rounded-xl p-4">
             <p className="text-sm text-gray-700">
               Groups are saved friend lists that make inviting people to hangouts faster. They're not recurring events.
             </p>
@@ -50,7 +50,7 @@ export function CreateGroupScreen() {
                   onClick={() => setSelectedEmoji(emoji)}
                   className={`w-14 h-14 text-2xl rounded-xl border-2 transition-all ${
                     selectedEmoji === emoji
-                      ? 'border-[#4F46E5] bg-[#4F46E5]/5 scale-110'
+                      ? 'border-[#007AFF] bg-[#007AFF]/5 scale-110'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -70,7 +70,7 @@ export function CreateGroupScreen() {
               placeholder="e.g., Close Friends, Basketball Crew"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#4F46E5] focus:outline-none transition-colors"
+              className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors"
             />
           </div>
         </div>
@@ -81,7 +81,7 @@ export function CreateGroupScreen() {
         <button 
           onClick={handleContinue}
           disabled={!name}
-          className="w-full bg-[#4F46E5] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#4338CA] transition-colors"
+          className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#0066CC] transition-colors"
         >
           Continue to Add Members
         </button>

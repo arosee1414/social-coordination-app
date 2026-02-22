@@ -49,7 +49,7 @@ export function GroupDetailScreen() {
           <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={handleInviteToHangout}
-              className="bg-[#4F46E5] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:bg-[#4338CA] transition-colors"
+              className="bg-[#007AFF] text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:bg-[#0066CC] transition-colors"
             >
               <Calendar className="w-5 h-5" />
               Invite to Hangout
@@ -82,7 +82,7 @@ export function GroupDetailScreen() {
 
         {/* Info Section */}
         <div className="px-6 pb-6">
-          <div className="bg-[#4F46E5]/5 border-2 border-[#4F46E5]/10 rounded-xl p-4">
+          <div className="bg-[#007AFF]/5 border-2 border-[#007AFF]/10 rounded-xl p-4">
             <h3 className="font-semibold mb-2">About Groups</h3>
             <p className="text-sm text-gray-600">
               This is a saved friend list. When you create a hangout, you can invite this entire group with one tap instead of selecting members individually.

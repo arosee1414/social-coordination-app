@@ -41,7 +41,7 @@ export function CreateHangoutScreen() {
               placeholder="e.g., Drinks at The Rooftop"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#4F46E5] focus:outline-none transition-colors"
+              className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors"
             />
           </div>
 
@@ -56,7 +56,7 @@ export function CreateHangoutScreen() {
                   type="date" 
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#4F46E5] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -69,7 +69,7 @@ export function CreateHangoutScreen() {
                   type="time" 
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#4F46E5] focus:outline-none transition-colors"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -87,15 +87,15 @@ export function CreateHangoutScreen() {
                 placeholder="Add a location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#4F46E5] focus:outline-none transition-colors"
+                className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors"
               />
             </div>
           </div>
 
           {/* Info Card */}
-          <div className="bg-[#4F46E5]/5 border-2 border-[#4F46E5]/10 rounded-xl p-4">
+          <div className="bg-[#007AFF]/5 border-2 border-[#007AFF]/10 rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <UsersIcon className="w-5 h-5 text-[#4F46E5] mt-0.5 flex-shrink-0" />
+              <UsersIcon className="w-5 h-5 text-[#007AFF] mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-gray-900 mb-1">Next: Invite friends</h4>
                 <p className="text-sm text-gray-600">
@@ -112,7 +112,7 @@ export function CreateHangoutScreen() {
         <button 
           onClick={handleContinue}
           disabled={!title || !date || !time}
-          className="w-full bg-[#4F46E5] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#4338CA] transition-colors"
+          className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#0066CC] transition-colors"
         >
           Continue to Invite
         </button>
