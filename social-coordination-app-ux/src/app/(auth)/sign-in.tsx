@@ -74,7 +74,10 @@ export default function SignInPage() {
 
             if (createdSessionId) {
                 await setActiveSession!({ session: createdSessionId });
-                router.replace('/(tabs)');
+                // Check if this was a new account creation (sign-up) vs existing sign-in
+                const isNewAccount =
+                    (signUp as any)?.createdSessionId === createdSessionId;
+                router.replace(isNewAccount ? '/find-friends' : '/(tabs)');
             } else if (
                 (ssoSignIn as any)?.status === 'complete' &&
                 (ssoSignIn as any)?.createdSessionId
@@ -90,7 +93,7 @@ export default function SignInPage() {
                 await setActiveSession!({
                     session: (signUp as any).createdSessionId,
                 });
-                router.replace('/(tabs)');
+                router.replace('/find-friends');
             }
         } catch (err) {
             console.error('SSO error:', err);
