@@ -1,8 +1,10 @@
 import { Stack, router } from 'expo-router';
 import React from 'react';
 import { Button, Keyboard } from 'react-native';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
 
 export default function AuthLayout(): React.JSX.Element {
+    const colors = useThemeColors();
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name='login' />
@@ -12,6 +14,8 @@ export default function AuthLayout(): React.JSX.Element {
                     headerShown: true,
                     title: '',
                     headerShadowVisible: false,
+                    headerStyle: { backgroundColor: colors.background },
+                    headerTintColor: colors.text,
                     headerLeft: () => (
                         <Button
                             title='Back'
@@ -29,6 +33,8 @@ export default function AuthLayout(): React.JSX.Element {
                     headerShown: true,
                     title: '',
                     headerShadowVisible: false,
+                    headerStyle: { backgroundColor: colors.background },
+                    headerTintColor: colors.text,
                     headerLeft: () => (
                         <Button
                             title='Back'
