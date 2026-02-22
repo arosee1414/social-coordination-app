@@ -418,6 +418,7 @@ export function createSharedStyles(colors: ThemeColors) {
         liveBadge: {
             flexDirection: 'row',
             alignItems: 'center',
+            alignSelf: 'flex-start',
             backgroundColor: colors.liveBadgeBg,
             paddingHorizontal: 10,
             paddingVertical: 4,
