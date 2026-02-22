@@ -9,57 +9,87 @@ import {
     KeyboardAvoidingView,
     Platform,
     TouchableWithoutFeedback,
+    ScrollView,
+    StyleSheet,
 } from 'react-native';
-import { isClerkAPIResponseError, useSignUp } from '@clerk/clerk-expo';
+import { isClerkAPIResponseError, useSignUp, useSSO } from '@clerk/clerk-expo';
 import { ClerkAPIError } from '@clerk/types';
-import {
-    Link,
-    RelativePathString,
-    useLocalSearchParams,
-    useRouter,
-} from 'expo-router';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Dialog from 'react-native-dialog';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 
+enum Strategy {
+    Google = 'oauth_google',
+}
+
 export default function SignUpPage() {
     const { isLoaded, signUp, setActive } = useSignUp();
+    const { startSSOFlow } = useSSO();
     const router = useRouter();
-    const { email } = useLocalSearchParams();
     const colors = useThemeColors();
-    const styles = createSharedStyles(colors);
-    const [emailAddress, setEmailAddress] = useState<string>(
-        (email as string) ?? '',
-    );
+    const shared = createSharedStyles(colors);
+
+    const [emailAddress, setEmailAddress] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [pendingVerification, setPendingVerification] = useState(false);
     const [code, setCode] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const onSelectAuth = async (strategy: Strategy) => {
+        try {
+            const result = await startSSOFlow({ strategy });
+            const {
+                createdSessionId,
+                setActive: setActiveSession,
+                signIn,
+                signUp: ssoSignUp,
+            } = result;
+
+            if (createdSessionId) {
+                await setActiveSession!({ session: createdSessionId });
+                router.replace('/find-friends');
+            } else if (
+                (ssoSignUp as any)?.status === 'complete' &&
+                (ssoSignUp as any)?.createdSessionId
+            ) {
+                await setActiveSession!({
+                    session: (ssoSignUp as any).createdSessionId,
+                });
+                router.replace('/find-friends');
+            } else if (
+                (signIn as any)?.status === 'complete' &&
+                (signIn as any)?.createdSessionId
+            ) {
+                await setActiveSession!({
+                    session: (signIn as any).createdSessionId,
+                });
+                router.replace('/(tabs)');
+            }
+        } catch (err) {
+            console.error('SSO error:', err);
+        }
+    };
+
     const onSignUpPress = async () => {
         setErrorMessage(null);
-        if (password !== confirmPassword) {
-            setErrorMessage('Passwords do not match');
+        if (!emailAddress.trim()) {
+            setErrorMessage('Please enter your email address');
             return;
         }
         if (!password) {
-            setErrorMessage('You must enter a password');
+            setErrorMessage('Please enter a password');
             return;
         }
         if (!isLoaded) return;
 
         try {
-            await signUp.create({
-                emailAddress,
-                password,
-            });
-
+            await signUp.create({ emailAddress, password });
             await signUp.prepareEmailAddressVerification({
                 strategy: 'email_code',
             });
-
             setPendingVerification(true);
         } catch (error) {
             if (isClerkAPIResponseError(error)) {
@@ -76,16 +106,14 @@ export default function SignUpPage() {
 
     const onVerifyPress = async () => {
         if (!isLoaded) return;
-
         try {
             const signUpAttempt = await signUp.attemptEmailAddressVerification({
                 code,
             });
-
             if (signUpAttempt.status === 'complete') {
                 setPendingVerification(false);
                 await setActive({ session: signUpAttempt.createdSessionId });
-                router.replace('/(tabs)');
+                router.replace('/find-friends');
             } else {
                 console.error(JSON.stringify(signUpAttempt, null, 2));
             }
@@ -99,17 +127,22 @@ export default function SignUpPage() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView
+            style={[
+                shared.screenContainer,
+                { backgroundColor: colors.background },
+            ]}
+        >
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1, width: '100%' }}
+                style={{ flex: 1 }}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View
-                        style={{
-                            flex: 1,
-                            alignItems: 'center',
-                        }}
+                    <ScrollView
+                        style={{ flex: 1 }}
+                        contentContainerStyle={s.scrollContent}
+                        keyboardShouldPersistTaps='handled'
+                        showsVerticalScrollIndicator={false}
                     >
                         <Dialog.Container visible={pendingVerification}>
                             <Dialog.Title>
@@ -125,66 +158,234 @@ export default function SignUpPage() {
                             />
                         </Dialog.Container>
 
-                        <Text style={[styles.title, { marginBottom: 24 }]}>
-                            Sign up
-                        </Text>
+                        {/* Title section */}
+                        <View style={s.titleSection}>
+                            <Text style={[s.title, { color: colors.text }]}>
+                                Create Account
+                            </Text>
+                            <Text
+                                style={[s.subtitle, { color: colors.subtitle }]}
+                            >
+                                Sign up to start planning hangouts with friends
+                            </Text>
+                        </View>
 
-                        <TextInput
-                            style={styles.input}
-                            autoCapitalize='none'
-                            value={emailAddress}
-                            placeholder='Enter email'
-                            placeholderTextColor={colors.placeholder}
-                            onChangeText={setEmailAddress}
-                        />
+                        {/* Social login buttons */}
+                        <View style={s.socialSection}>
+                            <TouchableOpacity
+                                style={[
+                                    s.socialBtn,
+                                    {
+                                        borderColor: colors.cardBorderHeavy,
+                                        backgroundColor:
+                                            colors.socialButtonBackground,
+                                    },
+                                ]}
+                                onPress={() => onSelectAuth(Strategy.Google)}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons
+                                    name='logo-google'
+                                    size={20}
+                                    color={colors.socialButtonIcon}
+                                />
+                                <Text
+                                    style={[
+                                        s.socialBtnText,
+                                        { color: colors.socialButtonText },
+                                    ]}
+                                >
+                                    Continue with Google
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
-                        <TextInput
-                            style={styles.input}
-                            value={password}
-                            placeholder='Enter password'
-                            placeholderTextColor={colors.placeholder}
-                            secureTextEntry={true}
-                            onChangeText={setPassword}
-                        />
+                        {/* Divider */}
+                        <View style={shared.separatorView}>
+                            <View style={shared.separator} />
+                            <Text style={shared.separatorText}>or</Text>
+                            <View style={shared.separator} />
+                        </View>
 
-                        <TextInput
-                            style={styles.input}
-                            value={confirmPassword}
-                            placeholder='Confirm password'
-                            placeholderTextColor={colors.placeholder}
-                            secureTextEntry={true}
-                            onChangeText={setConfirmPassword}
-                        />
+                        {/* Email form */}
+                        <View style={s.formSection}>
+                            <View style={s.inputWrapper}>
+                                <Ionicons
+                                    name='mail-outline'
+                                    size={20}
+                                    color={colors.placeholder}
+                                    style={s.inputIcon}
+                                />
+                                <TextInput
+                                    style={[
+                                        s.input,
+                                        {
+                                            borderColor: colors.cardBorderHeavy,
+                                            backgroundColor:
+                                                colors.inputBackground,
+                                            color: colors.inputText,
+                                        },
+                                    ]}
+                                    autoCapitalize='none'
+                                    keyboardType='email-address'
+                                    placeholder='Email address'
+                                    placeholderTextColor={colors.placeholder}
+                                    value={emailAddress}
+                                    onChangeText={setEmailAddress}
+                                />
+                            </View>
 
-                        <TouchableOpacity
-                            style={styles.primaryBtn}
-                            onPress={onSignUpPress}
-                        >
-                            <Text style={styles.primaryBtnText}>Continue</Text>
-                        </TouchableOpacity>
+                            <View style={s.inputWrapper}>
+                                <Ionicons
+                                    name='lock-closed-outline'
+                                    size={20}
+                                    color={colors.placeholder}
+                                    style={s.inputIcon}
+                                />
+                                <TextInput
+                                    style={[
+                                        s.input,
+                                        {
+                                            borderColor: colors.cardBorderHeavy,
+                                            backgroundColor:
+                                                colors.inputBackground,
+                                            color: colors.inputText,
+                                        },
+                                    ]}
+                                    placeholder='Password'
+                                    placeholderTextColor={colors.placeholder}
+                                    secureTextEntry
+                                    value={password}
+                                    onChangeText={setPassword}
+                                />
+                            </View>
+
+                            <TouchableOpacity
+                                style={[
+                                    s.signUpBtn,
+                                    { backgroundColor: colors.primary },
+                                ]}
+                                onPress={onSignUpPress}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={s.signUpBtnText}>Sign Up</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         {errorMessage && (
-                            <Text style={styles.errorText}>{errorMessage}</Text>
+                            <Text style={[shared.errorText, { marginTop: 12 }]}>
+                                {errorMessage}
+                            </Text>
                         )}
 
-                        <View style={{ marginTop: 10 }}>
-                            <Link
-                                href={
-                                    `/sign-in${
-                                        emailAddress
-                                            ? `?email=${encodeURIComponent(emailAddress)}`
-                                            : ''
-                                    }` as RelativePathString
-                                }
+                        {/* Toggle to sign in */}
+                        <View style={s.toggleSection}>
+                            <TouchableOpacity
+                                onPress={() => router.replace('/sign-in')}
                             >
-                                <Text style={styles.linkText}>
-                                    Have an account already? Sign in
+                                <Text
+                                    style={[
+                                        s.toggleText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Already have an account?{' '}
+                                    <Text
+                                        style={[
+                                            s.toggleLink,
+                                            { color: colors.primary },
+                                        ]}
+                                    >
+                                        Sign In
+                                    </Text>
                                 </Text>
-                            </Link>
+                            </TouchableOpacity>
                         </View>
-                    </View>
+                    </ScrollView>
                 </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
+
+const s = StyleSheet.create({
+    scrollContent: {
+        paddingHorizontal: 24,
+        paddingBottom: 40,
+    },
+    titleSection: {
+        paddingTop: 32,
+        marginBottom: 32,
+    },
+    title: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 16,
+        lineHeight: 22,
+    },
+    socialSection: {
+        gap: 12,
+    },
+    socialBtn: {
+        width: '100%',
+        height: 52,
+        borderWidth: 2,
+        borderRadius: 12,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 12,
+    },
+    socialBtnText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    formSection: {
+        gap: 16,
+    },
+    inputWrapper: {
+        position: 'relative',
+    },
+    inputIcon: {
+        position: 'absolute',
+        left: 16,
+        top: 16,
+        zIndex: 1,
+    },
+    input: {
+        width: '100%',
+        height: 52,
+        borderWidth: 2,
+        borderRadius: 12,
+        paddingLeft: 48,
+        paddingRight: 16,
+        fontSize: 16,
+    },
+    signUpBtn: {
+        width: '100%',
+        height: 56,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 4,
+    },
+    signUpBtnText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    toggleSection: {
+        paddingTop: 24,
+        paddingBottom: 16,
+        alignItems: 'center',
+    },
+    toggleText: {
+        fontSize: 15,
+    },
+    toggleLink: {
+        fontWeight: '600',
+    },
+});

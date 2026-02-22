@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import React from 'react';
 import { Text, TextInput, View, TouchableOpacity } from 'react-native';
-import { isClerkAPIResponseError, useSignIn } from '@clerk/clerk-expo';
-import {
-    Link,
-    RelativePathString,
-    useLocalSearchParams,
-    useRouter,
-} from 'expo-router';
+import { isClerkAPIResponseError, useSignIn, useSSO } from '@clerk/clerk-expo';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { ClerkAPIError } from '@clerk/types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 
+enum Strategy {
+    Google = 'oauth_google',
+}
+
 export default function SignInPage() {
     const { signIn, setActive, isLoaded } = useSignIn();
+    const { startSSOFlow } = useSSO();
     const router = useRouter();
     const { email } = useLocalSearchParams();
     const colors = useThemeColors();
@@ -46,6 +47,41 @@ export default function SignInPage() {
             } else {
                 console.error(JSON.stringify(error, null, 2));
             }
+        }
+    };
+
+    const onSelectAuth = async (strategy: Strategy) => {
+        try {
+            const result = await startSSOFlow({ strategy });
+            const {
+                createdSessionId,
+                setActive: setActiveSession,
+                signIn: ssoSignIn,
+                signUp,
+            } = result;
+
+            if (createdSessionId) {
+                await setActiveSession!({ session: createdSessionId });
+                router.replace('/(tabs)');
+            } else if (
+                (ssoSignIn as any)?.status === 'complete' &&
+                (ssoSignIn as any)?.createdSessionId
+            ) {
+                await setActiveSession!({
+                    session: (ssoSignIn as any).createdSessionId,
+                });
+                router.replace('/(tabs)');
+            } else if (
+                (signUp as any)?.status === 'complete' &&
+                (signUp as any)?.createdSessionId
+            ) {
+                await setActiveSession!({
+                    session: (signUp as any).createdSessionId,
+                });
+                router.replace('/(tabs)');
+            }
+        } catch (err) {
+            console.error('SSO error:', err);
         }
     };
 
@@ -96,20 +132,46 @@ export default function SignInPage() {
                 <Text style={styles.errorText}>{errorMessage}</Text>
             )}
 
-            <View style={{ marginTop: 10 }}>
-                <Link
-                    href={
-                        `/sign-up${
-                            emailAddress
-                                ? `?email=${encodeURIComponent(emailAddress)}`
-                                : ''
-                        }` as RelativePathString
-                    }
+            <View style={styles.separatorView}>
+                <View style={styles.separator} />
+                <Text style={styles.separatorText}>or</Text>
+                <View style={styles.separator} />
+            </View>
+
+            <View style={{ width: '100%' }}>
+                <TouchableOpacity
+                    onPress={() => onSelectAuth(Strategy.Google)}
+                    style={styles.socialBtn}
                 >
-                    <Text style={styles.linkText}>
-                        Don&apos;t have an account? Sign up
+                    <Ionicons
+                        name='logo-google'
+                        size={20}
+                        color={colors.socialButtonIcon}
+                        style={{ marginRight: 10 }}
+                    />
+                    <Text style={styles.socialBtnText}>
+                        Continue with Google
                     </Text>
-                </Link>
+                </TouchableOpacity>
+            </View>
+
+            <View
+                style={{
+                    paddingTop: 24,
+                    paddingBottom: 16,
+                    alignItems: 'center',
+                }}
+            >
+                <TouchableOpacity onPress={() => router.replace('/sign-up')}>
+                    <Text style={{ fontSize: 15, color: colors.textSecondary }}>
+                        Don&apos;t have an account?{' '}
+                        <Text
+                            style={{ fontWeight: '600', color: colors.primary }}
+                        >
+                            Sign Up
+                        </Text>
+                    </Text>
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );

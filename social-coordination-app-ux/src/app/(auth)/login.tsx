@@ -1,176 +1,156 @@
-import {
-    Text,
-    TouchableOpacity,
-    View,
-    TextInput,
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    TouchableWithoutFeedback,
-} from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useSSO } from '@clerk/clerk-expo';
-import * as Linking from 'expo-linking';
-import { Link, RelativePathString, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { createSharedStyles } from '@/src/constants/shared-styles';
-
-enum Strategy {
-    Google = 'oauth_google',
-}
 
 export default function LoginPage() {
-    const { startSSOFlow } = useSSO();
-    const [email, setEmail] = useState<string>('');
     const router = useRouter();
     const colors = useThemeColors();
-    const styles = createSharedStyles(colors);
-
-    useEffect(() => {
-        Keyboard.dismiss();
-        setEmail('');
-    }, []);
-
-    const onSelectAuth = async (strategy: Strategy) => {
-        try {
-            const redirectUrl = Linking.createURL('/');
-            const result = await startSSOFlow({
-                strategy: strategy,
-                //redirectUrl,
-            });
-
-            const { createdSessionId, setActive, signIn, signUp } = result;
-
-            console.log(
-                'SSO result:',
-                JSON.stringify({
-                    createdSessionId,
-                    signInStatus: (signIn as any)?.status,
-                    signInSessionId: (signIn as any)?.createdSessionId,
-                    signUpStatus: (signUp as any)?.status,
-                    signUpSessionId: (signUp as any)?.createdSessionId,
-                }),
-            );
-
-            if (createdSessionId) {
-                await setActive!({ session: createdSessionId });
-                router.replace('/(tabs)');
-            } else if (
-                (signUp as any)?.status === 'complete' &&
-                (signUp as any)?.createdSessionId
-            ) {
-                await setActive!({ session: (signUp as any).createdSessionId });
-                router.replace('/(tabs)');
-            } else if (
-                (signIn as any)?.status === 'complete' &&
-                (signIn as any)?.createdSessionId
-            ) {
-                await setActive!({ session: (signIn as any).createdSessionId });
-                router.replace('/(tabs)');
-            }
-        } catch (err) {
-            console.error('SSO error:', err);
-        }
-    };
-
-    const onSelectSignUpWithEmail = () => {
-        if (email.trim() !== '') {
-            Keyboard.dismiss();
-            setEmail('');
-            router.push(`/sign-up?email=${encodeURIComponent(email)}`);
-        }
-    };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                keyboardVerticalOffset={-200}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1, width: '100%' }}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View
-                        style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
+        <View
+            style={[
+                styles.gradientBg,
+                { backgroundColor: colors.gradientFrom },
+            ]}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                {/* Top spacer + branding */}
+                <View style={styles.brandingContainer}>
+                    {/* App icon */}
+                    <View style={styles.iconWrapper}>
+                        <View style={styles.appIcon}>
+                            <Ionicons
+                                name='people'
+                                size={48}
+                                color={colors.primary}
+                            />
+                        </View>
+                        <Text style={styles.sparkle}>✨</Text>
+                    </View>
+
+                    {/* Title */}
+                    <Text style={styles.title}>Hangout</Text>
+                    <Text style={styles.subtitle}>
+                        Plan spontaneous meetups and{'\n'}manage recurring
+                        social groups
+                    </Text>
+                </View>
+
+                {/* CTA buttons */}
+                <View style={styles.ctaContainer}>
+                    <TouchableOpacity
+                        style={styles.createAccountBtn}
+                        onPress={() => router.push('/sign-up')}
+                        activeOpacity={0.9}
                     >
                         <Text
-                            style={{
-                                fontFamily: 'Pacifico_400Regular',
-                                fontSize: 48,
-                                color: colors.primary,
-                                marginBottom: 8,
-                            }}
+                            style={[
+                                styles.createAccountText,
+                                { color: colors.primary },
+                            ]}
                         >
-                            Hangout
+                            Create Account
                         </Text>
-                        <Text style={styles.subtitle}>
-                            Plan hangouts with friends, effortlessly
-                        </Text>
+                    </TouchableOpacity>
 
-                        <TextInput
-                            style={styles.input}
-                            autoCapitalize='none'
-                            placeholder='Email'
-                            placeholderTextColor={colors.placeholder}
-                            onChangeText={setEmail}
-                            value={email}
-                        />
-
-                        <TouchableOpacity
-                            style={styles.primaryBtn}
-                            onPress={onSelectSignUpWithEmail}
-                        >
-                            <Text style={styles.primaryBtnText}>
-                                Sign up with email
-                            </Text>
-                        </TouchableOpacity>
-
-                        <View style={{ marginTop: 10 }}>
-                            <Link
-                                href={
-                                    `/sign-in${
-                                        email
-                                            ? `?email=${encodeURIComponent(email)}`
-                                            : ''
-                                    }` as RelativePathString
-                                }
-                            >
-                                <Text style={styles.linkText}>
-                                    Have an account already? Sign in
-                                </Text>
-                            </Link>
-                        </View>
-
-                        <View style={styles.separatorView}>
-                            <View style={styles.separator} />
-                            <Text style={styles.separatorText}>or</Text>
-                            <View style={styles.separator} />
-                        </View>
-
-                        <View style={{ width: '100%' }}>
-                            <TouchableOpacity
-                                onPress={() => onSelectAuth(Strategy.Google)}
-                                style={styles.socialBtn}
-                            >
-                                <Ionicons
-                                    name='logo-google'
-                                    size={20}
-                                    color={colors.socialButtonIcon}
-                                    style={{ marginRight: 10 }}
-                                />
-                                <Text style={styles.socialBtnText}>
-                                    Continue with Google
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
+                    <TouchableOpacity
+                        style={styles.signInBtn}
+                        onPress={() => router.push('/sign-in')}
+                        activeOpacity={0.9}
+                    >
+                        <Text style={styles.signInText}>Sign In</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    gradientBg: {
+        flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        paddingHorizontal: 24,
+    },
+    brandingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    iconWrapper: {
+        marginBottom: 32,
+        position: 'relative',
+    },
+    appIcon: {
+        width: 96,
+        height: 96,
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    sparkle: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        fontSize: 28,
+    },
+    title: {
+        fontFamily: 'Pacifico_400Regular',
+        fontSize: 52,
+        color: '#fff',
+        marginBottom: 12,
+    },
+    subtitle: {
+        fontSize: 18,
+        color: 'rgba(255, 255, 255, 0.85)',
+        textAlign: 'center',
+        lineHeight: 26,
+    },
+    ctaContainer: {
+        paddingBottom: 32,
+        gap: 12,
+    },
+    createAccountBtn: {
+        width: '100%',
+        height: 56,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 4,
+    },
+    createAccountText: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    signInBtn: {
+        width: '100%',
+        height: 56,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    signInText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#fff',
+    },
+});

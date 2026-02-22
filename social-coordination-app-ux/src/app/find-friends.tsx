@@ -1,26 +1,51 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    TextInput,
+    StyleSheet,
+    Alert,
+    Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockSuggestedFriends } from '@/src/data/mock-data';
+import { mockFriends } from '@/src/data/mock-data';
 
 export default function FindFriendsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const [search, setSearch] = useState('');
-    const [addedFriends, setAddedFriends] = useState<Set<string>>(new Set());
+    const [copied, setCopied] = useState(false);
+    const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
 
-    const toggleAdd = (id: string) => {
-        const next = new Set(addedFriends);
-        next.has(id) ? next.delete(id) : next.add(id);
-        setAddedFriends(next);
+    const inviteLink = 'hangout.app/join/abc123';
+
+    const handleCopy = async () => {
+        try {
+            await Clipboard.setStringAsync(inviteLink);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Fallback for environments without clipboard
+            Alert.alert('Invite Link', inviteLink);
+        }
     };
 
-    const filtered = mockSuggestedFriends.filter((f) =>
+    const handleInvite = (id: string) => {
+        const next = new Set(invitedIds);
+        next.add(id);
+        setInvitedIds(next);
+    };
+
+    // Filter contacts by search
+    const contacts = mockFriends.filter((f) =>
         f.name.toLowerCase().includes(search.toLowerCase()),
     );
 
@@ -28,101 +53,328 @@ export default function FindFriendsScreen() {
         <SafeAreaView style={shared.screenContainer}>
             {/* Header */}
             <View style={shared.stackHeader}>
-                <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={s.backBtn}
+                >
                     <Ionicons name='arrow-back' size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[s.headerTitle, { color: colors.text }]}>Find Friends</Text>
+                <Text style={[s.headerTitle, { color: colors.text }]}>
+                    Find Friends
+                </Text>
                 <View style={{ width: 40 }} />
             </View>
 
-            {/* Search */}
-            <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 12 }}>
-                <View style={{ position: 'relative' }}>
-                    <Ionicons
-                        name='search'
-                        size={20}
-                        color={colors.textTertiary}
-                        style={{ position: 'absolute', left: 14, top: 14, zIndex: 1 }}
-                    />
-                    <TextInput
-                        style={shared.searchInput}
-                        placeholder='Search by name or email...'
-                        placeholderTextColor={colors.placeholder}
-                        value={search}
-                        onChangeText={setSearch}
-                    />
-                </View>
-            </View>
+            {/* Content */}
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingBottom: 24 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
+                    <Text
+                        style={[s.introText, { color: colors.textSecondary }]}
+                    >
+                        Connect with your friends to start planning hangouts
+                        together
+                    </Text>
 
-            {/* Invite Link Card */}
-            <View style={{ paddingHorizontal: 24, paddingBottom: 16 }}>
-                <View style={shared.infoCard}>
-                    <Ionicons name='link-outline' size={22} color={colors.primary} />
-                    <View style={{ flex: 1 }}>
-                        <Text style={[s.inviteTitle, { color: colors.text }]}>Invite with Link</Text>
-                        <Text style={[s.inviteText, { color: colors.textSecondary }]}>
-                            Share a link for friends to join Hangout
+                    {/* Invite link card */}
+                    <View
+                        style={[
+                            s.inviteCard,
+                            { backgroundColor: colors.gradientFrom },
+                        ]}
+                    >
+                        <Text style={s.inviteCardTitle}>
+                            Share Your Invite Link
                         </Text>
+                        <Text style={s.inviteCardSubtitle}>
+                            Send this link to friends to connect instantly
+                        </Text>
+                        <View style={s.inviteLinkRow}>
+                            <Text
+                                style={s.inviteLinkText}
+                                numberOfLines={1}
+                                ellipsizeMode='tail'
+                            >
+                                {inviteLink}
+                            </Text>
+                            <TouchableOpacity
+                                style={s.copyBtn}
+                                onPress={handleCopy}
+                                activeOpacity={0.7}
+                            >
+                                {copied ? (
+                                    <Ionicons
+                                        name='checkmark'
+                                        size={20}
+                                        color='#fff'
+                                    />
+                                ) : (
+                                    <Ionicons
+                                        name='copy-outline'
+                                        size={20}
+                                        color='#fff'
+                                    />
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <TouchableOpacity style={[s.copyBtn, { backgroundColor: colors.indigoTint }]}>
-                        <Ionicons name='copy-outline' size={18} color={colors.primary} />
-                    </TouchableOpacity>
-                </View>
-            </View>
 
-            {/* Suggested Friends */}
-            <ScrollView style={{ flex: 1 }}>
-                <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
-                    <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>SUGGESTED FRIENDS</Text>
-                    <View style={{ gap: 8 }}>
-                        {filtered.map((friend) => {
-                            const added = addedFriends.has(friend.id);
+                    {/* Search */}
+                    <View style={s.searchWrapper}>
+                        <Ionicons
+                            name='search'
+                            size={20}
+                            color={colors.textTertiary}
+                            style={s.searchIcon}
+                        />
+                        <TextInput
+                            style={[
+                                shared.searchInput,
+                                { backgroundColor: colors.surfaceTertiary },
+                            ]}
+                            placeholder='Search contacts'
+                            placeholderTextColor={colors.placeholder}
+                            value={search}
+                            onChangeText={setSearch}
+                        />
+                    </View>
+
+                    {/* Contacts list */}
+                    <Text
+                        style={[
+                            shared.sectionLabel,
+                            { textTransform: 'uppercase', marginTop: 8 },
+                        ]}
+                    >
+                        FROM YOUR CONTACTS
+                    </Text>
+                    <View style={{ gap: 4 }}>
+                        {contacts.map((contact) => {
+                            const invited = invitedIds.has(contact.id);
                             return (
-                                <View key={friend.id} style={shared.listItem}>
+                                <View key={contact.id} style={s.contactRow}>
                                     <View style={shared.avatarLarge}>
-                                        <Text style={{ fontSize: 24 }}>{friend.avatar}</Text>
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[s.friendName, { color: colors.text }]}>{friend.name}</Text>
-                                        <Text style={[s.friendMutual, { color: colors.textTertiary }]}>
-                                            {friend.mutualFriends} mutual friends
+                                        <Text style={{ fontSize: 24 }}>
+                                            {contact.avatar}
                                         </Text>
                                     </View>
-                                    <TouchableOpacity
-                                        style={added ? [s.addedBtn, { backgroundColor: colors.statusGoingBg }] : [s.addBtn, { backgroundColor: colors.primary }]}
-                                        onPress={() => toggleAdd(friend.id)}
-                                    >
-                                        {added ? (
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                                <Ionicons name='checkmark' size={16} color={colors.statusGoingText} />
-                                                <Text style={[s.addBtnText, { color: colors.statusGoingText }]}>Added</Text>
-                                            </View>
-                                        ) : (
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                                <Ionicons name='person-add' size={16} color='#fff' />
-                                                <Text style={[s.addBtnText, { color: '#fff' }]}>Add</Text>
-                                            </View>
+                                    <View style={{ flex: 1, minWidth: 0 }}>
+                                        <Text
+                                            style={[
+                                                s.contactName,
+                                                { color: colors.text },
+                                            ]}
+                                        >
+                                            {contact.name}
+                                        </Text>
+                                        {contact.phone && (
+                                            <Text
+                                                style={[
+                                                    s.contactPhone,
+                                                    {
+                                                        color: colors.textTertiary,
+                                                    },
+                                                ]}
+                                            >
+                                                {contact.phone}
+                                            </Text>
                                         )}
-                                    </TouchableOpacity>
+                                    </View>
+                                    {invited ? (
+                                        <View
+                                            style={[
+                                                s.invitedBadge,
+                                                {
+                                                    backgroundColor:
+                                                        colors.statusGoingBg,
+                                                },
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name='checkmark'
+                                                size={16}
+                                                color={colors.statusGoingText}
+                                            />
+                                            <Text
+                                                style={[
+                                                    s.invitedBadgeText,
+                                                    {
+                                                        color: colors.statusGoingText,
+                                                    },
+                                                ]}
+                                            >
+                                                Invited
+                                            </Text>
+                                        </View>
+                                    ) : (
+                                        <TouchableOpacity
+                                            style={[
+                                                s.inviteBtn,
+                                                {
+                                                    backgroundColor:
+                                                        colors.primary,
+                                                },
+                                            ]}
+                                            onPress={() =>
+                                                handleInvite(contact.id)
+                                            }
+                                            activeOpacity={0.8}
+                                        >
+                                            <Text style={s.inviteBtnText}>
+                                                Invite
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             );
                         })}
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Bottom CTA */}
+            <View style={shared.bottomCTA}>
+                <TouchableOpacity
+                    style={[
+                        s.skipBtn,
+                        { backgroundColor: colors.surfaceTertiary },
+                    ]}
+                    onPress={() => router.replace('/(tabs)')}
+                    activeOpacity={0.7}
+                >
+                    <Text
+                        style={[s.skipBtnText, { color: colors.textSecondary }]}
+                    >
+                        Skip for Now
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </SafeAreaView>
     );
 }
 
 const s = StyleSheet.create({
-    backBtn: { padding: 8, marginLeft: -8 },
-    headerTitle: { fontSize: 18, fontWeight: '600' },
-    inviteTitle: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
-    inviteText: { fontSize: 13 },
-    copyBtn: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-    friendName: { fontSize: 16, fontWeight: '500' },
-    friendMutual: { fontSize: 13, marginTop: 2 },
-    addBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-    addedBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-    addBtnText: { fontSize: 13, fontWeight: '600' },
+    backBtn: {
+        padding: 8,
+        marginLeft: -8,
+    },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    introText: {
+        fontSize: 16,
+        lineHeight: 22,
+        marginBottom: 20,
+    },
+    // Invite card
+    inviteCard: {
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    inviteCardTitle: {
+        color: '#fff',
+        fontSize: 17,
+        fontWeight: '600',
+        marginBottom: 6,
+    },
+    inviteCardSubtitle: {
+        color: 'rgba(255, 255, 255, 0.8)',
+        fontSize: 14,
+        marginBottom: 16,
+    },
+    inviteLinkRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
+    },
+    inviteLinkText: {
+        flex: 1,
+        color: '#fff',
+        fontSize: 14,
+        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    },
+    copyBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    // Search
+    searchWrapper: {
+        position: 'relative',
+        marginBottom: 20,
+    },
+    searchIcon: {
+        position: 'absolute',
+        left: 14,
+        top: 14,
+        zIndex: 1,
+    },
+    // Contact row
+    contactRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+    },
+    contactName: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    contactPhone: {
+        fontSize: 13,
+        marginTop: 2,
+    },
+    inviteBtn: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    inviteBtnText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    invitedBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+    },
+    invitedBadgeText: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    // Skip button
+    skipBtn: {
+        width: '100%',
+        height: 56,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    skipBtnText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });
