@@ -5,7 +5,6 @@ import type { TokenCache } from '@clerk/clerk-expo';
 const createTokenCache = (): TokenCache => {
     return {
         getToken: async (key: string) => {
-            console.log('Attempting to retrieve token with key:', key);
             try {
                 const item = await SecureStore.getItemAsync(key);
                 return item;
@@ -16,7 +15,6 @@ const createTokenCache = (): TokenCache => {
             }
         },
         saveToken: (key: string, token: string) => {
-            console.log('Attempting to save token with key:', key);
             return SecureStore.setItemAsync(key, token);
         },
     };
