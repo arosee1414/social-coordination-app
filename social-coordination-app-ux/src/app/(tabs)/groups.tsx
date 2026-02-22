@@ -22,7 +22,10 @@ export default function GroupsScreen() {
     const router = useRouter();
 
     return (
-        <SafeAreaView style={shared.screenContainer}>
+        <SafeAreaView
+            style={shared.screenContainer}
+            edges={['top', 'left', 'right']}
+        >
             <View style={shared.screenHeaderBordered}>
                 <View style={s.headerRow}>
                     <Text style={shared.screenTitle}>Groups</Text>

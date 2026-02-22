@@ -26,7 +26,10 @@ export default function ProfileScreen() {
     };
 
     return (
-        <SafeAreaView style={shared.screenContainer}>
+        <SafeAreaView
+            style={shared.screenContainer}
+            edges={['top', 'left', 'right']}
+        >
             <ScrollView style={{ flex: 1 }}>
                 {/* Profile Header Card */}
                 <View

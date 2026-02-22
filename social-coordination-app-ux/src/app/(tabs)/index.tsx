@@ -52,7 +52,10 @@ export default function HomeScreen() {
     };
 
     return (
-        <SafeAreaView style={shared.screenContainer}>
+        <SafeAreaView
+            style={shared.screenContainer}
+            edges={['top', 'left', 'right']}
+        >
             {/* Header */}
             <View style={shared.screenHeader}>
                 <Text style={shared.screenTitle}>Home</Text>
