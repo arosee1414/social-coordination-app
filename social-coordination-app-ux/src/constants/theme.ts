@@ -10,25 +10,25 @@ export const Colors = {
         // Core
         text: '#11181C',
         background: '#fff',
-        tint: '#4F46E5',
+        tint: '#007AFF',
 
         // Navigation
         icon: '#687076',
         tabIconDefault: '#687076',
-        tabIconSelected: '#4F46E5',
+        tabIconSelected: '#007AFF',
 
         // Buttons
-        primary: '#4F46E5',
-        primaryDark: '#4338CA',
+        primary: '#007AFF',
+        primaryDark: '#0066CC',
         primaryText: '#fff',
 
-        // Indigo variants
-        indigo50: '#EEF2FF',
-        indigo100: '#E0E7FF',
-        indigo500: '#6366F1',
-        indigo600: '#4F46E5',
-        indigoTint: 'rgba(79, 70, 229, 0.1)',
-        indigoTint5: 'rgba(79, 70, 229, 0.05)',
+        // Blue variants (matching #007AFF primary)
+        indigo50: '#EBF5FF',
+        indigo100: '#DBEAFE',
+        indigo500: '#3B82F6',
+        indigo600: '#007AFF',
+        indigoTint: 'rgba(0, 122, 255, 0.1)',
+        indigoTint5: 'rgba(0, 122, 255, 0.05)',
 
         // Status colors
         statusGoing: '#22C55E',
@@ -54,7 +54,7 @@ export const Colors = {
         placeholder: '#999',
 
         // Links
-        link: '#4F46E5',
+        link: '#007AFF',
 
         // Feedback
         error: '#FF3B30',
@@ -77,40 +77,40 @@ export const Colors = {
         textTertiary: '#9CA3AF',
 
         // Gradient substitutes (solid)
-        gradientFrom: '#4F46E5',
-        gradientTo: '#6366F1',
+        gradientFrom: '#007AFF',
+        gradientTo: '#3B82F6',
 
         // Badge
         badgeRed: '#EF4444',
         badgeRedText: '#fff',
 
         // Notification
-        unreadBg: 'rgba(79, 70, 229, 0.05)',
-        unreadDot: '#4F46E5',
+        unreadBg: 'rgba(0, 122, 255, 0.05)',
+        unreadDot: '#007AFF',
     },
     dark: {
         // Core
         text: '#ECEDEE',
         background: '#151718',
-        tint: '#818CF8',
+        tint: '#0A84FF',
 
         // Navigation
         icon: '#9BA1A6',
         tabIconDefault: '#9BA1A6',
-        tabIconSelected: '#818CF8',
+        tabIconSelected: '#0A84FF',
 
         // Buttons
-        primary: '#6366F1',
-        primaryDark: '#4F46E5',
+        primary: '#007AFF',
+        primaryDark: '#0066CC',
         primaryText: '#fff',
 
-        // Indigo variants
-        indigo50: 'rgba(99, 102, 241, 0.1)',
-        indigo100: 'rgba(99, 102, 241, 0.15)',
-        indigo500: '#818CF8',
-        indigo600: '#6366F1',
-        indigoTint: 'rgba(99, 102, 241, 0.15)',
-        indigoTint5: 'rgba(99, 102, 241, 0.08)',
+        // Blue variants (matching #007AFF primary)
+        indigo50: 'rgba(0, 122, 255, 0.1)',
+        indigo100: 'rgba(0, 122, 255, 0.15)',
+        indigo500: '#0A84FF',
+        indigo600: '#007AFF',
+        indigoTint: 'rgba(0, 122, 255, 0.15)',
+        indigoTint5: 'rgba(0, 122, 255, 0.08)',
 
         // Status colors
         statusGoing: '#22C55E',
@@ -136,7 +136,7 @@ export const Colors = {
         placeholder: '#6C6C70',
 
         // Links
-        link: '#818CF8',
+        link: '#0A84FF',
 
         // Feedback
         error: '#FF453A',
@@ -159,16 +159,16 @@ export const Colors = {
         textTertiary: '#6C6C70',
 
         // Gradient substitutes (solid)
-        gradientFrom: '#6366F1',
-        gradientTo: '#818CF8',
+        gradientFrom: '#007AFF',
+        gradientTo: '#0A84FF',
 
         // Badge
         badgeRed: '#EF4444',
         badgeRedText: '#fff',
 
         // Notification
-        unreadBg: 'rgba(99, 102, 241, 0.1)',
-        unreadDot: '#818CF8',
+        unreadBg: 'rgba(0, 122, 255, 0.1)',
+        unreadDot: '#0A84FF',
     },
 };
 
