@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import React from 'react';
-import {
-    Text,
-    TextInput,
-    View,
-    TouchableOpacity,
-    StyleSheet,
-} from 'react-native';
+import { Text, TextInput, View, TouchableOpacity } from 'react-native';
 import { isClerkAPIResponseError, useSignIn } from '@clerk/clerk-expo';
 import {
     Link,
@@ -16,11 +10,15 @@ import {
 } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClerkAPIError } from '@clerk/types';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { createSharedStyles } from '@/src/constants/shared-styles';
 
 export default function SignInPage() {
     const { signIn, setActive, isLoaded } = useSignIn();
     const router = useRouter();
     const { email } = useLocalSearchParams();
+    const colors = useThemeColors();
+    const styles = createSharedStyles(colors);
     const [emailAddress, setEmailAddress] = useState<string>(
         (email as string) ?? '',
     );
@@ -69,15 +67,15 @@ export default function SignInPage() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Sign in</Text>
+        <SafeAreaView style={styles.centeredContainer}>
+            <Text style={[styles.title, { marginBottom: 24 }]}>Sign in</Text>
 
             <TextInput
                 style={styles.input}
                 autoCapitalize='none'
                 value={emailAddress}
                 placeholder='Enter email'
-                placeholderTextColor='#999'
+                placeholderTextColor={colors.placeholder}
                 onChangeText={setEmailAddress}
             />
 
@@ -85,7 +83,7 @@ export default function SignInPage() {
                 style={styles.input}
                 value={password}
                 placeholder='Enter password'
-                placeholderTextColor='#999'
+                placeholderTextColor={colors.placeholder}
                 secureTextEntry={true}
                 onChangeText={setPassword}
             />
@@ -116,49 +114,3 @@ export default function SignInPage() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 24,
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        marginBottom: 16,
-    },
-    primaryBtn: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#007AFF',
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    primaryBtnText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    errorText: {
-        color: 'red',
-        marginTop: 10,
-        textAlign: 'center',
-    },
-    linkText: {
-        color: '#007AFF',
-        fontSize: 14,
-        textDecorationLine: 'underline',
-    },
-});

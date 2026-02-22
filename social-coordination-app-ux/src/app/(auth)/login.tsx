@@ -3,7 +3,6 @@ import {
     TouchableOpacity,
     View,
     TextInput,
-    StyleSheet,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -14,6 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSSO } from '@clerk/clerk-expo';
 import { Link, RelativePathString, useRouter } from 'expo-router';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { createSharedStyles } from '@/src/constants/shared-styles';
 
 enum Strategy {
     Google = 'oauth_google',
@@ -23,6 +24,8 @@ export default function LoginPage() {
     const { startSSOFlow } = useSSO();
     const [email, setEmail] = useState<string>('');
     const router = useRouter();
+    const colors = useThemeColors();
+    const styles = createSharedStyles(colors);
 
     useEffect(() => {
         Keyboard.dismiss();
@@ -59,7 +62,13 @@ export default function LoginPage() {
                 style={{ flex: 1, width: '100%' }}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.inner}>
+                    <View
+                        style={{
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
                         <Text style={styles.title}>Welcome</Text>
                         <Text style={styles.subtitle}>
                             Sign in or create an account to get started
@@ -69,7 +78,7 @@ export default function LoginPage() {
                             style={styles.input}
                             autoCapitalize='none'
                             placeholder='Email'
-                            placeholderTextColor='gray'
+                            placeholderTextColor={colors.placeholder}
                             onChangeText={setEmail}
                             value={email}
                         />
@@ -101,11 +110,7 @@ export default function LoginPage() {
 
                         <View style={styles.separatorView}>
                             <View style={styles.separator} />
-                            <Text
-                                style={{ marginHorizontal: 8, color: 'grey' }}
-                            >
-                                or
-                            </Text>
+                            <Text style={styles.separatorText}>or</Text>
                             <View style={styles.separator} />
                         </View>
 
@@ -117,7 +122,7 @@ export default function LoginPage() {
                                 <Ionicons
                                     name='logo-google'
                                     size={20}
-                                    color={'#333'}
+                                    color={colors.socialButtonIcon}
                                     style={{ marginRight: 10 }}
                                 />
                                 <Text style={styles.socialBtnText}>
@@ -131,79 +136,3 @@ export default function LoginPage() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-    },
-    inner: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 16,
-        color: 'grey',
-        marginBottom: 30,
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        marginBottom: 16,
-    },
-    primaryBtn: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#007AFF',
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    primaryBtnText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    linkText: {
-        color: '#007AFF',
-        fontSize: 14,
-        textDecorationLine: 'underline',
-    },
-    separatorView: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 24,
-        width: '100%',
-    },
-    separator: {
-        flex: 1,
-        borderBottomColor: '#ccc',
-        borderBottomWidth: 1,
-    },
-    socialBtn: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    socialBtnText: {
-        fontSize: 16,
-        fontWeight: '500',
-    },
-});

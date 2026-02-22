@@ -5,7 +5,6 @@ import {
     TextInput,
     View,
     TouchableOpacity,
-    StyleSheet,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -21,11 +20,15 @@ import {
 } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Dialog from 'react-native-dialog';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { createSharedStyles } from '@/src/constants/shared-styles';
 
 export default function SignUpPage() {
     const { isLoaded, signUp, setActive } = useSignUp();
     const router = useRouter();
     const { email } = useLocalSearchParams();
+    const colors = useThemeColors();
+    const styles = createSharedStyles(colors);
     const [emailAddress, setEmailAddress] = useState<string>(
         (email as string) ?? '',
     );
@@ -102,7 +105,12 @@ export default function SignUpPage() {
                 style={{ flex: 1, width: '100%' }}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.inner}>
+                    <View
+                        style={{
+                            flex: 1,
+                            alignItems: 'center',
+                        }}
+                    >
                         <Dialog.Container visible={pendingVerification}>
                             <Dialog.Title>
                                 A verification code has been sent to your email.
@@ -117,14 +125,16 @@ export default function SignUpPage() {
                             />
                         </Dialog.Container>
 
-                        <Text style={styles.title}>Sign up</Text>
+                        <Text style={[styles.title, { marginBottom: 24 }]}>
+                            Sign up
+                        </Text>
 
                         <TextInput
                             style={styles.input}
                             autoCapitalize='none'
                             value={emailAddress}
                             placeholder='Enter email'
-                            placeholderTextColor='#999'
+                            placeholderTextColor={colors.placeholder}
                             onChangeText={setEmailAddress}
                         />
 
@@ -132,7 +142,7 @@ export default function SignUpPage() {
                             style={styles.input}
                             value={password}
                             placeholder='Enter password'
-                            placeholderTextColor='#999'
+                            placeholderTextColor={colors.placeholder}
                             secureTextEntry={true}
                             onChangeText={setPassword}
                         />
@@ -141,7 +151,7 @@ export default function SignUpPage() {
                             style={styles.input}
                             value={confirmPassword}
                             placeholder='Confirm password'
-                            placeholderTextColor='#999'
+                            placeholderTextColor={colors.placeholder}
                             secureTextEntry={true}
                             onChangeText={setConfirmPassword}
                         />
@@ -178,52 +188,3 @@ export default function SignUpPage() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-    },
-    inner: {
-        flex: 1,
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 24,
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        marginBottom: 16,
-    },
-    primaryBtn: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#007AFF',
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    primaryBtnText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    errorText: {
-        color: 'red',
-        marginTop: 10,
-        textAlign: 'center',
-    },
-    linkText: {
-        color: '#007AFF',
-        fontSize: 14,
-        textDecorationLine: 'underline',
-    },
-});
