@@ -287,9 +287,24 @@ export const mockSuggestedFriends = [
     { id: 's6', name: 'Olivia Park', avatar: '👩🏻', mutualFriends: 6 },
 ];
 
-export const groupBgColors: Record<string, { from: string; to: string }> = {
-    '1': { from: '#FAF5FF', to: '#F3E8FF' }, // purple-50 to purple-100
-    '2': { from: '#FFF7ED', to: '#FFEDD5' }, // orange-50 to orange-100
-    '3': { from: '#EFF6FF', to: '#DBEAFE' }, // blue-50 to blue-100
-    '4': { from: '#F0FDF4', to: '#DCFCE7' }, // green-50 to green-100
+export const groupBgColors: Record<
+    string,
+    { light: { from: string; to: string }; dark: { from: string; to: string } }
+> = {
+    '1': {
+        light: { from: '#F3E8FF', to: '#E9D5FF' }, // purple-100 to purple-200
+        dark: { from: 'rgba(168, 85, 247, 0.15)', to: 'rgba(168, 85, 247, 0.20)' },
+    },
+    '2': {
+        light: { from: '#FFEDD5', to: '#FED7AA' }, // orange-100 to orange-200
+        dark: { from: 'rgba(249, 115, 22, 0.15)', to: 'rgba(249, 115, 22, 0.20)' },
+    },
+    '3': {
+        light: { from: '#DBEAFE', to: '#BFDBFE' }, // blue-100 to blue-200
+        dark: { from: 'rgba(59, 130, 246, 0.15)', to: 'rgba(59, 130, 246, 0.20)' },
+    },
+    '4': {
+        light: { from: '#DCFCE7', to: '#BBF7D0' }, // green-100 to green-200
+        dark: { from: 'rgba(34, 197, 94, 0.15)', to: 'rgba(34, 197, 94, 0.20)' },
+    },
 };
