@@ -36,7 +36,7 @@ export default function SignInPage() {
 
             if (signInAttempt.status === 'complete') {
                 await setActive({ session: signInAttempt.createdSessionId });
-                router.navigate('/');
+                router.replace('/(tabs)');
             } else {
                 console.error(JSON.stringify(signInAttempt, null, 2));
             }

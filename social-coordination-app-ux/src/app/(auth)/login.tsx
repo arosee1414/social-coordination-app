@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSSO } from '@clerk/clerk-expo';
+import * as Linking from 'expo-linking';
 import { Link, RelativePathString, useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -34,12 +35,40 @@ export default function LoginPage() {
 
     const onSelectAuth = async (strategy: Strategy) => {
         try {
-            const { createdSessionId, setActive } = await startSSOFlow({
+            const redirectUrl = Linking.createURL('/');
+            const result = await startSSOFlow({
                 strategy: strategy,
+                //redirectUrl,
             });
+
+            const { createdSessionId, setActive, signIn, signUp } = result;
+
+            console.log(
+                'SSO result:',
+                JSON.stringify({
+                    createdSessionId,
+                    signInStatus: (signIn as any)?.status,
+                    signInSessionId: (signIn as any)?.createdSessionId,
+                    signUpStatus: (signUp as any)?.status,
+                    signUpSessionId: (signUp as any)?.createdSessionId,
+                }),
+            );
+
             if (createdSessionId) {
-                setActive!({ session: createdSessionId });
-                router.replace('/');
+                await setActive!({ session: createdSessionId });
+                router.replace('/(tabs)');
+            } else if (
+                (signUp as any)?.status === 'complete' &&
+                (signUp as any)?.createdSessionId
+            ) {
+                await setActive!({ session: (signUp as any).createdSessionId });
+                router.replace('/(tabs)');
+            } else if (
+                (signIn as any)?.status === 'complete' &&
+                (signIn as any)?.createdSessionId
+            ) {
+                await setActive!({ session: (signIn as any).createdSessionId });
+                router.replace('/(tabs)');
             }
         } catch (err) {
             console.error('SSO error:', err);
@@ -77,10 +106,10 @@ export default function LoginPage() {
                                 marginBottom: 8,
                             }}
                         >
-                            Meet up
+                            Hangout
                         </Text>
                         <Text style={styles.subtitle}>
-                            Sign in or create an account to get started
+                            Plan hangouts with friends, effortlessly
                         </Text>
 
                         <TextInput

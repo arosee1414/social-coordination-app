@@ -8,13 +8,19 @@ import { useColorScheme } from '@/src/hooks/use-color-scheme';
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
 
     return (
         <Tabs
             screenOptions={{
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+                tabBarActiveTintColor: colors.tabIconSelected,
+                tabBarInactiveTintColor: colors.tabIconDefault,
                 headerShown: false,
                 tabBarButton: HapticTab,
+                tabBarStyle: {
+                    backgroundColor: colors.background,
+                    borderTopColor: colors.cardBorder,
+                },
             }}
         >
             <Tabs.Screen
@@ -27,15 +33,42 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name='explore'
+                name='hangouts'
                 options={{
-                    title: 'Explore',
+                    title: 'Hangouts',
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol size={28} name='calendar' color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name='groups'
+                options={{
+                    title: 'Groups',
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol size={28} name='people' color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name='notifications'
+                options={{
+                    title: 'Alerts',
                     tabBarIcon: ({ color }) => (
                         <IconSymbol
                             size={28}
-                            name='paperplane.fill'
+                            name='notifications'
                             color={color}
                         />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name='profile'
+                options={{
+                    title: 'Profile',
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol size={28} name='person' color={color} />
                     ),
                 }}
             />

@@ -50,8 +50,36 @@ function RootLayoutNav(): React.JSX.Element {
             />
             <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
             <Stack.Screen
-                name='modal'
-                options={{ presentation: 'modal', title: 'Modal' }}
+                name='hangout/[id]'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='create-hangout'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='invite-selection'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='group/[id]'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='create-group'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='add-members'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='group-created'
+                options={{ headerShown: false, animation: 'fade' }}
+            />
+            <Stack.Screen
+                name='find-friends'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
             />
         </Stack>
     );

@@ -85,7 +85,7 @@ export default function SignUpPage() {
             if (signUpAttempt.status === 'complete') {
                 setPendingVerification(false);
                 await setActive({ session: signUpAttempt.createdSessionId });
-                router.navigate('/');
+                router.replace('/(tabs)');
             } else {
                 console.error(JSON.stringify(signUpAttempt, null, 2));
             }

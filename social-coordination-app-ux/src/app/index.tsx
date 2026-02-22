@@ -5,6 +5,7 @@ import { View } from 'react-native';
 
 export default function Index() {
     const { isLoaded, isSignedIn } = useAuth();
+    console.log('Auth state - isLoaded:', isLoaded, 'isSignedIn:', isSignedIn);
 
     if (!isLoaded) {
         return <View style={{ flex: 1 }} />;

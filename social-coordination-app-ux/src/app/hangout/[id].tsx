@@ -1,0 +1,209 @@
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { createSharedStyles } from '@/src/constants/shared-styles';
+import { mockHangouts, mockAttendees, mockInvitedGroups, mockInvitedFriends } from '@/src/data/mock-data';
+import type { RSVPStatus } from '@/src/types';
+
+export default function HangoutDetailScreen() {
+    const colors = useThemeColors();
+    const shared = createSharedStyles(colors);
+    const router = useRouter();
+    const { id } = useLocalSearchParams();
+    const hangout = mockHangouts.find((h) => h.id === id) ?? mockHangouts[0];
+    const [rsvp, setRsvp] = useState<RSVPStatus>(hangout.userStatus);
+    const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>('going');
+
+    const tabs: { key: 'going' | 'maybe' | 'not-going'; label: string; count: number }[] = [
+        { key: 'going', label: 'Going', count: mockAttendees.going.length },
+        { key: 'maybe', label: 'Maybe', count: mockAttendees.maybe.length },
+        { key: 'not-going', label: 'Not Going', count: mockAttendees.notGoing.length },
+    ];
+
+    const attendeeList =
+        activeTab === 'going' ? mockAttendees.going : activeTab === 'maybe' ? mockAttendees.maybe : mockAttendees.notGoing;
+
+    return (
+        <SafeAreaView style={shared.screenContainer}>
+            {/* Header */}
+            <View style={shared.stackHeader}>
+                <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+                    <Ionicons name='arrow-back' size={24} color={colors.text} />
+                </TouchableOpacity>
+                <Text style={[s.headerTitle, { color: colors.text }]}>Hangout Details</Text>
+                <View style={s.headerActions}>
+                    <TouchableOpacity><Ionicons name='share-social-outline' size={24} color={colors.text} /></TouchableOpacity>
+                    <TouchableOpacity><Ionicons name='ellipsis-vertical' size={24} color={colors.text} /></TouchableOpacity>
+                </View>
+            </View>
+
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 }}>
+                    {/* Title Section */}
+                    <Text style={[s.title, { color: colors.text }]}>{hangout.title}</Text>
+                    <Text style={[s.creator, { color: colors.subtitle }]}>Created by {hangout.creator}</Text>
+
+                    {/* Time Badge */}
+                    <View style={[s.countdownBadge, { backgroundColor: colors.primary }]}>
+                        <Ionicons name='time-outline' size={18} color='#fff' />
+                        <Text style={s.countdownText}>Starts in {hangout.timeUntil}</Text>
+                    </View>
+
+                    {/* Details Card */}
+                    <View style={[shared.card, { marginTop: 24, marginBottom: 24 }]}>
+                        <View style={s.detailRow}>
+                            <Ionicons name='time-outline' size={20} color={colors.primary} />
+                            <View style={{ flex: 1 }}>
+                                <Text style={[s.detailLabel, { color: colors.subtitle }]}>When</Text>
+                                <Text style={[s.detailValue, { color: colors.text }]}>{hangout.time}</Text>
+                            </View>
+                        </View>
+                        {hangout.location && (
+                            <View style={[s.detailRow, { borderTopWidth: 1, borderTopColor: colors.cardBorder, paddingTop: 12, marginTop: 12 }]}>
+                                <Ionicons name='location-outline' size={20} color={colors.primary} />
+                                <View style={{ flex: 1 }}>
+                                    <Text style={[s.detailLabel, { color: colors.subtitle }]}>Where</Text>
+                                    <Text style={[s.detailValue, { color: colors.text }]}>{hangout.location}</Text>
+                                    {hangout.locationDetail && (
+                                        <Text style={[s.detailSub, { color: colors.textSecondary }]}>{hangout.locationDetail}</Text>
+                                    )}
+                                </View>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* RSVP Buttons */}
+                    <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>YOUR RESPONSE</Text>
+                    <View style={s.rsvpRow}>
+                        <TouchableOpacity
+                            style={[s.rsvpBtn, rsvp === 'going' ? { backgroundColor: colors.statusGoingBg, borderColor: colors.statusGoing } : { borderColor: colors.cardBorderHeavy }]}
+                            onPress={() => setRsvp('going')}
+                        >
+                            <Text style={[s.rsvpBtnText, { color: rsvp === 'going' ? colors.statusGoingText : colors.textSecondary }]}>Going ✓</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[s.rsvpBtn, rsvp === 'maybe' ? { backgroundColor: colors.statusMaybeBg, borderColor: colors.statusMaybe } : { borderColor: colors.cardBorderHeavy }]}
+                            onPress={() => setRsvp('maybe')}
+                        >
+                            <Text style={[s.rsvpBtnText, { color: rsvp === 'maybe' ? colors.statusMaybeText : colors.textSecondary }]}>Maybe</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[s.rsvpBtn, rsvp === 'not-going' ? { backgroundColor: colors.statusNotGoingBg, borderColor: colors.statusNotGoing } : { borderColor: colors.cardBorderHeavy }]}
+                            onPress={() => setRsvp('not-going')}
+                        >
+                            <Text style={[s.rsvpBtnText, { color: rsvp === 'not-going' ? colors.statusNotGoingText : colors.textSecondary }]}>Can't Go</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Invited Groups */}
+                    {mockInvitedGroups.length > 0 && (
+                        <View style={{ marginTop: 24 }}>
+                            <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>INVITED GROUPS</Text>
+                            {mockInvitedGroups.map((g) => (
+                                <View key={g.id} style={[shared.card, { marginBottom: 8 }]}>
+                                    <View style={s.groupRow}>
+                                        <Text style={{ fontSize: 32 }}>{g.icon}</Text>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={[s.groupName, { color: colors.text }]}>{g.name}</Text>
+                                            <Text style={[s.groupMembers, { color: colors.textSecondary }]}>{g.memberCount} members</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    )}
+
+                    {/* Individual Invites */}
+                    {mockInvitedFriends.length > 0 && (
+                        <View style={{ marginTop: 24 }}>
+                            <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>INDIVIDUAL INVITES</Text>
+                            <View style={{ gap: 8 }}>
+                                {mockInvitedFriends.map((f, i) => (
+                                    <View key={i} style={[shared.listItem]}>
+                                        <View style={shared.avatarLarge}>
+                                            <Text style={{ fontSize: 24 }}>{f.avatar}</Text>
+                                        </View>
+                                        <Text style={[s.friendName, { color: colors.text }]}>{f.name}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Attendees Tabs */}
+                    <View style={{ marginTop: 24 }}>
+                        <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>RESPONSES</Text>
+                        <View style={shared.segmentedControl}>
+                            {tabs.map((tab) => (
+                                <TouchableOpacity
+                                    key={tab.key}
+                                    style={activeTab === tab.key ? shared.segmentedTabActive : shared.segmentedTab}
+                                    onPress={() => setActiveTab(tab.key)}
+                                >
+                                    <Text style={activeTab === tab.key ? shared.segmentedTabTextActive : shared.segmentedTabText}>
+                                        {tab.label} ({tab.count})
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <View style={{ marginTop: 16, gap: 8 }}>
+                            {attendeeList.map((attendee, index) => (
+                                <View key={index} style={[shared.listItem]}>
+                                    <View style={shared.avatarLarge}>
+                                        <Text style={{ fontSize: 24 }}>{attendee.avatar}</Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[s.attendeeName, { color: colors.text }]}>{attendee.name}</Text>
+                                        <Text style={[s.attendeeTime, { color: colors.textTertiary }]}>{attendee.time}</Text>
+                                    </View>
+                                    {attendee.fromGroup && (
+                                        <View style={[s.groupBadge, { backgroundColor: colors.indigoTint }]}>
+                                            <Text style={[s.groupBadgeText, { color: colors.primary }]}>{attendee.fromGroup}</Text>
+                                        </View>
+                                    )}
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+}
+
+const s = StyleSheet.create({
+    backBtn: { padding: 8, marginLeft: -8 },
+    headerTitle: { fontSize: 18, fontWeight: '600' },
+    headerActions: { flexDirection: 'row', gap: 16 },
+    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 4 },
+    creator: { fontSize: 16, marginBottom: 16 },
+    countdownBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        gap: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 12,
+    },
+    countdownText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+    detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+    detailLabel: { fontSize: 13, fontWeight: '500', marginBottom: 2 },
+    detailValue: { fontSize: 16, fontWeight: '600' },
+    detailSub: { fontSize: 14, marginTop: 2 },
+    rsvpRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+    rsvpBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, alignItems: 'center' },
+    rsvpBtnText: { fontSize: 14, fontWeight: '600' },
+    groupRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    groupName: { fontSize: 16, fontWeight: '600' },
+    groupMembers: { fontSize: 14 },
+    friendName: { fontSize: 16, fontWeight: '500' },
+    attendeeName: { fontSize: 16, fontWeight: '500' },
+    attendeeTime: { fontSize: 13, marginTop: 2 },
+    groupBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+    groupBadgeText: { fontSize: 12, fontWeight: '600' },
+});
