@@ -199,7 +199,7 @@ export const Colors = {
         reminderSubtext: '#FCD34D',
 
         // FAB
-        fabShadow: 'rgba(0, 122, 255, 0.4)',
+        fabShadow: 'rgba(0, 122, 255, 0.15)',
 
         // Overlay & bottom sheet
         overlayBg: 'rgba(0, 0, 0, 0.6)',

@@ -471,10 +471,10 @@ export function createSharedStyles(colors: ThemeColors) {
             justifyContent: 'center',
             alignItems: 'center',
             shadowColor: colors.fabShadow,
-            shadowOffset: { width: 0, height: 4 },
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 1,
-            shadowRadius: 8,
-            elevation: 6,
+            shadowRadius: 4,
+            elevation: 4,
         },
 
         // Bottom sheet overlay
