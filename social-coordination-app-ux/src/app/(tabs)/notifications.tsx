@@ -140,7 +140,7 @@ export default function NotificationsScreen() {
                                 )
                             }
                             rightThreshold={40}
-                            overshootRight={true}
+                            overshootRight={false}
                             friction={2}
                         >
                             <TouchableOpacity
