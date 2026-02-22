@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -13,30 +13,28 @@ import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockNotifications } from '@/src/data/mock-data';
+import { useNotifications } from '@/src/contexts/NotificationsContext';
 import type { Notification } from '@/src/types';
 
 export default function NotificationsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
-    const [notifications, setNotifications] = useState<Notification[]>(() => [
-        ...mockNotifications,
-    ]);
+    const { notifications, markAllAsRead, deleteNotification } =
+        useNotifications();
     const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
     const openSwipeableRef = useRef<Swipeable | null>(null);
 
-    const markAllAsRead = useCallback(() => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-    }, []);
-
-    const handleDelete = useCallback((id: string) => {
-        const ref = swipeableRefs.current.get(id);
-        if (ref) {
-            ref.close();
-        }
-        swipeableRefs.current.delete(id);
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, []);
+    const handleDelete = useCallback(
+        (id: string) => {
+            const ref = swipeableRefs.current.get(id);
+            if (ref) {
+                ref.close();
+            }
+            swipeableRefs.current.delete(id);
+            deleteNotification(id);
+        },
+        [deleteNotification],
+    );
 
     const renderRightActions = (
         _progress: RNAnimated.AnimatedInterpolation<number>,

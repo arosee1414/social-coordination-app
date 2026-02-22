@@ -12,6 +12,7 @@ import React from 'react';
 import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { NotificationsProvider } from '@/src/contexts/NotificationsContext';
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -35,7 +36,9 @@ export default function RootLayout() {
                     }
                 >
                     <ClerkLoaded>
-                        <RootLayoutNav />
+                        <NotificationsProvider>
+                            <RootLayoutNav />
+                        </NotificationsProvider>
                     </ClerkLoaded>
                 </ClerkProvider>
             </ThemeProvider>
