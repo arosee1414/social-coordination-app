@@ -3,17 +3,12 @@ import {
     DefaultTheme,
     ThemeProvider,
 } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { Stack } from 'expo-router';
 import 'react-native-reanimated';
-import { ClerkLoaded, ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { tokenCache } from './utils/tokenCache';
-import React, { useEffect } from 'react';
-
-export const unstable_settings = {
-    anchor: '(tabs)',
-};
+import React from 'react';
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -37,21 +32,9 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav(): React.JSX.Element {
-    const { isLoaded, isSignedIn } = useAuth();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (isLoaded && isSignedIn) {
-            console.log('user is signed in');
-            router.navigate('/');
-        } else if (isLoaded && !isSignedIn) {
-            console.log('user is not signed in');
-            router.navigate('/login');
-        }
-    }, []);
-
     return (
         <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name='index' options={{ headerShown: false }} />
             <Stack.Screen
                 name='(auth)'
                 options={{ headerShown: false, animation: 'fade' }}
