@@ -413,5 +413,126 @@ export function createSharedStyles(colors: ThemeColors) {
             fontWeight: '600',
             color: colors.primary,
         },
+
+        // Live badge
+        liveBadge: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: colors.liveBadgeBg,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 12,
+            gap: 6,
+        },
+        liveBadgeText: {
+            fontSize: 12,
+            fontWeight: '700',
+            color: '#fff',
+            letterSpacing: 0.5,
+        },
+
+        // Join button (for live hangout cards)
+        joinButton: {
+            backgroundColor: '#fff',
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            borderRadius: 20,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        joinButtonText: {
+            fontSize: 14,
+            fontWeight: '700',
+            color: colors.primary,
+        },
+
+        // Reminder banner
+        reminderBanner: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: colors.reminderBg,
+            borderWidth: 1,
+            borderColor: colors.reminderBorder,
+            borderRadius: 12,
+            padding: 14,
+            gap: 12,
+        },
+
+        // Large FAB (floating action button)
+        fabLarge: {
+            position: 'absolute',
+            bottom: 24,
+            right: 24,
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: colors.primary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: colors.fabShadow,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 1,
+            shadowRadius: 8,
+            elevation: 6,
+        },
+
+        // Bottom sheet overlay
+        bottomSheetOverlay: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: colors.overlayBg,
+        },
+
+        // Bottom sheet container
+        bottomSheetContainer: {
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: colors.bottomSheetBg,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            paddingHorizontal: 24,
+            paddingTop: 12,
+            paddingBottom: 36,
+        },
+
+        // Bottom sheet handle
+        bottomSheetHandle: {
+            width: 36,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: colors.bottomSheetHandle,
+            alignSelf: 'center',
+            marginBottom: 16,
+        },
+
+        // Bottom sheet action row
+        bottomSheetActionRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 16,
+            paddingVertical: 14,
+        },
+
+        // Bottom sheet action icon circle
+        bottomSheetActionIcon: {
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: colors.indigoTint,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        // See All link
+        seeAllLink: {
+            fontSize: 14,
+            fontWeight: '600',
+            color: colors.primary,
+        },
     });
 }

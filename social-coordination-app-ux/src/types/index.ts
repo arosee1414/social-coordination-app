@@ -1,5 +1,7 @@
 export type RSVPStatus = 'going' | 'maybe' | 'not-going' | null;
 
+export type HangoutStatus = 'live' | 'upcoming' | 'past' | 'cancelled';
+
 export interface Hangout {
     id: string;
     title: string;
@@ -12,6 +14,22 @@ export interface Hangout {
     maybe: number;
     userStatus: RSVPStatus;
     attendeesPreview: string[];
+    // Home screen redesign fields
+    status: HangoutStatus;
+    attendeeCount?: number;
+    date?: string;
+}
+
+export interface RecentActivity {
+    id: string;
+    text: string;
+    avatar: string;
+}
+
+export interface ReminderBanner {
+    id: string;
+    title: string;
+    subtitle: string;
 }
 
 export interface Attendee {

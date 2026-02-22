@@ -8,9 +8,45 @@ import {
     Notification,
     ProfileStat,
     SettingsSection,
+    RecentActivity,
+    ReminderBanner,
 } from '../types';
 
 export const mockHangouts: Hangout[] = [
+    // Live hangouts
+    {
+        id: '4',
+        title: 'Basketball at the park',
+        time: 'Now · Started 20m ago',
+        timeUntil: 'Live',
+        location: 'Central Park Courts',
+        locationDetail: 'Court 3, near the fountain',
+        creator: 'Alex Turner',
+        going: 6,
+        maybe: 0,
+        userStatus: null,
+        attendeesPreview: ['👨🏼', '👨🏽', '👩🏻', '👨🏻', '👩🏽', '👩🏾'],
+        status: 'live',
+        attendeeCount: 6,
+        date: 'Today',
+    },
+    {
+        id: '5',
+        title: 'Coffee & coworking',
+        time: 'Now · Started 45m ago',
+        timeUntil: 'Live',
+        location: 'Blue Bottle Coffee',
+        locationDetail: '789 Market St',
+        creator: 'Nina Patel',
+        going: 3,
+        maybe: 1,
+        userStatus: null,
+        attendeesPreview: ['👩🏾', '👨🏻', '👩🏼'],
+        status: 'live',
+        attendeeCount: 3,
+        date: 'Today',
+    },
+    // Upcoming hangouts
     {
         id: '1',
         title: 'Drinks at The Rooftop',
@@ -23,6 +59,9 @@ export const mockHangouts: Hangout[] = [
         maybe: 2,
         userStatus: 'going',
         attendeesPreview: ['👩🏻', '👨🏽', '👩🏼', '👨🏻', '👩🏽'],
+        status: 'upcoming',
+        attendeeCount: 7,
+        date: 'Today',
     },
     {
         id: '2',
@@ -36,6 +75,9 @@ export const mockHangouts: Hangout[] = [
         maybe: 4,
         userStatus: 'maybe',
         attendeesPreview: ['👨🏽', '👩🏼', '👨🏻'],
+        status: 'upcoming',
+        attendeeCount: 7,
+        date: 'Sat, Feb 22',
     },
     {
         id: '3',
@@ -48,8 +90,25 @@ export const mockHangouts: Hangout[] = [
         maybe: 1,
         userStatus: null,
         attendeesPreview: ['👩🏼', '👨🏻', '👩🏾', '👨🏼'],
+        status: 'upcoming',
+        attendeeCount: 5,
+        date: 'Fri, Feb 21',
     },
 ];
+
+export const mockRecentActivity: RecentActivity[] = [
+    { id: 'ra1', text: 'Sarah is going to Drinks at The Rooftop', avatar: '👩🏻' },
+    { id: 'ra2', text: 'Mike created Weekend brunch catch-up', avatar: '👨🏽' },
+    { id: 'ra3', text: 'Emma invited Close Friends to Movie night', avatar: '👩🏼' },
+    { id: 'ra4', text: 'Alex joined Basketball at the park', avatar: '👨🏼' },
+    { id: 'ra5', text: 'Nina started Coffee & coworking', avatar: '👩🏾' },
+];
+
+export const mockReminderBanner: ReminderBanner = {
+    id: 'rem1',
+    title: 'You haven\'t RSVP\'d to Movie night',
+    subtitle: 'Starts Friday at 8:00 PM — respond now!',
+};
 
 export const mockAttendees: AttendeesByStatus = {
     going: [

@@ -78,7 +78,7 @@ Modify existing files and create new component files for the redesigned Home scr
 3. **`social-coordination-app-ux/src/components/home/UpcomingHangoutsSection.tsx`**
     - Section header with "Upcoming" title and "See All" link
     - Vertical list of up to 3 hangout cards
-    - Each card: title, time, location, attendee avatars, RSVP status/buttons
+    - Each card: title, time, location, timeUntil badge (e.g. "4h 30m"), attendee avatars, RSVP status/buttons
     - Receives `hangouts` array (filtered to `status === 'upcoming'`), `onSeeAll`, `onHangoutPress` as props
 
 4. **`social-coordination-app-ux/src/components/home/RecentActivitySection.tsx`**
@@ -147,7 +147,7 @@ Describe the new functions and modifications needed.
     - `UpcomingHangoutsSection({ hangouts, onSeeAll, onHangoutPress, onRSVP }): JSX.Element`
     - Renders section header row ("Upcoming" + "See All" link)
     - Maps over hangouts (max 3) to render compact cards
-    - Each card: title, time (clock icon), location (pin icon), attendee avatar stack, RSVP status badge or Going/Maybe buttons
+    - Each card: title, time (clock icon), location (pin icon), timeUntil badge (top-right, e.g. "4h 30m"), attendee avatar stack, RSVP status badge or Going/Maybe buttons
     - `onRSVP(hangoutId, status)` fires when RSVP button tapped
 
 4. **`RecentActivitySection` component** — `social-coordination-app-ux/src/components/home/RecentActivitySection.tsx`

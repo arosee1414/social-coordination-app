@@ -87,6 +87,24 @@ export const Colors = {
         // Notification
         unreadBg: 'rgba(0, 122, 255, 0.05)',
         unreadDot: '#007AFF',
+
+        // Live badge
+        liveBadgeBg: 'rgba(255, 255, 255, 0.25)',
+        livePulse: '#EF4444',
+
+        // Reminder banner
+        reminderBg: '#FFFBEB',
+        reminderBorder: '#FDE68A',
+        reminderText: '#92400E',
+        reminderSubtext: '#A16207',
+
+        // FAB
+        fabShadow: 'rgba(0, 122, 255, 0.3)',
+
+        // Overlay & bottom sheet
+        overlayBg: 'rgba(0, 0, 0, 0.4)',
+        bottomSheetBg: '#fff',
+        bottomSheetHandle: '#D1D5DB',
     },
     dark: {
         // Core
@@ -169,6 +187,24 @@ export const Colors = {
         // Notification
         unreadBg: 'rgba(0, 122, 255, 0.1)',
         unreadDot: '#0A84FF',
+
+        // Live badge
+        liveBadgeBg: 'rgba(255, 255, 255, 0.2)',
+        livePulse: '#F87171',
+
+        // Reminder banner
+        reminderBg: 'rgba(234, 179, 8, 0.12)',
+        reminderBorder: 'rgba(234, 179, 8, 0.3)',
+        reminderText: '#FBBF24',
+        reminderSubtext: '#FCD34D',
+
+        // FAB
+        fabShadow: 'rgba(0, 122, 255, 0.4)',
+
+        // Overlay & bottom sheet
+        overlayBg: 'rgba(0, 0, 0, 0.6)',
+        bottomSheetBg: '#1C1C1E',
+        bottomSheetHandle: '#48484A',
     },
 };
 
