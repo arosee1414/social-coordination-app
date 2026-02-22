@@ -43,12 +43,22 @@ export default function RootLayout() {
 function RootLayoutNav(): React.JSX.Element {
     return (
         <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name='index' options={{ headerShown: false }} />
+            <Stack.Screen
+                name='index'
+                options={{ headerShown: false, gestureEnabled: false }}
+            />
             <Stack.Screen
                 name='(auth)'
-                options={{ headerShown: false, animation: 'fade' }}
+                options={{
+                    headerShown: false,
+                    animation: 'fade',
+                    gestureEnabled: false,
+                }}
             />
-            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+            <Stack.Screen
+                name='(tabs)'
+                options={{ headerShown: false, gestureEnabled: false }}
+            />
             <Stack.Screen
                 name='hangout/[id]'
                 options={{ headerShown: false, animation: 'slide_from_right' }}
@@ -75,11 +85,19 @@ function RootLayoutNav(): React.JSX.Element {
             />
             <Stack.Screen
                 name='group-created'
-                options={{ headerShown: false, animation: 'fade' }}
+                options={{
+                    headerShown: false,
+                    animation: 'fade',
+                    gestureEnabled: false,
+                }}
             />
             <Stack.Screen
                 name='find-friends'
-                options={{ headerShown: false, animation: 'slide_from_right' }}
+                options={{
+                    headerShown: false,
+                    animation: 'slide_from_right',
+                    gestureEnabled: false,
+                }}
             />
         </Stack>
     );

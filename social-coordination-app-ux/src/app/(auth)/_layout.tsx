@@ -7,7 +7,7 @@ export default function AuthLayout(): React.JSX.Element {
     const colors = useThemeColors();
     return (
         <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name='login' />
+            <Stack.Screen name='login' options={{ gestureEnabled: false }} />
             <Stack.Screen
                 name='sign-in'
                 options={{
