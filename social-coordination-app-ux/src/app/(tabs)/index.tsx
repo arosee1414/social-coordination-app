@@ -4,11 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import {
-    mockHangouts,
-    mockRecentActivity,
-    mockReminderBanner,
-} from '@/src/data/mock-data';
+import { mockRecentActivity, mockReminderBanner } from '@/src/data/mock-data';
+import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { HappeningNowSection } from '@/src/components/home/HappeningNowSection';
 import { ReminderBannerCard } from '@/src/components/home/ReminderBannerCard';
 import { UpcomingHangoutsSection } from '@/src/components/home/UpcomingHangoutsSection';
@@ -20,11 +17,10 @@ export default function HomeScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
+    const { hangouts, updateRSVP } = useHangouts();
 
-    const liveHangouts = mockHangouts.filter((h) => h.status === 'live');
-    const upcomingHangouts = mockHangouts.filter(
-        (h) => h.status === 'upcoming',
-    );
+    const liveHangouts = hangouts.filter((h) => h.status === 'live');
+    const upcomingHangouts = hangouts.filter((h) => h.status === 'upcoming');
 
     const handleJoinLive = (hangoutId: string) => {
         router.push(`/hangout/${hangoutId}` as any);
@@ -38,9 +34,8 @@ export default function HomeScreen() {
         router.push('/(tabs)/hangouts' as any);
     };
 
-    const handleRSVP = (hangoutId: string, _status: RSVPStatus) => {
-        // In a real app this would update state; for now just navigate
-        router.push(`/hangout/${hangoutId}` as any);
+    const handleRSVP = (hangoutId: string, status: RSVPStatus) => {
+        updateRSVP(hangoutId, status);
     };
 
     const handleCreateHangout = () => {

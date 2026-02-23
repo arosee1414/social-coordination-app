@@ -1,74 +1,191 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockHangouts, mockAttendees, mockInvitedGroups, mockInvitedFriends } from '@/src/data/mock-data';
-import type { RSVPStatus } from '@/src/types';
+import {
+    mockAttendees,
+    mockInvitedGroups,
+    mockInvitedFriends,
+} from '@/src/data/mock-data';
+import { useHangouts } from '@/src/contexts/HangoutsContext';
 
 export default function HangoutDetailScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { id } = useLocalSearchParams();
-    const hangout = mockHangouts.find((h) => h.id === id) ?? mockHangouts[0];
-    const [rsvp, setRsvp] = useState<RSVPStatus>(hangout.userStatus);
-    const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>('going');
+    const { hangouts, updateRSVP } = useHangouts();
+    const hangout = hangouts.find((h) => h.id === id) ?? hangouts[0];
+    const rsvp = hangout.userStatus;
+    const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
+        'going',
+    );
 
-    const tabs: { key: 'going' | 'maybe' | 'not-going'; label: string; count: number }[] = [
+    const tabs: {
+        key: 'going' | 'maybe' | 'not-going';
+        label: string;
+        count: number;
+    }[] = [
         { key: 'going', label: 'Going', count: mockAttendees.going.length },
         { key: 'maybe', label: 'Maybe', count: mockAttendees.maybe.length },
-        { key: 'not-going', label: 'Not Going', count: mockAttendees.notGoing.length },
+        {
+            key: 'not-going',
+            label: 'Not Going',
+            count: mockAttendees.notGoing.length,
+        },
     ];
 
     const attendeeList =
-        activeTab === 'going' ? mockAttendees.going : activeTab === 'maybe' ? mockAttendees.maybe : mockAttendees.notGoing;
+        activeTab === 'going'
+            ? mockAttendees.going
+            : activeTab === 'maybe'
+              ? mockAttendees.maybe
+              : mockAttendees.notGoing;
 
     return (
         <SafeAreaView style={shared.screenContainer}>
             {/* Header */}
             <View style={shared.stackHeader}>
-                <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={s.backBtn}
+                >
                     <Ionicons name='arrow-back' size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[s.headerTitle, { color: colors.text }]}>Hangout Details</Text>
+                <Text style={[s.headerTitle, { color: colors.text }]}>
+                    Hangout Details
+                </Text>
                 <View style={s.headerActions}>
-                    <TouchableOpacity><Ionicons name='share-social-outline' size={24} color={colors.text} /></TouchableOpacity>
-                    <TouchableOpacity><Ionicons name='ellipsis-vertical' size={24} color={colors.text} /></TouchableOpacity>
+                    <TouchableOpacity>
+                        <Ionicons
+                            name='share-social-outline'
+                            size={24}
+                            color={colors.text}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <Ionicons
+                            name='ellipsis-vertical'
+                            size={24}
+                            color={colors.text}
+                        />
+                    </TouchableOpacity>
                 </View>
             </View>
 
             <ScrollView style={{ flex: 1 }}>
-                <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 }}>
+                <View
+                    style={{
+                        paddingHorizontal: 24,
+                        paddingTop: 24,
+                        paddingBottom: 24,
+                    }}
+                >
                     {/* Title Section */}
-                    <Text style={[s.title, { color: colors.text }]}>{hangout.title}</Text>
-                    <Text style={[s.creator, { color: colors.subtitle }]}>Created by {hangout.creator}</Text>
+                    <Text style={[s.title, { color: colors.text }]}>
+                        {hangout.title}
+                    </Text>
+                    <Text style={[s.creator, { color: colors.subtitle }]}>
+                        Created by {hangout.creator}
+                    </Text>
 
                     {/* Time Badge */}
-                    <View style={[s.countdownBadge, { backgroundColor: colors.primary }]}>
+                    <View
+                        style={[
+                            s.countdownBadge,
+                            { backgroundColor: colors.primary },
+                        ]}
+                    >
                         <Ionicons name='time-outline' size={18} color='#fff' />
-                        <Text style={s.countdownText}>Starts in {hangout.timeUntil}</Text>
+                        <Text style={s.countdownText}>
+                            Starts in {hangout.timeUntil}
+                        </Text>
                     </View>
 
                     {/* Details Card */}
-                    <View style={[shared.card, { marginTop: 24, marginBottom: 24 }]}>
+                    <View
+                        style={[
+                            shared.card,
+                            { marginTop: 24, marginBottom: 24 },
+                        ]}
+                    >
                         <View style={s.detailRow}>
-                            <Ionicons name='time-outline' size={20} color={colors.primary} />
+                            <Ionicons
+                                name='time-outline'
+                                size={20}
+                                color={colors.primary}
+                            />
                             <View style={{ flex: 1 }}>
-                                <Text style={[s.detailLabel, { color: colors.subtitle }]}>When</Text>
-                                <Text style={[s.detailValue, { color: colors.text }]}>{hangout.time}</Text>
+                                <Text
+                                    style={[
+                                        s.detailLabel,
+                                        { color: colors.subtitle },
+                                    ]}
+                                >
+                                    When
+                                </Text>
+                                <Text
+                                    style={[
+                                        s.detailValue,
+                                        { color: colors.text },
+                                    ]}
+                                >
+                                    {hangout.time}
+                                </Text>
                             </View>
                         </View>
                         {hangout.location && (
-                            <View style={[s.detailRow, { borderTopWidth: 1, borderTopColor: colors.cardBorder, paddingTop: 12, marginTop: 12 }]}>
-                                <Ionicons name='location-outline' size={20} color={colors.primary} />
+                            <View
+                                style={[
+                                    s.detailRow,
+                                    {
+                                        borderTopWidth: 1,
+                                        borderTopColor: colors.cardBorder,
+                                        paddingTop: 12,
+                                        marginTop: 12,
+                                    },
+                                ]}
+                            >
+                                <Ionicons
+                                    name='location-outline'
+                                    size={20}
+                                    color={colors.primary}
+                                />
                                 <View style={{ flex: 1 }}>
-                                    <Text style={[s.detailLabel, { color: colors.subtitle }]}>Where</Text>
-                                    <Text style={[s.detailValue, { color: colors.text }]}>{hangout.location}</Text>
+                                    <Text
+                                        style={[
+                                            s.detailLabel,
+                                            { color: colors.subtitle },
+                                        ]}
+                                    >
+                                        Where
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            s.detailValue,
+                                            { color: colors.text },
+                                        ]}
+                                    >
+                                        {hangout.location}
+                                    </Text>
                                     {hangout.locationDetail && (
-                                        <Text style={[s.detailSub, { color: colors.textSecondary }]}>{hangout.locationDetail}</Text>
+                                        <Text
+                                            style={[
+                                                s.detailSub,
+                                                { color: colors.textSecondary },
+                                            ]}
+                                        >
+                                            {hangout.locationDetail}
+                                        </Text>
                                     )}
                                 </View>
                             </View>
@@ -76,39 +193,135 @@ export default function HangoutDetailScreen() {
                     </View>
 
                     {/* RSVP Buttons */}
-                    <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>YOUR RESPONSE</Text>
+                    <Text
+                        style={[
+                            shared.sectionLabel,
+                            { textTransform: 'uppercase' },
+                        ]}
+                    >
+                        YOUR RESPONSE
+                    </Text>
                     <View style={s.rsvpRow}>
                         <TouchableOpacity
-                            style={[s.rsvpBtn, rsvp === 'going' ? { backgroundColor: colors.statusGoingBg, borderColor: colors.statusGoing } : { borderColor: colors.cardBorderHeavy }]}
-                            onPress={() => setRsvp('going')}
+                            style={[
+                                s.rsvpBtn,
+                                rsvp === 'going'
+                                    ? {
+                                          backgroundColor: colors.statusGoingBg,
+                                          borderColor: colors.statusGoing,
+                                      }
+                                    : { borderColor: colors.cardBorderHeavy },
+                            ]}
+                            onPress={() => updateRSVP(hangout.id, 'going')}
                         >
-                            <Text style={[s.rsvpBtnText, { color: rsvp === 'going' ? colors.statusGoingText : colors.textSecondary }]}>Going ✓</Text>
+                            <Text
+                                style={[
+                                    s.rsvpBtnText,
+                                    {
+                                        color:
+                                            rsvp === 'going'
+                                                ? colors.statusGoingText
+                                                : colors.textSecondary,
+                                    },
+                                ]}
+                            >
+                                Going ✓
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[s.rsvpBtn, rsvp === 'maybe' ? { backgroundColor: colors.statusMaybeBg, borderColor: colors.statusMaybe } : { borderColor: colors.cardBorderHeavy }]}
-                            onPress={() => setRsvp('maybe')}
+                            style={[
+                                s.rsvpBtn,
+                                rsvp === 'maybe'
+                                    ? {
+                                          backgroundColor: colors.statusMaybeBg,
+                                          borderColor: colors.statusMaybe,
+                                      }
+                                    : { borderColor: colors.cardBorderHeavy },
+                            ]}
+                            onPress={() => updateRSVP(hangout.id, 'maybe')}
                         >
-                            <Text style={[s.rsvpBtnText, { color: rsvp === 'maybe' ? colors.statusMaybeText : colors.textSecondary }]}>Maybe</Text>
+                            <Text
+                                style={[
+                                    s.rsvpBtnText,
+                                    {
+                                        color:
+                                            rsvp === 'maybe'
+                                                ? colors.statusMaybeText
+                                                : colors.textSecondary,
+                                    },
+                                ]}
+                            >
+                                Maybe
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[s.rsvpBtn, rsvp === 'not-going' ? { backgroundColor: colors.statusNotGoingBg, borderColor: colors.statusNotGoing } : { borderColor: colors.cardBorderHeavy }]}
-                            onPress={() => setRsvp('not-going')}
+                            style={[
+                                s.rsvpBtn,
+                                rsvp === 'not-going'
+                                    ? {
+                                          backgroundColor:
+                                              colors.statusNotGoingBg,
+                                          borderColor: colors.statusNotGoing,
+                                      }
+                                    : { borderColor: colors.cardBorderHeavy },
+                            ]}
+                            onPress={() => updateRSVP(hangout.id, 'not-going')}
                         >
-                            <Text style={[s.rsvpBtnText, { color: rsvp === 'not-going' ? colors.statusNotGoingText : colors.textSecondary }]}>Can't Go</Text>
+                            <Text
+                                style={[
+                                    s.rsvpBtnText,
+                                    {
+                                        color:
+                                            rsvp === 'not-going'
+                                                ? colors.statusNotGoingText
+                                                : colors.textSecondary,
+                                    },
+                                ]}
+                            >
+                                {"Can't Go"}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Invited Groups */}
                     {mockInvitedGroups.length > 0 && (
                         <View style={{ marginTop: 24 }}>
-                            <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>INVITED GROUPS</Text>
+                            <Text
+                                style={[
+                                    shared.sectionLabel,
+                                    { textTransform: 'uppercase' },
+                                ]}
+                            >
+                                INVITED GROUPS
+                            </Text>
                             {mockInvitedGroups.map((g) => (
-                                <View key={g.id} style={[shared.card, { marginBottom: 8 }]}>
+                                <View
+                                    key={g.id}
+                                    style={[shared.card, { marginBottom: 8 }]}
+                                >
                                     <View style={s.groupRow}>
-                                        <Text style={{ fontSize: 32 }}>{g.icon}</Text>
+                                        <Text style={{ fontSize: 32 }}>
+                                            {g.icon}
+                                        </Text>
                                         <View style={{ flex: 1 }}>
-                                            <Text style={[s.groupName, { color: colors.text }]}>{g.name}</Text>
-                                            <Text style={[s.groupMembers, { color: colors.textSecondary }]}>{g.memberCount} members</Text>
+                                            <Text
+                                                style={[
+                                                    s.groupName,
+                                                    { color: colors.text },
+                                                ]}
+                                            >
+                                                {g.name}
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    s.groupMembers,
+                                                    {
+                                                        color: colors.textSecondary,
+                                                    },
+                                                ]}
+                                            >
+                                                {g.memberCount} members
+                                            </Text>
                                         </View>
                                     </View>
                                 </View>
@@ -119,14 +332,30 @@ export default function HangoutDetailScreen() {
                     {/* Individual Invites */}
                     {mockInvitedFriends.length > 0 && (
                         <View style={{ marginTop: 24 }}>
-                            <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>INDIVIDUAL INVITES</Text>
+                            <Text
+                                style={[
+                                    shared.sectionLabel,
+                                    { textTransform: 'uppercase' },
+                                ]}
+                            >
+                                INDIVIDUAL INVITES
+                            </Text>
                             <View style={{ gap: 8 }}>
                                 {mockInvitedFriends.map((f, i) => (
                                     <View key={i} style={[shared.listItem]}>
                                         <View style={shared.avatarLarge}>
-                                            <Text style={{ fontSize: 24 }}>{f.avatar}</Text>
+                                            <Text style={{ fontSize: 24 }}>
+                                                {f.avatar}
+                                            </Text>
                                         </View>
-                                        <Text style={[s.friendName, { color: colors.text }]}>{f.name}</Text>
+                                        <Text
+                                            style={[
+                                                s.friendName,
+                                                { color: colors.text },
+                                            ]}
+                                        >
+                                            {f.name}
+                                        </Text>
                                     </View>
                                 ))}
                             </View>
@@ -135,15 +364,32 @@ export default function HangoutDetailScreen() {
 
                     {/* Attendees Tabs */}
                     <View style={{ marginTop: 24 }}>
-                        <Text style={[shared.sectionLabel, { textTransform: 'uppercase' }]}>RESPONSES</Text>
+                        <Text
+                            style={[
+                                shared.sectionLabel,
+                                { textTransform: 'uppercase' },
+                            ]}
+                        >
+                            RESPONSES
+                        </Text>
                         <View style={shared.segmentedControl}>
                             {tabs.map((tab) => (
                                 <TouchableOpacity
                                     key={tab.key}
-                                    style={activeTab === tab.key ? shared.segmentedTabActive : shared.segmentedTab}
+                                    style={
+                                        activeTab === tab.key
+                                            ? shared.segmentedTabActive
+                                            : shared.segmentedTab
+                                    }
                                     onPress={() => setActiveTab(tab.key)}
                                 >
-                                    <Text style={activeTab === tab.key ? shared.segmentedTabTextActive : shared.segmentedTabText}>
+                                    <Text
+                                        style={
+                                            activeTab === tab.key
+                                                ? shared.segmentedTabTextActive
+                                                : shared.segmentedTabText
+                                        }
+                                    >
                                         {tab.label} ({tab.count})
                                     </Text>
                                 </TouchableOpacity>
@@ -154,15 +400,46 @@ export default function HangoutDetailScreen() {
                             {attendeeList.map((attendee, index) => (
                                 <View key={index} style={[shared.listItem]}>
                                     <View style={shared.avatarLarge}>
-                                        <Text style={{ fontSize: 24 }}>{attendee.avatar}</Text>
+                                        <Text style={{ fontSize: 24 }}>
+                                            {attendee.avatar}
+                                        </Text>
                                     </View>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={[s.attendeeName, { color: colors.text }]}>{attendee.name}</Text>
-                                        <Text style={[s.attendeeTime, { color: colors.textTertiary }]}>{attendee.time}</Text>
+                                        <Text
+                                            style={[
+                                                s.attendeeName,
+                                                { color: colors.text },
+                                            ]}
+                                        >
+                                            {attendee.name}
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                s.attendeeTime,
+                                                { color: colors.textTertiary },
+                                            ]}
+                                        >
+                                            {attendee.time}
+                                        </Text>
                                     </View>
                                     {attendee.fromGroup && (
-                                        <View style={[s.groupBadge, { backgroundColor: colors.indigoTint }]}>
-                                            <Text style={[s.groupBadgeText, { color: colors.primary }]}>{attendee.fromGroup}</Text>
+                                        <View
+                                            style={[
+                                                s.groupBadge,
+                                                {
+                                                    backgroundColor:
+                                                        colors.indigoTint,
+                                                },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    s.groupBadgeText,
+                                                    { color: colors.primary },
+                                                ]}
+                                            >
+                                                {attendee.fromGroup}
+                                            </Text>
                                         </View>
                                     )}
                                 </View>
@@ -196,7 +473,13 @@ const s = StyleSheet.create({
     detailValue: { fontSize: 16, fontWeight: '600' },
     detailSub: { fontSize: 14, marginTop: 2 },
     rsvpRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-    rsvpBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, alignItems: 'center' },
+    rsvpBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 12,
+        borderWidth: 2,
+        alignItems: 'center',
+    },
     rsvpBtnText: { fontSize: 14, fontWeight: '600' },
     groupRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     groupName: { fontSize: 16, fontWeight: '600' },

@@ -13,6 +13,7 @@ import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NotificationsProvider } from '@/src/contexts/NotificationsContext';
+import { HangoutsProvider } from '@/src/contexts/HangoutsContext';
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -37,7 +38,9 @@ export default function RootLayout() {
                 >
                     <ClerkLoaded>
                         <NotificationsProvider>
-                            <RootLayoutNav />
+                            <HangoutsProvider>
+                                <RootLayoutNav />
+                            </HangoutsProvider>
                         </NotificationsProvider>
                     </ClerkLoaded>
                 </ClerkProvider>

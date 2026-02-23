@@ -11,13 +11,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockHangouts } from '@/src/data/mock-data';
+import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { PulsingDot } from '@/src/components/PulsingDot';
 
 export default function HangoutsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
+    const { hangouts: mockHangouts } = useHangouts();
 
     return (
         <SafeAreaView
@@ -178,7 +179,7 @@ export default function HangoutsScreen() {
                                                     shared.statusBadgeGoingText
                                                 }
                                             >
-                                                You're going ✓
+                                                {"You're going ✓"}
                                             </Text>
                                         </View>
                                     )}
