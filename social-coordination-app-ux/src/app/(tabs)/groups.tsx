@@ -12,7 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockGroups, groupBgColors } from '@/src/data/mock-data';
+import { groupBgColors } from '@/src/data/mock-data';
+import { useApiGroups } from '@/src/hooks/useApiGroups';
 
 export default function GroupsScreen() {
     const colorScheme = useColorScheme();
@@ -20,6 +21,7 @@ export default function GroupsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
+    const { groups, loading, error } = useApiGroups();
 
     return (
         <SafeAreaView
@@ -42,7 +44,7 @@ export default function GroupsScreen() {
             </View>
 
             <ScrollView style={{ flex: 1 }}>
-                {mockGroups.length > 0 ? (
+                {groups.length > 0 ? (
                     <View
                         style={{
                             paddingHorizontal: 24,
@@ -50,7 +52,7 @@ export default function GroupsScreen() {
                             gap: 12,
                         }}
                     >
-                        {mockGroups.map((group) => {
+                        {groups.map((group) => {
                             const bgTheme = groupBgColors[group.id];
                             const bg = bgTheme
                                 ? isDark

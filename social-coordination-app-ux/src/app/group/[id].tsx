@@ -12,12 +12,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import {
-    mockGroups,
-    mockGroupMembers,
-    groupBgColors,
-    findFriendIdByName,
-} from '@/src/data/mock-data';
+import { groupBgColors } from '@/src/data/mock-data';
+import { useApiGroupDetail } from '@/src/hooks/useApiGroupDetail';
 
 export default function GroupDetailScreen() {
     const colorScheme = useColorScheme();
@@ -26,13 +22,37 @@ export default function GroupDetailScreen() {
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { id } = useLocalSearchParams();
-    const group = mockGroups.find((g) => g.id === id) ?? mockGroups[0];
-    const bgTheme = groupBgColors[group.id];
+    const groupId = typeof id === 'string' ? id : (id?.[0] ?? '');
+    const { group, members, loading, error } = useApiGroupDetail(groupId);
+    const bgTheme = group ? groupBgColors[group.id] : undefined;
     const bg = bgTheme
         ? isDark
             ? bgTheme.dark
             : bgTheme.light
         : { from: colors.indigo50, to: colors.indigo100 };
+
+    if (!group && !loading) {
+        return (
+            <SafeAreaView style={shared.screenContainer}>
+                <View style={shared.stackHeader}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={s.backBtn}
+                    >
+                        <Ionicons
+                            name='arrow-back'
+                            size={24}
+                            color={colors.text}
+                        />
+                    </TouchableOpacity>
+                    <Text style={[s.headerTitle, { color: colors.text }]}>
+                        Group Not Found
+                    </Text>
+                    <View style={s.headerActions} />
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={shared.screenContainer}>
@@ -76,7 +96,7 @@ export default function GroupDetailScreen() {
                 >
                     <View style={[s.groupCard, { backgroundColor: bg.from }]}>
                         <View style={s.groupCardRow}>
-                            <Text style={{ fontSize: 48 }}>{group.icon}</Text>
+                            <Text style={{ fontSize: 48 }}>{group?.icon}</Text>
                             <View style={{ flex: 1 }}>
                                 <Text
                                     style={[
@@ -84,7 +104,7 @@ export default function GroupDetailScreen() {
                                         { color: colors.text },
                                     ]}
                                 >
-                                    {group.name}
+                                    {group?.name}
                                 </Text>
                                 <Text
                                     style={[
@@ -92,19 +112,19 @@ export default function GroupDetailScreen() {
                                         { color: colors.textSecondary },
                                     ]}
                                 >
-                                    {group.memberCount} members
+                                    {group?.memberCount} members
                                 </Text>
                             </View>
                         </View>
                         <View style={s.avatarRow}>
-                            {mockGroupMembers.slice(0, 5).map((m, i) => (
+                            {members.slice(0, 5).map((m, i) => (
                                 <View
                                     key={i}
                                     style={[
                                         s.avatarCircle,
                                         {
                                             marginLeft: i > 0 ? -12 : 0,
-                                            zIndex: mockGroupMembers.length - i,
+                                            zIndex: members.length - i,
                                         },
                                     ]}
                                 >
@@ -145,7 +165,7 @@ export default function GroupDetailScreen() {
                                 { textTransform: 'uppercase', marginBottom: 0 },
                             ]}
                         >
-                            MEMBERS ({mockGroupMembers.length})
+                            MEMBERS ({members.length})
                         </Text>
                         <TouchableOpacity
                             onPress={() => router.push('/add-members')}
@@ -158,19 +178,15 @@ export default function GroupDetailScreen() {
                         </TouchableOpacity>
                     </View>
                     <View style={{ gap: 8 }}>
-                        {mockGroupMembers.map((member, index) => (
+                        {members.map((member, index) => (
                             <TouchableOpacity
                                 key={index}
                                 style={shared.listItem}
                                 onPress={() => {
-                                    const friendId = findFriendIdByName(
-                                        member.name,
+                                    // member.name is the userId for API members
+                                    router.push(
+                                        `/friend/${member.name}` as any,
                                     );
-                                    if (friendId) {
-                                        router.push(
-                                            `/friend/${friendId}` as any,
-                                        );
-                                    }
                                 }}
                             >
                                 <View style={shared.avatarLarge}>

@@ -13,12 +13,19 @@ import { useClerk } from '@clerk/clerk-expo';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { profileStats, settingsSections } from '@/src/data/mock-data';
+import { useApiUser } from '@/src/hooks/useApiUser';
 
 export default function ProfileScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { signOut } = useClerk();
+    const { user, loading: userLoading } = useApiUser();
+
+    const displayName = user
+        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Your Name'
+        : 'Your Name';
+    const displayEmail = user?.email ?? 'user@example.com';
 
     const handleSignOut = async () => {
         await signOut();
@@ -50,9 +57,9 @@ export default function ProfileScreen() {
                                 <Text style={{ fontSize: 32 }}>👤</Text>
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={s.profileName}>Your Name</Text>
+                                <Text style={s.profileName}>{displayName}</Text>
                                 <Text style={s.profileEmail}>
-                                    user@example.com
+                                    {displayEmail}
                                 </Text>
                             </View>
                         </View>

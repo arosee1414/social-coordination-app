@@ -12,62 +12,88 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import {
-    mockAttendees,
     mockInvitedGroups,
     mockInvitedFriends,
     findFriendIdByName,
 } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
+import { useApiHangoutDetail } from '@/src/hooks/useApiHangoutDetail';
+import { useApiUser } from '@/src/hooks/useApiUser';
 
 export default function HangoutDetailScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { id } = useLocalSearchParams();
-    const { hangouts, updateRSVP } = useHangouts();
-    const hangout = hangouts.find((h) => h.id === id) ?? hangouts[0];
-    const rsvp = hangout.userStatus;
+    const hangoutId = typeof id === 'string' ? id : (id?.[0] ?? '');
+    const { updateRSVP } = useHangouts();
+    const { user } = useApiUser();
+    const { hangout, attendeesByStatus, loading, error } = useApiHangoutDetail(
+        hangoutId,
+        user?.id,
+    );
+    const rsvp = hangout?.userStatus ?? null;
     const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
         'going',
     );
-    // Compute a capped minHeight for the attendee list so switching tabs
-    // doesn't shrink the content and cause the scroll position to snap.
-    // Cap at 6 items so a very large list (e.g. 50 going) doesn't create
-    // excessive empty space when viewing a shorter tab.
-    const ITEM_HEIGHT = 72; // 48px avatar + 12px padding top + 12px padding bottom
+
+    const ITEM_HEIGHT = 72;
     const ITEM_GAP = 8;
     const minListHeight = useMemo(() => {
         const maxCount = Math.max(
-            mockAttendees.going.length,
-            mockAttendees.maybe.length,
-            mockAttendees.notGoing.length,
+            attendeesByStatus.going.length,
+            attendeesByStatus.maybe.length,
+            attendeesByStatus.notGoing.length,
         );
         const cappedCount = Math.min(maxCount, 6);
         return (
             cappedCount * ITEM_HEIGHT + Math.max(0, cappedCount - 1) * ITEM_GAP
         );
-    }, []);
+    }, [attendeesByStatus]);
 
     const tabs: {
         key: 'going' | 'maybe' | 'not-going';
         label: string;
         count: number;
     }[] = [
-        { key: 'going', label: 'Going', count: mockAttendees.going.length },
-        { key: 'maybe', label: 'Maybe', count: mockAttendees.maybe.length },
+        { key: 'going', label: 'Going', count: attendeesByStatus.going.length },
+        { key: 'maybe', label: 'Maybe', count: attendeesByStatus.maybe.length },
         {
             key: 'not-going',
             label: 'Not Going',
-            count: mockAttendees.notGoing.length,
+            count: attendeesByStatus.notGoing.length,
         },
     ];
 
     const attendeeList =
         activeTab === 'going'
-            ? mockAttendees.going
+            ? attendeesByStatus.going
             : activeTab === 'maybe'
-              ? mockAttendees.maybe
-              : mockAttendees.notGoing;
+              ? attendeesByStatus.maybe
+              : attendeesByStatus.notGoing;
+
+    if (!hangout && !loading) {
+        return (
+            <SafeAreaView style={shared.screenContainer}>
+                <View style={shared.stackHeader}>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        style={s.backBtn}
+                    >
+                        <Ionicons
+                            name='arrow-back'
+                            size={24}
+                            color={colors.text}
+                        />
+                    </TouchableOpacity>
+                    <Text style={[s.headerTitle, { color: colors.text }]}>
+                        Hangout Not Found
+                    </Text>
+                    <View style={s.headerActions} />
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={shared.screenContainer}>
@@ -110,10 +136,10 @@ export default function HangoutDetailScreen() {
                 >
                     {/* Title Section */}
                     <Text style={[s.title, { color: colors.text }]}>
-                        {hangout.title}
+                        {hangout?.title}
                     </Text>
                     <Text style={[s.creator, { color: colors.subtitle }]}>
-                        Created by {hangout.creator}
+                        Created by {hangout?.creator}
                     </Text>
 
                     {/* Time Badge */}
@@ -125,7 +151,7 @@ export default function HangoutDetailScreen() {
                     >
                         <Ionicons name='time-outline' size={18} color='#fff' />
                         <Text style={s.countdownText}>
-                            Starts in {hangout.timeUntil}
+                            Starts in {hangout?.timeUntil}
                         </Text>
                     </View>
 
@@ -157,11 +183,11 @@ export default function HangoutDetailScreen() {
                                         { color: colors.text },
                                     ]}
                                 >
-                                    {hangout.time}
+                                    {hangout?.time}
                                 </Text>
                             </View>
                         </View>
-                        {hangout.location && (
+                        {hangout?.location && (
                             <View
                                 style={[
                                     s.detailRow,
@@ -193,16 +219,16 @@ export default function HangoutDetailScreen() {
                                             { color: colors.text },
                                         ]}
                                     >
-                                        {hangout.location}
+                                        {hangout?.location}
                                     </Text>
-                                    {hangout.locationDetail && (
+                                    {hangout?.locationDetail && (
                                         <Text
                                             style={[
                                                 s.detailSub,
                                                 { color: colors.textSecondary },
                                             ]}
                                         >
-                                            {hangout.locationDetail}
+                                            {hangout?.locationDetail}
                                         </Text>
                                     )}
                                 </View>
@@ -230,7 +256,9 @@ export default function HangoutDetailScreen() {
                                       }
                                     : { borderColor: colors.cardBorderHeavy },
                             ]}
-                            onPress={() => updateRSVP(hangout.id, 'going')}
+                            onPress={() =>
+                                hangout && updateRSVP(hangout.id, 'going')
+                            }
                         >
                             <Text
                                 style={[
@@ -256,7 +284,9 @@ export default function HangoutDetailScreen() {
                                       }
                                     : { borderColor: colors.cardBorderHeavy },
                             ]}
-                            onPress={() => updateRSVP(hangout.id, 'maybe')}
+                            onPress={() =>
+                                hangout && updateRSVP(hangout.id, 'maybe')
+                            }
                         >
                             <Text
                                 style={[
@@ -283,7 +313,9 @@ export default function HangoutDetailScreen() {
                                       }
                                     : { borderColor: colors.cardBorderHeavy },
                             ]}
-                            onPress={() => updateRSVP(hangout.id, 'not-going')}
+                            onPress={() =>
+                                hangout && updateRSVP(hangout.id, 'not-going')
+                            }
                         >
                             <Text
                                 style={[

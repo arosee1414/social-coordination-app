@@ -14,6 +14,7 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NotificationsProvider } from '@/src/contexts/NotificationsContext';
 import { HangoutsProvider } from '@/src/contexts/HangoutsContext';
+import { ApiClientProvider } from '@/src/contexts/ApiClientContext';
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -37,11 +38,13 @@ export default function RootLayout() {
                     }
                 >
                     <ClerkLoaded>
-                        <NotificationsProvider>
-                            <HangoutsProvider>
-                                <RootLayoutNav />
-                            </HangoutsProvider>
-                        </NotificationsProvider>
+                        <ApiClientProvider>
+                            <NotificationsProvider>
+                                <HangoutsProvider>
+                                    <RootLayoutNav />
+                                </HangoutsProvider>
+                            </NotificationsProvider>
+                        </ApiClientProvider>
                     </ClerkLoaded>
                 </ClerkProvider>
             </ThemeProvider>

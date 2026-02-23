@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using SocialCoordinationApp.Extensions;
 using SocialCoordinationApp.Infrastructure;
 using SocialCoordinationApp.Middleware;
+using SocialCoordinationApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,12 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // Application Services
 builder.Services.AddApplicationServices();
+
+// Dev-only seed service
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<ISeedService, SeedService>();
+}
 
 // CORS
 builder.Services.AddCors(options =>
@@ -49,7 +56,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -16,6 +16,7 @@ import * as Clipboard from 'expo-clipboard';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { mockFriends } from '@/src/data/mock-data';
+import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
 
 export default function FindFriendsScreen() {
     const colors = useThemeColors();
@@ -24,6 +25,11 @@ export default function FindFriendsScreen() {
     const [search, setSearch] = useState('');
     const [copied, setCopied] = useState(false);
     const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
+    const {
+        results: apiResults,
+        loading: searchLoading,
+        searchUsers,
+    } = useApiUserSearch();
 
     const inviteLink = 'hangout.app/join/abc123';
 
@@ -44,10 +50,18 @@ export default function FindFriendsScreen() {
         setInvitedIds(next);
     };
 
-    // Filter contacts by search
+    // Filter mock contacts by search
     const contacts = mockFriends.filter((f) =>
         f.name.toLowerCase().includes(search.toLowerCase()),
     );
+
+    // Debounced API search on text change
+    const handleSearchChange = (text: string) => {
+        setSearch(text);
+        if (text.length >= 2) {
+            searchUsers(text);
+        }
+    };
 
     return (
         <SafeAreaView style={shared.screenContainer}>
@@ -138,11 +152,123 @@ export default function FindFriendsScreen() {
                             placeholder='Search contacts'
                             placeholderTextColor={colors.placeholder}
                             value={search}
-                            onChangeText={setSearch}
+                            onChangeText={handleSearchChange}
                         />
                     </View>
 
                     {/* Contacts list */}
+                    {/* API Search Results */}
+                    {apiResults.length > 0 && (
+                        <>
+                            <Text
+                                style={[
+                                    shared.sectionLabel,
+                                    {
+                                        textTransform: 'uppercase',
+                                        marginTop: 8,
+                                    },
+                                ]}
+                            >
+                                SEARCH RESULTS
+                            </Text>
+                            <View style={{ gap: 4, marginBottom: 16 }}>
+                                {apiResults.map((user) => {
+                                    const invited = invitedIds.has(
+                                        user.id ?? '',
+                                    );
+                                    const displayName =
+                                        `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
+                                        user.email;
+                                    return (
+                                        <View
+                                            key={user.id}
+                                            style={s.contactRow}
+                                        >
+                                            <View style={shared.avatarLarge}>
+                                                <Text style={{ fontSize: 24 }}>
+                                                    👤
+                                                </Text>
+                                            </View>
+                                            <View
+                                                style={{ flex: 1, minWidth: 0 }}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        s.contactName,
+                                                        { color: colors.text },
+                                                    ]}
+                                                >
+                                                    {displayName}
+                                                </Text>
+                                                <Text
+                                                    style={[
+                                                        s.contactPhone,
+                                                        {
+                                                            color: colors.textTertiary,
+                                                        },
+                                                    ]}
+                                                >
+                                                    {user.email}
+                                                </Text>
+                                            </View>
+                                            {invited ? (
+                                                <View
+                                                    style={[
+                                                        s.invitedBadge,
+                                                        {
+                                                            backgroundColor:
+                                                                colors.statusGoingBg,
+                                                        },
+                                                    ]}
+                                                >
+                                                    <Ionicons
+                                                        name='checkmark'
+                                                        size={16}
+                                                        color={
+                                                            colors.statusGoingText
+                                                        }
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            s.invitedBadgeText,
+                                                            {
+                                                                color: colors.statusGoingText,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        Invited
+                                                    </Text>
+                                                </View>
+                                            ) : (
+                                                <TouchableOpacity
+                                                    style={[
+                                                        s.inviteBtn,
+                                                        {
+                                                            backgroundColor:
+                                                                colors.primary,
+                                                        },
+                                                    ]}
+                                                    onPress={() =>
+                                                        handleInvite(
+                                                            user.id ?? '',
+                                                        )
+                                                    }
+                                                    activeOpacity={0.8}
+                                                >
+                                                    <Text
+                                                        style={s.inviteBtnText}
+                                                    >
+                                                        Invite
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        </>
+                    )}
+
                     <Text
                         style={[
                             shared.sectionLabel,
