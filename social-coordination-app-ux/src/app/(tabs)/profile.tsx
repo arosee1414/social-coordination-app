@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
     ScrollView,
     TouchableOpacity,
     StyleSheet,
+    ActivityIndicator,
+    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -21,6 +23,21 @@ export default function ProfileScreen() {
     const router = useRouter();
     const { signOut } = useClerk();
     const { user, loading: userLoading } = useApiUser();
+
+    const spinnerOpacity = useRef(new Animated.Value(1)).current;
+    const [showSpinner, setShowSpinner] = useState(true);
+
+    useEffect(() => {
+        if (!userLoading) {
+            Animated.timing(spinnerOpacity, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: true,
+            }).start(() => {
+                setShowSpinner(false);
+            });
+        }
+    }, [userLoading]);
 
     const displayName = user
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Your Name'
@@ -175,6 +192,24 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+
+            {/* Spinner overlay — fades out when user data loads */}
+            {showSpinner && (
+                <Animated.View
+                    style={[
+                        StyleSheet.absoluteFill,
+                        {
+                            backgroundColor: colors.background,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            opacity: spinnerOpacity,
+                        },
+                    ]}
+                    pointerEvents={userLoading ? 'auto' : 'none'}
+                >
+                    <ActivityIndicator size='large' color={colors.primary} />
+                </Animated.View>
+            )}
         </SafeAreaView>
     );
 }

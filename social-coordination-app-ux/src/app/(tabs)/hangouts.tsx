@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
     ScrollView,
     TouchableOpacity,
     StyleSheet,
+    ActivityIndicator,
+    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -18,7 +20,22 @@ export default function HangoutsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
-    const { hangouts: mockHangouts } = useHangouts();
+    const { hangouts: mockHangouts, loading } = useHangouts();
+
+    const spinnerOpacity = useRef(new Animated.Value(1)).current;
+    const [showSpinner, setShowSpinner] = useState(true);
+
+    useEffect(() => {
+        if (!loading) {
+            Animated.timing(spinnerOpacity, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: true,
+            }).start(() => {
+                setShowSpinner(false);
+            });
+        }
+    }, [loading]);
 
     return (
         <SafeAreaView
@@ -219,7 +236,7 @@ export default function HangoutsScreen() {
                             </TouchableOpacity>
                         ))}
                     </View>
-                ) : (
+                ) : !loading ? (
                     <View style={s.emptyState}>
                         <View
                             style={[
@@ -249,8 +266,26 @@ export default function HangoutsScreen() {
                             </Text>
                         </TouchableOpacity>
                     </View>
-                )}
+                ) : null}
             </ScrollView>
+
+            {/* Spinner overlay — fades out when data loads */}
+            {showSpinner && (
+                <Animated.View
+                    style={[
+                        StyleSheet.absoluteFill,
+                        {
+                            backgroundColor: colors.background,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            opacity: spinnerOpacity,
+                        },
+                    ]}
+                    pointerEvents={loading ? 'auto' : 'none'}
+                >
+                    <ActivityIndicator size='large' color={colors.primary} />
+                </Animated.View>
+            )}
         </SafeAreaView>
     );
 }

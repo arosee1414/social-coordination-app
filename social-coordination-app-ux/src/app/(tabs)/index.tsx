@@ -1,5 +1,12 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    ActivityIndicator,
+    Animated,
+    StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -21,7 +28,22 @@ export default function HomeScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
-    const { hangouts, updateRSVP } = useHangouts();
+    const { hangouts, loading, updateRSVP } = useHangouts();
+
+    const spinnerOpacity = useRef(new Animated.Value(1)).current;
+    const [showSpinner, setShowSpinner] = useState(true);
+
+    useEffect(() => {
+        if (!loading) {
+            Animated.timing(spinnerOpacity, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: true,
+            }).start(() => {
+                setShowSpinner(false);
+            });
+        }
+    }, [loading]);
 
     const liveHangouts = hangouts.filter((h) => h.status === 'live');
     const upcomingHangouts = hangouts.filter((h) => h.status === 'upcoming');
@@ -45,10 +67,7 @@ export default function HomeScreen() {
     const handleActivityPress = (activityId: string) => {
         const activity = mockRecentActivity.find((a) => a.id === activityId);
         if (activity) {
-            // Extract the first word (friend's first name) from the activity text
-            // Activity text format: "Sarah is going to...", "Mike created...", etc.
             const firstName = activity.text.split(' ')[0];
-            // Map first names to full names for lookup
             const nameMap: Record<string, string> = {
                 Sarah: 'Sarah Chen',
                 Mike: 'Mike Johnson',
@@ -90,20 +109,18 @@ export default function HomeScreen() {
                 </Text>
             </View>
 
+            {/* Content — always rendered to avoid layout shift */}
             <ScrollView style={{ flex: 1 }}>
-                {/* Happening Now (conditional) */}
                 <HappeningNowSection
                     hangouts={liveHangouts}
                     onJoin={handleJoinLive}
                     onPress={handleHangoutPress}
                 />
 
-                {/* Reminder Banner */}
                 <View style={{ paddingTop: 16, paddingBottom: 16 }}>
                     <ReminderBannerCard reminder={mockReminderBanner} />
                 </View>
 
-                {/* Upcoming Hangouts */}
                 <UpcomingHangoutsSection
                     hangouts={upcomingHangouts}
                     onSeeAll={handleSeeAll}
@@ -111,12 +128,29 @@ export default function HomeScreen() {
                     onRSVP={handleRSVP}
                 />
 
-                {/* Recent Activity */}
                 <RecentActivitySection
                     activities={mockRecentActivity}
                     onActivityPress={handleActivityPress}
                 />
             </ScrollView>
+
+            {/* Spinner overlay — fades out when data loads */}
+            {showSpinner && (
+                <Animated.View
+                    style={[
+                        StyleSheet.absoluteFill,
+                        {
+                            backgroundColor: colors.background,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            opacity: spinnerOpacity,
+                        },
+                    ]}
+                    pointerEvents={loading ? 'auto' : 'none'}
+                >
+                    <ActivityIndicator size='large' color={colors.primary} />
+                </Animated.View>
+            )}
 
             {/* FAB + Bottom Sheet */}
             <FABBottomSheet
