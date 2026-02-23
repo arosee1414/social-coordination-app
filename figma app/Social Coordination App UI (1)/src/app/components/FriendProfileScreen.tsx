@@ -157,7 +157,7 @@ export function FriendProfileScreen() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto pb-32">
+      <div className="flex-1 overflow-y-auto pb-8">
         {/* Profile Header */}
         <div className="bg-white px-6 pt-8 pb-6 text-center">
           <div className="w-28 h-28 bg-gradient-to-br from-[#007AFF]/10 to-[#007AFF]/5 rounded-full flex items-center justify-center text-6xl mx-auto mb-4 shadow-md">
@@ -263,17 +263,7 @@ export function FriendProfileScreen() {
         </div>
       </div>
 
-      {/* Action Buttons - Fixed at Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto bg-white border-t border-gray-100 p-6 space-y-3">
-        <button className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold active:bg-[#0066CC] transition-colors shadow-sm">
-          Invite to Hangout
-        </button>
-        <button className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold active:bg-gray-200 transition-colors">
-          Invite to Group
-        </button>
-      </div>
-
-      {/* Remove Friend Modal */}
+      {/* Action Menu Modal */}
       {showRemoveModal && (
         <>
           {/* Backdrop */}
@@ -287,6 +277,30 @@ export function FriendProfileScreen() {
             <div className="p-6">
               <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6" />
               
+              <button
+                onClick={() => {
+                  // Handle invite to hangout action
+                  setShowRemoveModal(false);
+                }}
+                className="w-full flex items-center justify-center gap-3 py-4 text-gray-800 font-semibold active:bg-gray-50 rounded-xl transition-colors"
+              >
+                <Calendar className="w-5 h-5" />
+                Invite to Hangout
+              </button>
+
+              <button
+                onClick={() => {
+                  // Handle invite to group action
+                  setShowRemoveModal(false);
+                }}
+                className="w-full flex items-center justify-center gap-3 py-4 text-gray-800 font-semibold active:bg-gray-50 rounded-xl transition-colors"
+              >
+                <UsersIcon className="w-5 h-5" />
+                Invite to Group
+              </button>
+
+              <div className="w-full h-px bg-gray-200 my-2" />
+
               <button
                 onClick={() => {
                   // Handle remove friend action
