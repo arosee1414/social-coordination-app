@@ -286,6 +286,7 @@ export const mockNotifications: Notification[] = [
         message: 'You can now plan hangouts together',
         time: '1d ago',
         unread: false,
+        relatedEntityId: '5',
     },
     {
         id: '7',

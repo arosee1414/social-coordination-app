@@ -43,7 +43,9 @@ export default function NotificationsScreen() {
                     router.push(`/group/${notification.relatedEntityId}`);
                     break;
                 case 'friend':
-                    // No specific page to navigate to for friend notifications
+                    router.push(
+                        `/friend/${notification.relatedEntityId}` as any,
+                    );
                     break;
             }
         },

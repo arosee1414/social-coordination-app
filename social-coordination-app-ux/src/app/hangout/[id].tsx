@@ -360,7 +360,20 @@ export default function HangoutDetailScreen() {
                             </Text>
                             <View style={{ gap: 8 }}>
                                 {mockInvitedFriends.map((f, i) => (
-                                    <View key={i} style={[shared.listItem]}>
+                                    <TouchableOpacity
+                                        key={i}
+                                        style={[shared.listItem]}
+                                        onPress={() => {
+                                            const friendId = findFriendIdByName(
+                                                f.name,
+                                            );
+                                            if (friendId) {
+                                                router.push(
+                                                    `/friend/${friendId}` as any,
+                                                );
+                                            }
+                                        }}
+                                    >
                                         <View style={shared.avatarLarge}>
                                             <Text style={{ fontSize: 24 }}>
                                                 {f.avatar}
@@ -374,7 +387,7 @@ export default function HangoutDetailScreen() {
                                         >
                                             {f.name}
                                         </Text>
-                                    </View>
+                                    </TouchableOpacity>
                                 ))}
                             </View>
                         </View>
