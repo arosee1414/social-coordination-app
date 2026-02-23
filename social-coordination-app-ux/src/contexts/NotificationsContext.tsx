@@ -11,6 +11,7 @@ import type { Notification } from '@/src/types';
 interface NotificationsContextValue {
     notifications: Notification[];
     unreadCount: number;
+    markAsRead: (id: string) => void;
     markAllAsRead: () => void;
     deleteNotification: (id: string) => void;
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
@@ -34,6 +35,12 @@ export function NotificationsProvider({
         [notifications],
     );
 
+    const markAsRead = useCallback((id: string) => {
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, unread: false } : n)),
+        );
+    }, []);
+
     const markAllAsRead = useCallback(() => {
         setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
     }, []);
@@ -46,11 +53,18 @@ export function NotificationsProvider({
         () => ({
             notifications,
             unreadCount,
+            markAsRead,
             markAllAsRead,
             deleteNotification,
             setNotifications,
         }),
-        [notifications, unreadCount, markAllAsRead, deleteNotification],
+        [
+            notifications,
+            unreadCount,
+            markAsRead,
+            markAllAsRead,
+            deleteNotification,
+        ],
     );
 
     return (

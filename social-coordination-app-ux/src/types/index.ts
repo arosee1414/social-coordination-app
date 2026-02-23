@@ -82,6 +82,7 @@ export interface Notification {
     time: string;
     unread: boolean;
     color?: string;
+    relatedEntityId?: string;
 }
 
 export interface ProfileStat {

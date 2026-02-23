@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useNotifications } from '@/src/contexts/NotificationsContext';
@@ -19,10 +20,35 @@ import type { Notification } from '@/src/types';
 export default function NotificationsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
-    const { notifications, markAllAsRead, deleteNotification } =
+    const router = useRouter();
+    const { notifications, markAsRead, markAllAsRead, deleteNotification } =
         useNotifications();
     const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
     const openSwipeableRef = useRef<Swipeable | null>(null);
+
+    const handleNotificationPress = useCallback(
+        (notification: Notification) => {
+            markAsRead(notification.id);
+
+            if (!notification.relatedEntityId) return;
+
+            switch (notification.type) {
+                case 'rsvp':
+                case 'invite':
+                case 'reminder':
+                case 'group':
+                    router.push(`/hangout/${notification.relatedEntityId}`);
+                    break;
+                case 'group_created':
+                    router.push(`/group/${notification.relatedEntityId}`);
+                    break;
+                case 'friend':
+                    // No specific page to navigate to for friend notifications
+                    break;
+            }
+        },
+        [markAsRead, router],
+    );
 
     const handleDelete = useCallback(
         (id: string) => {
@@ -180,6 +206,9 @@ export default function NotificationsScreen() {
                                     },
                                 ]}
                                 activeOpacity={0.7}
+                                onPress={() =>
+                                    handleNotificationPress(notification)
+                                }
                             >
                                 {getNotificationIcon(notification)}
                                 <View style={{ flex: 1 }}>

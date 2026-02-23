@@ -232,6 +232,7 @@ export const mockNotifications: Notification[] = [
         message: 'to "Drinks at The Rooftop"',
         time: '5m ago',
         unread: true,
+        relatedEntityId: '1',
     },
     {
         id: '2',
@@ -241,6 +242,7 @@ export const mockNotifications: Notification[] = [
         message: 'to "Weekend brunch catch-up"',
         time: '1h ago',
         unread: true,
+        relatedEntityId: '2',
     },
     {
         id: '3',
@@ -250,6 +252,7 @@ export const mockNotifications: Notification[] = [
         time: '2h ago',
         unread: false,
         color: '#3B82F6',
+        relatedEntityId: '1',
     },
     {
         id: '4',
@@ -259,6 +262,7 @@ export const mockNotifications: Notification[] = [
         message: 'Close Friends was invited to "Movie night"',
         time: '3h ago',
         unread: false,
+        relatedEntityId: '3',
     },
     {
         id: '5',
@@ -268,6 +272,7 @@ export const mockNotifications: Notification[] = [
         message: 'for "Weekend brunch catch-up"',
         time: '5h ago',
         unread: false,
+        relatedEntityId: '2',
     },
     {
         id: '6',
@@ -286,6 +291,7 @@ export const mockNotifications: Notification[] = [
         time: '2d ago',
         unread: false,
         color: '#22C55E',
+        relatedEntityId: '2',
     },
 ];
 
