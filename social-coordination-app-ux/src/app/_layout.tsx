@@ -10,11 +10,14 @@ import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { tokenCache } from './utils/tokenCache';
 import React from 'react';
 import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
-import { View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NotificationsProvider } from '@/src/contexts/NotificationsContext';
 import { HangoutsProvider } from '@/src/contexts/HangoutsContext';
 import { ApiClientProvider } from '@/src/contexts/ApiClientContext';
+
+// Keep the splash screen visible until we explicitly hide it
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -23,7 +26,8 @@ export default function RootLayout() {
     });
 
     if (!fontsLoaded) {
-        return <View style={{ flex: 1 }} />;
+        // Splash screen is still showing natively — return null to avoid any flash
+        return null;
     }
 
     return (
@@ -57,7 +61,11 @@ function RootLayoutNav(): React.JSX.Element {
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen
                 name='index'
-                options={{ headerShown: false, gestureEnabled: false }}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                    animation: 'none',
+                }}
             />
             <Stack.Screen
                 name='(auth)'
@@ -69,7 +77,11 @@ function RootLayoutNav(): React.JSX.Element {
             />
             <Stack.Screen
                 name='(tabs)'
-                options={{ headerShown: false, gestureEnabled: false }}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: false,
+                    animation: 'none',
+                }}
             />
             <Stack.Screen
                 name='hangout/[id]'
