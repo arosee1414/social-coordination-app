@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -30,6 +30,23 @@ export default function HangoutDetailScreen() {
     const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
         'going',
     );
+    // Compute a capped minHeight for the attendee list so switching tabs
+    // doesn't shrink the content and cause the scroll position to snap.
+    // Cap at 6 items so a very large list (e.g. 50 going) doesn't create
+    // excessive empty space when viewing a shorter tab.
+    const ITEM_HEIGHT = 72; // 48px avatar + 12px padding top + 12px padding bottom
+    const ITEM_GAP = 8;
+    const minListHeight = useMemo(() => {
+        const maxCount = Math.max(
+            mockAttendees.going.length,
+            mockAttendees.maybe.length,
+            mockAttendees.notGoing.length,
+        );
+        const cappedCount = Math.min(maxCount, 6);
+        return (
+            cappedCount * ITEM_HEIGHT + Math.max(0, cappedCount - 1) * ITEM_GAP
+        );
+    }, []);
 
     const tabs: {
         key: 'going' | 'maybe' | 'not-going';
@@ -397,7 +414,13 @@ export default function HangoutDetailScreen() {
                             ))}
                         </View>
 
-                        <View style={{ marginTop: 16, gap: 8 }}>
+                        <View
+                            style={{
+                                marginTop: 16,
+                                gap: 8,
+                                minHeight: minListHeight,
+                            }}
+                        >
                             {attendeeList.map((attendee, index) => (
                                 <TouchableOpacity
                                     key={index}
