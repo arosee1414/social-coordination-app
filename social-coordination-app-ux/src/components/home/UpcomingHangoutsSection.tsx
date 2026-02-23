@@ -165,6 +165,14 @@ export function UpcomingHangoutsSection({
                                         Maybe
                                     </Text>
                                 </View>
+                            ) : hangout.userStatus === 'not-going' ? (
+                                <View style={shared.statusBadgeNotGoing}>
+                                    <Text
+                                        style={shared.statusBadgeNotGoingText}
+                                    >
+                                        {"Can't Go"}
+                                    </Text>
+                                </View>
                             ) : (
                                 <View style={styles.rsvpButtons}>
                                     <TouchableOpacity

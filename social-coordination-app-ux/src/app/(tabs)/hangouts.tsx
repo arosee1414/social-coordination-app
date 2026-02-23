@@ -199,6 +199,22 @@ export default function HangoutsScreen() {
                                             </Text>
                                         </View>
                                     )}
+                                    {hangout.userStatus === 'not-going' && (
+                                        <View
+                                            style={[
+                                                shared.statusBadgeNotGoing,
+                                                { marginLeft: 'auto' },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={
+                                                    shared.statusBadgeNotGoingText
+                                                }
+                                            >
+                                                {"Can't Go"}
+                                            </Text>
+                                        </View>
+                                    )}
                                 </View>
                             </TouchableOpacity>
                         ))}

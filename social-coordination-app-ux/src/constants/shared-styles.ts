@@ -400,6 +400,17 @@ export function createSharedStyles(colors: ThemeColors) {
             fontWeight: '600',
             color: colors.statusMaybeText,
         },
+        statusBadgeNotGoing: {
+            backgroundColor: colors.statusNotGoingBg,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+        },
+        statusBadgeNotGoingText: {
+            fontSize: 12,
+            fontWeight: '600',
+            color: colors.statusNotGoingText,
+        },
 
         // Time badge
         timeBadge: {
