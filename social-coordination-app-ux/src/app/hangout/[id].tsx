@@ -15,6 +15,7 @@ import {
     mockAttendees,
     mockInvitedGroups,
     mockInvitedFriends,
+    findFriendIdByName,
 } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 
@@ -398,7 +399,20 @@ export default function HangoutDetailScreen() {
 
                         <View style={{ marginTop: 16, gap: 8 }}>
                             {attendeeList.map((attendee, index) => (
-                                <View key={index} style={[shared.listItem]}>
+                                <TouchableOpacity
+                                    key={index}
+                                    style={[shared.listItem]}
+                                    onPress={() => {
+                                        const friendId = findFriendIdByName(
+                                            attendee.name,
+                                        );
+                                        if (friendId) {
+                                            router.push(
+                                                `/friend/${friendId}` as any,
+                                            );
+                                        }
+                                    }}
+                                >
                                     <View style={shared.avatarLarge}>
                                         <Text style={{ fontSize: 24 }}>
                                             {attendee.avatar}
@@ -442,7 +456,7 @@ export default function HangoutDetailScreen() {
                                             </Text>
                                         </View>
                                     )}
-                                </View>
+                                </TouchableOpacity>
                             ))}
                         </View>
                     </View>

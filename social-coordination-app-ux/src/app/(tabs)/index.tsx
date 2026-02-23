@@ -4,7 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockRecentActivity, mockReminderBanner } from '@/src/data/mock-data';
+import {
+    mockRecentActivity,
+    mockReminderBanner,
+    findFriendIdByName,
+} from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { HappeningNowSection } from '@/src/components/home/HappeningNowSection';
 import { ReminderBannerCard } from '@/src/components/home/ReminderBannerCard';
@@ -36,6 +40,33 @@ export default function HomeScreen() {
 
     const handleRSVP = (hangoutId: string, status: RSVPStatus) => {
         updateRSVP(hangoutId, status);
+    };
+
+    const handleActivityPress = (activityId: string) => {
+        const activity = mockRecentActivity.find((a) => a.id === activityId);
+        if (activity) {
+            // Extract the first word (friend's first name) from the activity text
+            // Activity text format: "Sarah is going to...", "Mike created...", etc.
+            const firstName = activity.text.split(' ')[0];
+            // Map first names to full names for lookup
+            const nameMap: Record<string, string> = {
+                Sarah: 'Sarah Chen',
+                Mike: 'Mike Johnson',
+                Emma: 'Emma Wilson',
+                Alex: 'Alex Turner',
+                Nina: 'Nina Patel',
+                David: 'David Kim',
+                Lisa: 'Lisa Martinez',
+                Tom: 'Tom Anderson',
+            };
+            const fullName = nameMap[firstName];
+            if (fullName) {
+                const friendId = findFriendIdByName(fullName);
+                if (friendId) {
+                    router.push(`/friend/${friendId}` as any);
+                }
+            }
+        }
     };
 
     const handleCreateHangout = () => {
@@ -81,7 +112,10 @@ export default function HomeScreen() {
                 />
 
                 {/* Recent Activity */}
-                <RecentActivitySection activities={mockRecentActivity} />
+                <RecentActivitySection
+                    activities={mockRecentActivity}
+                    onActivityPress={handleActivityPress}
+                />
             </ScrollView>
 
             {/* FAB + Bottom Sheet */}

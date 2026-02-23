@@ -100,3 +100,37 @@ export interface SettingsSection {
     title: string;
     items: SettingsItem[];
 }
+
+export interface FriendProfile {
+    id: string;
+    name: string;
+    avatar: string;
+    friendsSince: string;
+    mutualGroups: number;
+    mutualFriends: number;
+    bio?: string;
+    hangoutsTogether: number;
+    lastHangout: string;
+}
+
+export interface FriendGroupInCommon {
+    id: string;
+    name: string;
+    icon: string;
+    memberCount: number;
+}
+
+export interface FriendUpcomingHangout {
+    id: string;
+    title: string;
+    time: string;
+    date: string;
+    groupName: string;
+}
+
+export interface FriendRecentActivity {
+    id: string;
+    text: string;
+    time: string;
+    icon: string;
+}

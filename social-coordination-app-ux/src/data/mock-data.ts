@@ -10,6 +10,10 @@ import {
     SettingsSection,
     RecentActivity,
     ReminderBanner,
+    FriendProfile,
+    FriendGroupInCommon,
+    FriendUpcomingHangout,
+    FriendRecentActivity,
 } from '../types';
 
 export const mockHangouts: Hangout[] = [
@@ -351,6 +355,139 @@ export const mockSuggestedFriends = [
     { id: 's5', name: 'Carlos Rivera', avatar: '👨🏽', mutualFriends: 4 },
     { id: 's6', name: 'Olivia Park', avatar: '👩🏻', mutualFriends: 6 },
 ];
+
+export const mockFriendProfiles: Record<string, FriendProfile> = {
+    '1': {
+        id: '1',
+        name: 'Sarah Chen',
+        avatar: '👩🏻',
+        friendsSince: 'Jan 2024',
+        mutualGroups: 3,
+        mutualFriends: 8,
+        bio: 'Coffee enthusiast ☕ Always down for spontaneous adventures',
+        hangoutsTogether: 12,
+        lastHangout: '2 days ago',
+    },
+    '2': {
+        id: '2',
+        name: 'Mike Johnson',
+        avatar: '👨🏽',
+        friendsSince: 'Mar 2023',
+        mutualGroups: 2,
+        mutualFriends: 5,
+        bio: 'Basketball and good vibes 🏀',
+        hangoutsTogether: 18,
+        lastHangout: '1 week ago',
+    },
+    '3': {
+        id: '3',
+        name: 'Emma Wilson',
+        avatar: '👩🏼',
+        friendsSince: 'Sep 2023',
+        mutualGroups: 4,
+        mutualFriends: 12,
+        bio: 'Movie buff 🎬 Board game champion',
+        hangoutsTogether: 15,
+        lastHangout: '3 days ago',
+    },
+    '4': {
+        id: '4',
+        name: 'David Kim',
+        avatar: '👨🏻',
+        friendsSince: 'Jun 2023',
+        mutualGroups: 1,
+        mutualFriends: 3,
+        hangoutsTogether: 6,
+        lastHangout: '5 days ago',
+    },
+    '5': {
+        id: '5',
+        name: 'Lisa Martinez',
+        avatar: '👩🏽',
+        friendsSince: 'Nov 2023',
+        mutualGroups: 2,
+        mutualFriends: 7,
+        bio: 'Foodie & travel lover 🌍',
+        hangoutsTogether: 9,
+        lastHangout: '4 days ago',
+    },
+    '6': {
+        id: '6',
+        name: 'Alex Turner',
+        avatar: '👨🏼',
+        friendsSince: 'Dec 2023',
+        mutualGroups: 2,
+        mutualFriends: 6,
+        hangoutsTogether: 8,
+        lastHangout: '1 week ago',
+    },
+    '7': {
+        id: '7',
+        name: 'Nina Patel',
+        avatar: '👩🏾',
+        friendsSince: 'Feb 2024',
+        mutualGroups: 1,
+        mutualFriends: 4,
+        bio: 'Design & coffee ☕✨',
+        hangoutsTogether: 5,
+        lastHangout: '3 days ago',
+    },
+    '8': {
+        id: '8',
+        name: 'Tom Anderson',
+        avatar: '👨🏻',
+        friendsSince: 'Oct 2023',
+        mutualGroups: 1,
+        mutualFriends: 2,
+        hangoutsTogether: 3,
+        lastHangout: '2 weeks ago',
+    },
+};
+
+export const mockFriendGroupsInCommon: FriendGroupInCommon[] = [
+    { id: 'g1', name: 'Close Friends', icon: '💜', memberCount: 5 },
+    { id: 'g2', name: 'Basketball Crew', icon: '🏀', memberCount: 8 },
+    { id: 'g3', name: 'Roommates', icon: '🏠', memberCount: 3 },
+    { id: 'g4', name: 'College Squad', icon: '🎓', memberCount: 12 },
+];
+
+export const mockFriendUpcomingHangouts: FriendUpcomingHangout[] = [
+    {
+        id: '1',
+        title: 'Coffee at Blue Bottle',
+        time: '2:00 PM',
+        date: 'Today',
+        groupName: 'Close Friends',
+    },
+    {
+        id: '2',
+        title: 'Pickup Basketball',
+        time: '6:00 PM',
+        date: 'Tomorrow',
+        groupName: 'Basketball Crew',
+    },
+    {
+        id: '3',
+        title: 'Game Night',
+        time: '8:00 PM',
+        date: 'Saturday',
+        groupName: 'Close Friends',
+    },
+];
+
+export const mockFriendRecentActivities: FriendRecentActivity[] = [
+    { id: '1', text: 'Attended Trivia Night', time: '2 days ago', icon: '🎯' },
+    { id: '2', text: 'Joined Basketball Crew', time: '1 week ago', icon: '🏀' },
+    { id: '3', text: 'Went to Brunch Club', time: '1 week ago', icon: '☕' },
+    { id: '4', text: 'Attended Movie Night', time: '2 weeks ago', icon: '🎬' },
+];
+
+export function findFriendIdByName(name: string): string | undefined {
+    const friend = mockFriends.find(
+        (f) => f.name.toLowerCase() === name.toLowerCase(),
+    );
+    return friend?.id;
+}
 
 export const groupBgColors: Record<
     string,

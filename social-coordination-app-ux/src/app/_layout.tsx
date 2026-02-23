@@ -101,6 +101,10 @@ function RootLayoutNav(): React.JSX.Element {
                 }}
             />
             <Stack.Screen
+                name='friend/[id]'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
                 name='find-friends'
                 options={{
                     headerShown: false,

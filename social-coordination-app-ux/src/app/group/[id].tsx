@@ -16,6 +16,7 @@ import {
     mockGroups,
     mockGroupMembers,
     groupBgColors,
+    findFriendIdByName,
 } from '@/src/data/mock-data';
 
 export default function GroupDetailScreen() {
@@ -158,7 +159,20 @@ export default function GroupDetailScreen() {
                     </View>
                     <View style={{ gap: 8 }}>
                         {mockGroupMembers.map((member, index) => (
-                            <View key={index} style={shared.listItem}>
+                            <TouchableOpacity
+                                key={index}
+                                style={shared.listItem}
+                                onPress={() => {
+                                    const friendId = findFriendIdByName(
+                                        member.name,
+                                    );
+                                    if (friendId) {
+                                        router.push(
+                                            `/friend/${friendId}` as any,
+                                        );
+                                    }
+                                }}
+                            >
                                 <View style={shared.avatarLarge}>
                                     <Text style={{ fontSize: 24 }}>
                                         {member.avatar}
@@ -202,7 +216,7 @@ export default function GroupDetailScreen() {
                                         </Text>
                                     </View>
                                 )}
-                            </View>
+                            </TouchableOpacity>
                         ))}
                     </View>
                 </View>
