@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SocialCoordinationApp.Models.DTOs.Requests;
+using SocialCoordinationApp.Models.DTOs.Responses;
 using SocialCoordinationApp.Services;
 
 namespace SocialCoordinationApp.Controllers;
@@ -15,7 +16,8 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateHangout([FromBody] CreateHangoutRequest request)
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status201Created)]
+    public async Task<ActionResult<HangoutResponse>> CreateHangout([FromBody] CreateHangoutRequest request)
     {
         var userId = GetUserId();
         var result = await _hangoutsService.CreateHangoutAsync(userId, request);
@@ -23,7 +25,8 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMyHangouts()
+    [ProducesResponseType(typeof(List<HangoutSummaryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<HangoutSummaryResponse>>> GetMyHangouts()
     {
         var userId = GetUserId();
         var result = await _hangoutsService.GetUserHangoutsAsync(userId);
@@ -31,7 +34,8 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetHangout(string id)
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<HangoutResponse>> GetHangout(string id)
     {
         var userId = GetUserId();
         var result = await _hangoutsService.GetHangoutAsync(id, userId);
@@ -39,7 +43,8 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateHangout(string id, [FromBody] UpdateHangoutRequest request)
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<HangoutResponse>> UpdateHangout(string id, [FromBody] UpdateHangoutRequest request)
     {
         var userId = GetUserId();
         var result = await _hangoutsService.UpdateHangoutAsync(id, userId, request);
@@ -47,6 +52,7 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteHangout(string id)
     {
         var userId = GetUserId();
@@ -55,7 +61,8 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpPost("{id}/rsvp")]
-    public async Task<IActionResult> UpdateRSVP(string id, [FromBody] UpdateRSVPRequest request)
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<HangoutResponse>> UpdateRSVP(string id, [FromBody] UpdateRSVPRequest request)
     {
         var userId = GetUserId();
         var result = await _hangoutsService.UpdateRSVPAsync(id, userId, request);
@@ -63,7 +70,8 @@ public class HangoutsController : BaseApiController
     }
 
     [HttpPost("{id}/cancel")]
-    public async Task<IActionResult> CancelHangout(string id)
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<HangoutResponse>> CancelHangout(string id)
     {
         var userId = GetUserId();
         var result = await _hangoutsService.CancelHangoutAsync(id, userId);

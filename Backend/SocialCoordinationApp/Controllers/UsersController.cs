@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using SocialCoordinationApp.Models.DTOs.Requests;
+using SocialCoordinationApp.Models.DTOs.Responses;
 using SocialCoordinationApp.Services;
 
 namespace SocialCoordinationApp.Controllers;
@@ -15,7 +16,8 @@ public class UsersController : BaseApiController
     }
 
     [HttpPost("me")]
-    public async Task<IActionResult> CreateOrUpdateUser([FromBody] CreateUserRequest request)
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<UserResponse>> CreateOrUpdateUser([FromBody] CreateUserRequest request)
     {
         var userId = GetUserId();
         var result = await _usersService.CreateOrUpdateUserAsync(userId, request);
@@ -23,7 +25,8 @@ public class UsersController : BaseApiController
     }
 
     [HttpGet("me")]
-    public async Task<IActionResult> GetCurrentUser()
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<UserResponse>> GetCurrentUser()
     {
         var userId = GetUserId();
         var result = await _usersService.GetUserAsync(userId);
@@ -31,7 +34,8 @@ public class UsersController : BaseApiController
     }
 
     [HttpPut("me")]
-    public async Task<IActionResult> UpdateCurrentUser([FromBody] UpdateUserRequest request)
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<UserResponse>> UpdateCurrentUser([FromBody] UpdateUserRequest request)
     {
         var userId = GetUserId();
         var result = await _usersService.UpdateUserAsync(userId, request);
@@ -39,6 +43,7 @@ public class UsersController : BaseApiController
     }
 
     [HttpDelete("me")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteCurrentUser()
     {
         var userId = GetUserId();
@@ -47,7 +52,8 @@ public class UsersController : BaseApiController
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchUsers([FromQuery] string q)
+    [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<UserResponse>>> SearchUsers([FromQuery] string q)
     {
         var result = await _usersService.SearchUsersAsync(q);
         return Ok(result);
