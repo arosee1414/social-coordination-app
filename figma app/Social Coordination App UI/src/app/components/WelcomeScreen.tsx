@@ -31,7 +31,7 @@ export function WelcomeScreen() {
           Create Account
         </Link>
         <Link 
-          to="/auth"
+          to="/auth?mode=signin"
           className="block w-full bg-white/10 backdrop-blur-sm text-white text-center py-4 rounded-2xl font-semibold text-lg border-2 border-white/30 active:scale-95 transition-transform"
         >
           Sign In

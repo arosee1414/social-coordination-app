@@ -58,7 +58,7 @@ export function HangoutsListScreen() {
             <div className="space-y-3">
               {mockHangouts.map((hangout) => (
                 <Link key={hangout.id} to={`/hangout/${hangout.id}`}>
-                  <div className="bg-white border-2 border-gray-100 rounded-2xl p-4 shadow-sm active:shadow-md active:scale-[0.98] transition-all">
+                  <div className="bg-white border-2 border-gray-100 rounded-2xl p-4 shadow-sm active:shadow-md active:scale-[0.98] transition-all mb-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg mb-1">{hangout.title}</h3>

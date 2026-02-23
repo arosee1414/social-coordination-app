@@ -56,7 +56,7 @@ export function GroupsListScreen() {
             <div className="space-y-3">
               {mockGroups.map((group) => (
                 <Link key={group.id} to={`/group/${group.id}`}>
-                  <div className={`bg-gradient-to-br ${group.bgColor} rounded-2xl p-5 shadow-sm active:shadow-md active:scale-[0.98] transition-all`}>
+                  <div className={`bg-gradient-to-br ${group.bgColor} rounded-2xl p-5 shadow-sm active:shadow-md active:scale-[0.98] transition-all mb-4`}>
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">{group.icon}</div>
                       <div className="flex-1">

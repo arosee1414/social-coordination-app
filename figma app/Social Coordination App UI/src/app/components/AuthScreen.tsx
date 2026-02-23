@@ -1,9 +1,10 @@
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { ArrowLeft, Mail, Lock } from 'lucide-react';
 import { useState } from 'react';
 
 export function AuthScreen() {
-  const [isSignUp, setIsSignUp] = useState(true);
+  const [searchParams] = useSearchParams();
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('mode') !== 'signin');
 
   return (
     <div className="flex flex-col h-screen bg-white">

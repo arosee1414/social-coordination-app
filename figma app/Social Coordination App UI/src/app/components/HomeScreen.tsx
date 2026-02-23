@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
-import { Plus, Clock, MapPin, Users as UsersIcon, Calendar, X } from 'lucide-react';
+import { Plus, Clock, MapPin, Users as UsersIcon, Calendar, X, Globe, User, UserPlus } from 'lucide-react';
 import { useState } from 'react';
+import { useHangouts } from '../contexts/HangoutsContext';
 
 const mockLiveHangouts = [
   {
@@ -30,6 +31,7 @@ const mockHangouts = [
     timeUntil: '4h 30m',
     location: 'The Rooftop Bar',
     group: 'Work Friends',
+    inviteType: 'group', // group invite
     creator: 'Sarah Chen',
     going: 5,
     maybe: 2,
@@ -43,7 +45,8 @@ const mockHangouts = [
     date: 'Sat, Feb 22',
     timeUntil: '2d',
     location: 'Maple Café',
-    group: 'Roommates',
+    group: null,
+    inviteType: 'individual', // individual invites
     creator: 'Mike Johnson',
     going: 3,
     maybe: 4,
@@ -58,11 +61,28 @@ const mockHangouts = [
     timeUntil: '1d 6h',
     location: null,
     group: 'Basketball Crew',
+    inviteType: 'group_plus', // group + extra invites
+    extraInvites: 3,
     creator: 'Emma Wilson',
     going: 4,
     maybe: 1,
     userStatus: null,
     attendeesPreview: ['👩🏼', '👨🏻', '👩🏾', '👨🏼'],
+  },
+  {
+    id: '4',
+    title: 'Sunday Pickup Basketball',
+    time: 'Sunday at 10:00 AM',
+    date: 'Sun, Feb 23',
+    timeUntil: '3d',
+    location: 'Lincoln Park',
+    group: null,
+    inviteType: 'public', // open to any friends
+    creator: 'Alex Kim',
+    going: 8,
+    maybe: 3,
+    userStatus: null,
+    attendeesPreview: ['👨🏽', '👩🏼', '👨🏻', '👩🏾', '👨🏼'],
   },
 ];
 
@@ -91,7 +111,39 @@ const mockRecentActivity = [
 
 export function HomeScreen() {
   const [isFabModalOpen, setIsFabModalOpen] = useState(false);
+  const { hangouts } = useHangouts();
   const hasLiveHangouts = mockLiveHangouts.length > 0;
+
+  // Helper function to get invite type indicator
+  const getInviteTypeIndicator = (inviteType?: string, groupName?: string) => {
+    if (groupName) {
+      return (
+        <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
+          <UsersIcon className="w-3 h-3" />
+          <span>{groupName}</span>
+        </div>
+      );
+    }
+    
+    switch (inviteType) {
+      case 'public':
+        return (
+          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
+            <Globe className="w-3 h-3" />
+            <span>Open to friends</span>
+          </div>
+        );
+      case 'private':
+        return (
+          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
+            <User className="w-3 h-3" />
+            <span>Private invite</span>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 pb-20">
@@ -189,76 +241,71 @@ export function HomeScreen() {
             </Link>
           </div>
           
-          <div className="space-y-3 px-6">
-            {mockHangouts.slice(0, 3).map((hangout) => (
-              <Link key={hangout.id} to={`/hangout/${hangout.id}`}>
-                <div className="bg-white rounded-2xl p-4 shadow-sm active:shadow-md active:scale-[0.98] transition-all">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 pr-3">
-                      <h3 className="font-bold text-base mb-1.5">{hangout.title}</h3>
-                      <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{hangout.time}</span>
+          <div className="space-y-4 px-6">
+            {hangouts.slice(0, 3).map((hangout) => {
+              const contextHangout = hangouts.find(h => h.id === hangout.id);
+              const userStatus = contextHangout?.userStatus || 'pending';
+              
+              return (
+                <Link key={hangout.id} to={`/hangout/${hangout.id}`}>
+                  <div className="bg-white rounded-2xl p-4 shadow-sm active:shadow-md active:scale-[0.98] transition-all mb-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 pr-3">
+                        <h3 className="font-bold text-base mb-1.5">{hangout.title}</h3>
+                        <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{hangout.time}</span>
+                        </div>
+                        {hangout.location && (
+                          <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                            <MapPin className="w-3.5 h-3.5" />
+                            <span>{hangout.location}</span>
+                          </div>
+                        )}
                       </div>
-                      {hangout.location && (
-                        <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span>{hangout.location}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Group pill */}
-                    {hangout.group && (
-                      <div className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap">
-                        {hangout.group}
+                      
+                      {/* Time until badge */}
+                      <div className="bg-[#007AFF]/10 text-[#007AFF] px-3 py-1.5 rounded-full text-xs font-semibold">
+                        {hangout.timeUntil}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Attendees and RSVP */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex -space-x-2">
-                      {hangout.attendeesPreview.slice(0, 3).map((avatar, index) => (
-                        <div 
-                          key={index}
-                          className="w-7 h-7 bg-white border-2 border-white rounded-full flex items-center justify-center text-xs shadow-sm"
-                          style={{ zIndex: hangout.attendeesPreview.length - index }}
-                        >
-                          {avatar}
-                        </div>
-                      ))}
-                      {hangout.attendeesPreview.length > 3 && (
-                        <div className="w-7 h-7 bg-gray-100 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-bold text-gray-600">
-                          +{hangout.attendeesPreview.length - 3}
-                        </div>
-                      )}
                     </div>
 
-                    {/* RSVP Status or Buttons */}
-                    {hangout.userStatus === 'going' ? (
-                      <div className="bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1">
-                        ✓ Going
+                    {/* Attendees and RSVP */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="font-medium">{hangout.going}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                          <span className="font-medium">{hangout.maybe}</span>
+                        </div>
                       </div>
-                    ) : hangout.userStatus === 'maybe' ? (
-                      <div className="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-full text-xs font-bold">
-                        Maybe
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button className="bg-[#007AFF] text-white px-4 py-1.5 rounded-full text-xs font-bold active:bg-[#0066CC] transition-colors">
-                          Going
-                        </button>
-                        <button className="bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full text-xs font-bold active:bg-gray-200 transition-colors">
+
+                      {/* RSVP Status or Buttons */}
+                      {userStatus === 'going' ? (
+                        <div className="bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1">
+                          ✓ Going
+                        </div>
+                      ) : userStatus === 'maybe' ? (
+                        <div className="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-full text-xs font-bold">
                           Maybe
-                        </button>
-                      </div>
-                    )}
+                        </div>
+                      ) : (
+                        <div className="text-gray-500 text-xs font-semibold">
+                          Pending
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Invite Type Indicator */}
+                    {getInviteTypeIndicator(hangout.inviteType, hangout.groupName)}
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -347,10 +394,10 @@ export function HomeScreen() {
                 {/* Cancel */}
                 <button 
                   onClick={() => setIsFabModalOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl active:bg-gray-50 transition-colors mt-2"
+                  className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-gray-100 text-gray-700 font-semibold active:bg-gray-200 transition-colors mt-2"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
-                  <span className="font-semibold text-gray-700">Cancel</span>
+                  <X className="w-5 h-5" />
+                  <span>Cancel</span>
                 </button>
               </div>
             </div>

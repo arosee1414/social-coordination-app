@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Clock, MapPin, Share2, MoreVertical, MessageCircle, Users as UsersIcon } from 'lucide-react';
-import { useState } from 'react';
-
-type RSVPStatus = 'going' | 'maybe' | 'not-going' | null;
+import { useState, useEffect } from 'react';
+import { useHangouts, RSVPStatus } from '../contexts/HangoutsContext';
+import { Link } from 'react-router';
 
 const mockInvitedGroups = [
   { 
@@ -21,18 +21,18 @@ const mockInvitedFriends = [
 
 const mockAttendees = {
   going: [
-    { name: 'Sarah Chen', avatar: '👩🏻', time: 'RSVP 2h ago', fromGroup: 'Close Friends' },
-    { name: 'Mike Johnson', avatar: '👨🏽', time: 'RSVP 1h ago', fromGroup: 'Close Friends' },
-    { name: 'Emma Wilson', avatar: '👩🏼', time: 'RSVP 45m ago', fromGroup: 'Close Friends' },
-    { name: 'David Kim', avatar: '👨🏻', time: 'RSVP 30m ago', fromGroup: null },
-    { name: 'Lisa Martinez', avatar: '👩🏽', time: 'RSVP 15m ago', fromGroup: null },
+    { name: 'Sarah Chen', avatar: '👩🏻', time: 'RSVP 2h ago', fromGroup: 'Close Friends', id: 'sarah' },
+    { name: 'Mike Johnson', avatar: '👨🏽', time: 'RSVP 1h ago', fromGroup: 'Close Friends', id: 'mike' },
+    { name: 'Emma Wilson', avatar: '👩🏼', time: 'RSVP 45m ago', fromGroup: 'Close Friends', id: 'emma' },
+    { name: 'David Kim', avatar: '👨🏻', time: 'RSVP 30m ago', fromGroup: null, id: 'david' },
+    { name: 'Lisa Martinez', avatar: '👩🏽', time: 'RSVP 15m ago', fromGroup: null, id: 'lisa' },
   ],
   maybe: [
-    { name: 'Alex Turner', avatar: '👨🏼', time: 'RSVP 1h ago', fromGroup: 'Close Friends' },
-    { name: 'Nina Patel', avatar: '👩🏾', time: 'RSVP 20m ago', fromGroup: 'Close Friends' },
+    { name: 'Alex Turner', avatar: '👨🏼', time: 'RSVP 1h ago', fromGroup: 'Close Friends', id: 'alex' },
+    { name: 'Nina Patel', avatar: '👩🏾', time: 'RSVP 20m ago', fromGroup: 'Close Friends', id: 'nina' },
   ],
   notGoing: [
-    { name: 'Tom Anderson', avatar: '👨🏻', time: 'RSVP 3h ago', fromGroup: null },
+    { name: 'Tom Anderson', avatar: '👨🏻', time: 'RSVP 3h ago', fromGroup: null, id: 'tom' },
   ],
 };
 
@@ -40,10 +40,21 @@ export function HangoutDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [userRSVP, setUserRSVP] = useState<RSVPStatus>('going');
+  const { hangouts, updateHangoutRSVP } = useHangouts();
 
   const handleRSVP = (status: RSVPStatus) => {
     setUserRSVP(status);
+    if (id) {
+      updateHangoutRSVP(id, status);
+    }
   };
+
+  useEffect(() => {
+    const hangout = hangouts.find(h => h.id === id);
+    if (hangout) {
+      setUserRSVP(hangout.userStatus);
+    }
+  }, [hangouts, id]);
 
   return (
     <div className="flex flex-col h-screen bg-white">
@@ -200,18 +211,20 @@ export function HangoutDetailScreen() {
             </h3>
             <div className="space-y-2">
               {mockAttendees.going.map((person, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">
-                    {person.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{person.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {person.time}
-                      {person.fromGroup && <span className="text-[#007AFF]"> · from {person.fromGroup}</span>}
+                <Link key={index} to={`/friend/${person.id}`}>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-colors">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">
+                      {person.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{person.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {person.time}
+                        {person.fromGroup && <span className="text-[#007AFF]"> · from {person.fromGroup}</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -224,18 +237,20 @@ export function HangoutDetailScreen() {
             </h3>
             <div className="space-y-2">
               {mockAttendees.maybe.map((person, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">
-                    {person.avatar}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{person.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {person.time}
-                      {person.fromGroup && <span className="text-[#007AFF]"> · from {person.fromGroup}</span>}
+                <Link key={index} to={`/friend/${person.id}`}>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl active:bg-gray-100 transition-colors">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">
+                      {person.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{person.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {person.time}
+                        {person.fromGroup && <span className="text-[#007AFF]"> · from {person.fromGroup}</span>}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -248,15 +263,17 @@ export function HangoutDetailScreen() {
             </h3>
             <div className="space-y-2">
               {mockAttendees.notGoing.map((person, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl opacity-60">
-                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">
-                    {person.avatar}
+                <Link key={index} to={`/friend/${person.id}`}>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl opacity-60 active:bg-gray-100 transition-colors">
+                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">
+                      {person.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{person.name}</div>
+                      <div className="text-sm text-gray-500">{person.time}</div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{person.name}</div>
-                    <div className="text-sm text-gray-500">{person.time}</div>
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
