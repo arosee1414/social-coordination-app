@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
     ScrollView,
     TouchableOpacity,
     StyleSheet,
-    Modal,
     Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    runOnJS,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import {
@@ -20,12 +26,18 @@ import {
     mockFriendRecentActivities,
 } from '@/src/data/mock-data';
 
+const CLOSE_THRESHOLD = 50;
+const SHEET_HIDDEN_Y = 400;
+
 export default function FriendProfileScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { id } = useLocalSearchParams();
-    const [showRemoveModal, setShowRemoveModal] = useState(false);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+    const sheetTranslateY = useSharedValue(SHEET_HIDDEN_Y);
+    const overlayOpacity = useSharedValue(0);
 
     const friendId = typeof id === 'string' ? id : '1';
     const friend = mockFriendProfiles[friendId] ?? mockFriendProfiles['1'];
@@ -33,6 +45,71 @@ export default function FriendProfileScreen() {
         0,
         friend.mutualGroups,
     );
+
+    const openSheet = useCallback(() => {
+        setIsSheetOpen(true);
+        overlayOpacity.value = withTiming(1, { duration: 200 });
+        sheetTranslateY.value = withTiming(0, { duration: 250 });
+    }, [overlayOpacity, sheetTranslateY]);
+
+    const closeSheet = useCallback(() => {
+        overlayOpacity.value = withTiming(0, { duration: 200 });
+        sheetTranslateY.value = withTiming(
+            SHEET_HIDDEN_Y,
+            { duration: 250 },
+            () => {
+                runOnJS(setIsSheetOpen)(false);
+            },
+        );
+    }, [overlayOpacity, sheetTranslateY]);
+
+    const panGesture = Gesture.Pan()
+        .onUpdate((event) => {
+            if (event.translationY > 0) {
+                sheetTranslateY.value = event.translationY;
+                overlayOpacity.value = Math.max(
+                    0,
+                    1 - event.translationY / SHEET_HIDDEN_Y,
+                );
+            }
+        })
+        .onEnd((event) => {
+            if (event.translationY > CLOSE_THRESHOLD) {
+                overlayOpacity.value = withTiming(0, { duration: 200 });
+                sheetTranslateY.value = withTiming(
+                    SHEET_HIDDEN_Y,
+                    { duration: 200 },
+                    () => {
+                        runOnJS(setIsSheetOpen)(false);
+                    },
+                );
+            } else {
+                sheetTranslateY.value = withTiming(0, { duration: 200 });
+                overlayOpacity.value = withTiming(1, { duration: 200 });
+            }
+        });
+
+    const overlayAnimatedStyle = useAnimatedStyle(() => ({
+        opacity: overlayOpacity.value,
+    }));
+
+    const sheetAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: sheetTranslateY.value }],
+    }));
+
+    const handleInviteHangout = useCallback(() => {
+        closeSheet();
+        setTimeout(() => router.push('/create-hangout'), 150);
+    }, [closeSheet, router]);
+
+    const handleInviteGroup = useCallback(() => {
+        closeSheet();
+        setTimeout(() => router.push('/(tabs)/groups' as any), 150);
+    }, [closeSheet, router]);
+
+    const handleRemoveFriend = useCallback(() => {
+        closeSheet();
+    }, [closeSheet]);
 
     return (
         <SafeAreaView style={shared.screenContainer}>
@@ -47,10 +124,7 @@ export default function FriendProfileScreen() {
                 <Text style={[s.headerTitle, { color: colors.text }]}>
                     Profile
                 </Text>
-                <TouchableOpacity
-                    onPress={() => setShowRemoveModal(true)}
-                    style={s.menuBtn}
-                >
+                <TouchableOpacity onPress={openSheet} style={s.menuBtn}>
                     <Ionicons
                         name='ellipsis-vertical'
                         size={24}
@@ -61,7 +135,7 @@ export default function FriendProfileScreen() {
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingBottom: 140 }}
+                contentContainerStyle={{ paddingBottom: 32 }}
             >
                 {/* Profile Header */}
                 <View
@@ -388,97 +462,115 @@ export default function FriendProfileScreen() {
                 )}
             </ScrollView>
 
-            {/* Action Buttons - Fixed at Bottom */}
-            <View
-                style={[
-                    s.bottomActions,
-                    {
-                        backgroundColor: colors.background,
-                        borderTopColor: colors.cardBorder,
-                    },
-                ]}
-            >
-                <TouchableOpacity
-                    style={[shared.primaryBtnLarge, { marginBottom: 12 }]}
-                    onPress={() => router.push('/create-hangout')}
-                >
-                    <Text style={shared.primaryBtnLargeText}>
-                        Invite to Hangout
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={shared.secondaryBtn}
-                    onPress={() => router.push('/(tabs)/groups' as any)}
-                >
-                    <Text style={shared.secondaryBtnText}>Invite to Group</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Remove Friend Modal */}
-            <Modal
-                visible={showRemoveModal}
-                transparent
-                animationType='fade'
-                onRequestClose={() => setShowRemoveModal(false)}
-            >
-                <Pressable
-                    style={[
-                        s.modalOverlay,
-                        { backgroundColor: colors.overlayBg },
-                    ]}
-                    onPress={() => setShowRemoveModal(false)}
-                >
-                    <Pressable
+            {/* Action Menu Bottom Sheet */}
+            {isSheetOpen && (
+                <View style={StyleSheet.absoluteFill} pointerEvents='box-none'>
+                    {/* Overlay */}
+                    <Animated.View
                         style={[
-                            s.modalSheet,
-                            { backgroundColor: colors.bottomSheetBg },
+                            shared.bottomSheetOverlay,
+                            overlayAnimatedStyle,
                         ]}
-                        onPress={(e) => e.stopPropagation()}
                     >
-                        <View
-                            style={[
-                                s.modalHandle,
-                                {
-                                    backgroundColor: colors.bottomSheetHandle,
-                                },
-                            ]}
+                        <Pressable
+                            style={StyleSheet.absoluteFill}
+                            onPress={closeSheet}
                         />
-                        <TouchableOpacity
-                            style={s.removeBtn}
-                            onPress={() => {
-                                setShowRemoveModal(false);
-                            }}
+                    </Animated.View>
+
+                    {/* Sheet */}
+                    <GestureDetector gesture={panGesture}>
+                        <Animated.View
+                            style={[
+                                shared.bottomSheetContainer,
+                                sheetAnimatedStyle,
+                            ]}
                         >
-                            <Ionicons
-                                name='person-remove-outline'
-                                size={20}
-                                color={colors.error}
-                            />
-                            <Text
-                                style={[
-                                    s.removeBtnText,
-                                    { color: colors.error },
-                                ]}
-                            >
-                                Remove Friend
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={s.cancelBtn}
-                            onPress={() => setShowRemoveModal(false)}
-                        >
-                            <Text
-                                style={[
-                                    s.cancelBtnText,
-                                    { color: colors.textSecondary },
-                                ]}
-                            >
-                                Cancel
-                            </Text>
-                        </TouchableOpacity>
-                    </Pressable>
-                </Pressable>
-            </Modal>
+                            {/* Handle */}
+                            <View style={shared.bottomSheetHandle} />
+
+                            {/* Buttons */}
+                            <View style={s.menuButtonsContainer}>
+                                <TouchableOpacity
+                                    style={[
+                                        shared.primaryBtnLarge,
+                                        { flexDirection: 'row', gap: 8 },
+                                    ]}
+                                    activeOpacity={0.7}
+                                    onPress={handleInviteHangout}
+                                >
+                                    <Ionicons
+                                        name='calendar-outline'
+                                        size={20}
+                                        color={colors.primaryText}
+                                    />
+                                    <Text style={shared.primaryBtnLargeText}>
+                                        Invite to Hangout
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={shared.secondaryBtn}
+                                    activeOpacity={0.7}
+                                    onPress={handleInviteGroup}
+                                >
+                                    <Ionicons
+                                        name='people-outline'
+                                        size={20}
+                                        color={colors.textSecondary}
+                                    />
+                                    <Text style={shared.secondaryBtnText}>
+                                        Invite to Group
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        s.destructiveBtn,
+                                        {
+                                            backgroundColor: `${colors.error}10`,
+                                        },
+                                    ]}
+                                    activeOpacity={0.7}
+                                    onPress={handleRemoveFriend}
+                                >
+                                    <Ionicons
+                                        name='person-remove-outline'
+                                        size={20}
+                                        color={colors.error}
+                                    />
+                                    <Text
+                                        style={[
+                                            s.destructiveBtnText,
+                                            { color: colors.error },
+                                        ]}
+                                    >
+                                        Remove Friend
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        s.cancelBtn,
+                                        {
+                                            backgroundColor:
+                                                colors.surfaceTertiary,
+                                        },
+                                    ]}
+                                    activeOpacity={0.7}
+                                    onPress={closeSheet}
+                                >
+                                    <Text
+                                        style={[
+                                            s.cancelBtnText,
+                                            { color: colors.textSecondary },
+                                        ]}
+                                    >
+                                        Cancel
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Animated.View>
+                    </GestureDetector>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
@@ -647,47 +739,26 @@ const s = StyleSheet.create({
     activityText: { fontSize: 14, fontWeight: '500' },
     activityTime: { fontSize: 12, marginTop: 2 },
 
-    // Bottom Actions
-    bottomActions: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: 24,
-        borderTopWidth: 1,
-    },
-
-    // Modal
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    modalSheet: {
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 24,
-    },
-    modalHandle: {
-        width: 48,
-        height: 4,
-        borderRadius: 2,
-        alignSelf: 'center',
-        marginBottom: 24,
-    },
-    removeBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+    // Bottom sheet buttons
+    menuButtonsContainer: {
         gap: 12,
-        paddingVertical: 16,
-        borderRadius: 12,
     },
-    removeBtnText: { fontSize: 16, fontWeight: '600' },
-    cancelBtn: {
-        alignItems: 'center',
-        paddingVertical: 16,
-        marginTop: 8,
+    destructiveBtn: {
+        width: '100%',
+        height: 56,
         borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: 8,
+    },
+    destructiveBtnText: { fontSize: 16, fontWeight: '600' },
+    cancelBtn: {
+        width: '100%',
+        height: 56,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     cancelBtnText: { fontSize: 16, fontWeight: '600' },
 });
