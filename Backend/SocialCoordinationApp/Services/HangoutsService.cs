@@ -20,7 +20,19 @@ public class HangoutsService : IHangoutsService
 
     public async Task<HangoutResponse> CreateHangoutAsync(string userId, CreateHangoutRequest request)
     {
+        // Validate EndTime if provided
+        if (request.EndTime.HasValue)
+        {
+            if (request.EndTime.Value <= request.StartTime)
+                throw new ArgumentException("EndTime must be after StartTime");
+            if ((request.EndTime.Value - request.StartTime).TotalHours > 24)
+                throw new ArgumentException("Hangout duration cannot exceed 24 hours");
+        }
+
         var now = DateTime.UtcNow;
+
+        // Default EndTime to StartTime + 8 hours if not provided
+        var endTime = request.EndTime ?? request.StartTime.AddHours(8);
 
         var hangout = new HangoutRecord
         {
@@ -30,7 +42,7 @@ public class HangoutsService : IHangoutsService
             Description = request.Description,
             Location = request.Location,
             StartTime = request.StartTime,
-            EndTime = request.EndTime,
+            EndTime = endTime,
             CreatedByUserId = userId,
             GroupId = request.GroupId,
             Attendees = new List<HangoutAttendee>
@@ -147,6 +159,22 @@ public class HangoutsService : IHangoutsService
         if (request.Location != null) hangout.Location = request.Location;
         if (request.StartTime.HasValue) hangout.StartTime = request.StartTime.Value;
         if (request.EndTime.HasValue) hangout.EndTime = request.EndTime.Value;
+
+        // If StartTime changed but EndTime was not provided, recompute default
+        if (request.StartTime.HasValue && !request.EndTime.HasValue)
+        {
+            hangout.EndTime = hangout.StartTime.AddHours(8);
+        }
+
+        // Validate duration does not exceed 24 hours
+        if (hangout.EndTime.HasValue)
+        {
+            if (hangout.EndTime.Value <= hangout.StartTime)
+                throw new ArgumentException("EndTime must be after StartTime");
+            if ((hangout.EndTime.Value - hangout.StartTime).TotalHours > 24)
+                throw new ArgumentException("Hangout duration cannot exceed 24 hours");
+        }
+
         hangout.UpdatedAt = DateTime.UtcNow;
 
         var response = await _cosmosContext.HangoutsContainer

@@ -105,7 +105,7 @@ function isLive(startTime: Date | undefined, endTime: Date | undefined | null, s
     if (!startTime) return false;
     const now = new Date();
     const start = new Date(startTime);
-    const end = endTime ? new Date(endTime) : new Date(start.getTime() + 2 * 60 * 60 * 1000); // default 2 hours
+    const end = endTime ? new Date(endTime) : new Date(start.getTime() + 8 * 60 * 60 * 1000); // default 8 hours
     return now >= start && now <= end;
 }
 

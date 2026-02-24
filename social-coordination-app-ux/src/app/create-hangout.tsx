@@ -11,6 +11,7 @@ import {
     Modal,
     Pressable,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,25 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
+
+/** Duration options: null = "No set duration", numbers = hours */
+const DURATION_OPTIONS: { value: number | null; label: string }[] = [
+    { value: null, label: 'No set duration' },
+    ...Array.from({ length: 96 }, (_, i) => {
+        const hours = (i + 1) * 0.25;
+        return { value: hours, label: formatDuration(hours) };
+    }),
+];
+
+/** Convert fractional hours to a human-readable label */
+function formatDuration(hours: number): string {
+    const totalMinutes = Math.round(hours * 60);
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (h === 0) return `${m} min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+}
 
 export default function CreateHangoutScreen() {
     const colors = useThemeColors();
@@ -36,6 +56,41 @@ export default function CreateHangoutScreen() {
     // Temp values for iOS modal spinner — only committed on "Done"
     const [tempDate, setTempDate] = useState(new Date());
     const [tempTime, setTempTime] = useState(new Date());
+
+    // Duration picker state
+    const [selectedDuration, setSelectedDuration] = useState<number | null>(
+        null,
+    );
+    const [showDurationPicker, setShowDurationPicker] = useState(false);
+    const [tempDuration, setTempDuration] = useState<number | null>(null);
+
+    const openDurationPicker = () => {
+        setTempDuration(selectedDuration);
+        setShowDurationPicker(true);
+    };
+
+    const confirmDuration = () => {
+        setSelectedDuration(tempDuration);
+        setShowDurationPicker(false);
+    };
+
+    const cancelDuration = () => {
+        setShowDurationPicker(false);
+    };
+
+    /** Compute endTime from selectedDate + selectedTime + selectedDuration */
+    const computeEndTime = (): Date | null => {
+        if (selectedDuration === null) return null; // backend defaults to +8h
+        if (!selectedDate || !selectedTime) return null;
+        const start = new Date(selectedDate);
+        start.setHours(
+            selectedTime.getHours(),
+            selectedTime.getMinutes(),
+            0,
+            0,
+        );
+        return new Date(start.getTime() + selectedDuration * 60 * 60 * 1000);
+    };
 
     const openDatePicker = () => {
         setShowTimePicker(false);
@@ -310,6 +365,57 @@ export default function CreateHangoutScreen() {
                             />
                         )}
 
+                        {/* Duration (Optional) */}
+                        <View>
+                            <Text style={shared.formLabel}>
+                                Duration (optional)
+                            </Text>
+                            <TouchableOpacity
+                                style={[
+                                    s.pickerBtn,
+                                    {
+                                        borderColor: colors.cardBorderHeavy,
+                                        backgroundColor: colors.inputBackground,
+                                    },
+                                ]}
+                                onPress={openDurationPicker}
+                            >
+                                <Ionicons
+                                    name='hourglass-outline'
+                                    size={20}
+                                    color={
+                                        selectedDuration !== null
+                                            ? colors.text
+                                            : colors.subtitle
+                                    }
+                                />
+                                <Text
+                                    style={[
+                                        s.pickerText,
+                                        {
+                                            color:
+                                                selectedDuration !== null
+                                                    ? colors.text
+                                                    : colors.subtitle,
+                                        },
+                                    ]}
+                                    numberOfLines={1}
+                                >
+                                    {selectedDuration !== null
+                                        ? formatDuration(selectedDuration)
+                                        : 'No set duration'}
+                                </Text>
+                            </TouchableOpacity>
+                            <Text
+                                style={[
+                                    s.durationHelperText,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Defaults to 8 hours if not set
+                            </Text>
+                        </View>
+
                         {/* Location */}
                         <View>
                             <Text style={shared.formLabel}>
@@ -425,6 +531,73 @@ export default function CreateHangoutScreen() {
                     () => setShowTimePicker(false),
                     isSelectedDateToday ? new Date() : undefined,
                 )}
+
+            {/* Duration picker modal */}
+            <Modal
+                visible={showDurationPicker}
+                transparent
+                animationType='fade'
+            >
+                <Pressable style={s.modalOverlay} onPress={cancelDuration}>
+                    <Pressable
+                        style={[
+                            s.modalContent,
+                            { backgroundColor: colors.background },
+                        ]}
+                        onPress={(e) => e.stopPropagation()}
+                    >
+                        <View style={s.modalHeader}>
+                            <TouchableOpacity onPress={cancelDuration}>
+                                <Text
+                                    style={[
+                                        s.modalBtn,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={confirmDuration}>
+                                <Text
+                                    style={[
+                                        s.modalBtn,
+                                        { color: colors.primary },
+                                    ]}
+                                >
+                                    Done
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Picker
+                            selectedValue={
+                                tempDuration === null ? 'none' : tempDuration
+                            }
+                            onValueChange={(itemValue) =>
+                                setTempDuration(
+                                    itemValue === 'none'
+                                        ? null
+                                        : (itemValue as number),
+                                )
+                            }
+                            itemStyle={{ color: colors.text }}
+                        >
+                            {DURATION_OPTIONS.map((opt) => (
+                                <Picker.Item
+                                    key={
+                                        opt.value === null
+                                            ? 'none'
+                                            : String(opt.value)
+                                    }
+                                    label={opt.label}
+                                    value={
+                                        opt.value === null ? 'none' : opt.value
+                                    }
+                                />
+                            ))}
+                        </Picker>
+                    </Pressable>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -474,5 +647,9 @@ const s = StyleSheet.create({
     modalBtn: {
         fontSize: 17,
         fontWeight: '600',
+    },
+    durationHelperText: {
+        fontSize: 13,
+        marginTop: 6,
     },
 });
