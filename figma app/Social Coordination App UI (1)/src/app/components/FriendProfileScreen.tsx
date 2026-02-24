@@ -277,47 +277,53 @@ export function FriendProfileScreen() {
             <div className="p-6">
               <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6" />
               
-              <button
-                onClick={() => {
-                  // Handle invite to hangout action
-                  setShowRemoveModal(false);
-                }}
-                className="w-full flex items-center justify-center gap-3 py-4 text-gray-800 font-semibold active:bg-gray-50 rounded-xl transition-colors"
-              >
-                <Calendar className="w-5 h-5" />
-                Invite to Hangout
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    // Handle invite to hangout action
+                    setShowRemoveModal(false);
+                  }}
+                  className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold active:bg-[#0066CC] transition-colors shadow-sm"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Invite to Hangout
+                  </div>
+                </button>
 
-              <button
-                onClick={() => {
-                  // Handle invite to group action
-                  setShowRemoveModal(false);
-                }}
-                className="w-full flex items-center justify-center gap-3 py-4 text-gray-800 font-semibold active:bg-gray-50 rounded-xl transition-colors"
-              >
-                <UsersIcon className="w-5 h-5" />
-                Invite to Group
-              </button>
+                <button
+                  onClick={() => {
+                    // Handle invite to group action
+                    setShowRemoveModal(false);
+                  }}
+                  className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold active:bg-gray-200 transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <UsersIcon className="w-5 h-5" />
+                    Invite to Group
+                  </div>
+                </button>
 
-              <div className="w-full h-px bg-gray-200 my-2" />
+                <button
+                  onClick={() => {
+                    // Handle remove friend action
+                    setShowRemoveModal(false);
+                  }}
+                  className="w-full bg-red-50 text-red-600 py-4 rounded-xl font-semibold active:bg-red-100 transition-colors"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <UserMinus className="w-5 h-5" />
+                    Remove Friend
+                  </div>
+                </button>
 
-              <button
-                onClick={() => {
-                  // Handle remove friend action
-                  setShowRemoveModal(false);
-                }}
-                className="w-full flex items-center justify-center gap-3 py-4 text-red-600 font-semibold active:bg-gray-50 rounded-xl transition-colors"
-              >
-                <UserMinus className="w-5 h-5" />
-                Remove Friend
-              </button>
-
-              <button
-                onClick={() => setShowRemoveModal(false)}
-                className="w-full mt-2 py-4 text-gray-600 font-semibold active:bg-gray-50 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
+                <button
+                  onClick={() => setShowRemoveModal(false)}
+                  className="w-full bg-white border border-gray-200 text-gray-700 py-4 rounded-xl font-semibold active:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </>

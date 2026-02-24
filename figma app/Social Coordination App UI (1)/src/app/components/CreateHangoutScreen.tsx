@@ -7,7 +7,9 @@ export function CreateHangoutScreen() {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [duration, setDuration] = useState('');
   const [location, setLocation] = useState('');
+  const [note, setNote] = useState('');
 
   const handleContinue = () => {
     // Navigate to invite selection screen
@@ -62,7 +64,7 @@ export function CreateHangoutScreen() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Time *
+                Start Time *
               </label>
               <div className="relative">
                 <input 
@@ -73,6 +75,33 @@ export function CreateHangoutScreen() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Duration (Optional)
+            </label>
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-gray-400" />
+              <select 
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="flex-1 px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors bg-white"
+              >
+                <option value="">No set duration</option>
+                <option value="1">1 hour</option>
+                <option value="1.5">1.5 hours</option>
+                <option value="2">2 hours</option>
+                <option value="2.5">2.5 hours</option>
+                <option value="3">3 hours</option>
+                <option value="4">4 hours</option>
+                <option value="5">5+ hours</option>
+              </select>
+            </div>
+            <p className="text-xs text-gray-500 mt-2 ml-8">
+              If not set, the hangout will use a default expiration
+            </p>
           </div>
 
           {/* Location */}
@@ -90,6 +119,20 @@ export function CreateHangoutScreen() {
                 className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors"
               />
             </div>
+          </div>
+
+          {/* Note */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Note (Optional)
+            </label>
+            <textarea 
+              placeholder="Add any details for your friends..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-[#007AFF] focus:outline-none transition-colors resize-none"
+            />
           </div>
 
           {/* Info Card */}
