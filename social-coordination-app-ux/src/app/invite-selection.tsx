@@ -215,7 +215,7 @@ export default function InviteSelectionScreen() {
                 </View>
             </View>
 
-            <ScrollView style={{ flex: 1 }}>
+            <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps='handled'>
                 {/* Friends Tab Content */}
                 {activeTab === 'friends' && (
                     <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
