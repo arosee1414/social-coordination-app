@@ -439,7 +439,7 @@ export function createSharedStyles(colors: ThemeColors) {
         liveBadgeText: {
             fontSize: 12,
             fontWeight: '700',
-            color: '#fff',
+            color: colors.liveBadgeText,
             letterSpacing: 0.5,
         },
 

@@ -89,7 +89,8 @@ export const Colors = {
         unreadDot: '#007AFF',
 
         // Live badge
-        liveBadgeBg: 'rgba(255, 255, 255, 0.25)',
+        liveBadgeBg: 'rgba(255, 255, 255, 0.2)',
+        liveBadgeText: '#fff',
         livePulse: '#EF4444',
 
         // Reminder banner
@@ -190,7 +191,8 @@ export const Colors = {
 
         // Live badge
         liveBadgeBg: 'rgba(255, 255, 255, 0.2)',
-        livePulse: '#F87171',
+        liveBadgeText: '#fff',
+        livePulse: '#EF4444',
 
         // Reminder banner
         reminderBg: 'rgba(234, 179, 8, 0.12)',

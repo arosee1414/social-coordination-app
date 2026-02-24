@@ -86,175 +86,234 @@ export default function HangoutsScreen() {
                             gap: 12,
                         }}
                     >
-                        {mockHangouts.map((hangout) => (
-                            <TouchableOpacity
-                                key={hangout.id}
-                                style={shared.card}
-                                onPress={() =>
-                                    router.push(`/hangout/${hangout.id}` as any)
-                                }
-                                activeOpacity={0.7}
-                            >
-                                <View style={s.cardTop}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text
-                                            style={[
-                                                s.cardTitle,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {hangout.title}
-                                        </Text>
-                                        <View style={s.iconRow}>
-                                            <Ionicons
-                                                name='time-outline'
-                                                size={16}
-                                                color={colors.subtitle}
-                                            />
+                        {mockHangouts.map((hangout) => {
+                            const isLive = hangout.status === 'live';
+
+                            return (
+                                <TouchableOpacity
+                                    key={hangout.id}
+                                    style={[
+                                        shared.card,
+                                        isLive && {
+                                            backgroundColor:
+                                                colors.gradientFrom,
+                                            borderColor: colors.gradientFrom,
+                                        },
+                                    ]}
+                                    onPress={() =>
+                                        router.push(
+                                            `/hangout/${hangout.id}` as any,
+                                        )
+                                    }
+                                    activeOpacity={0.7}
+                                >
+                                    <View style={s.cardTop}>
+                                        <View style={{ flex: 1 }}>
                                             <Text
                                                 style={[
-                                                    s.iconRowText,
+                                                    s.cardTitle,
                                                     {
-                                                        color: colors.textSecondary,
+                                                        color: isLive
+                                                            ? '#fff'
+                                                            : colors.text,
                                                     },
                                                 ]}
                                             >
-                                                {hangout.time}
+                                                {hangout.title}
                                             </Text>
-                                        </View>
-                                        {hangout.location && (
                                             <View style={s.iconRow}>
                                                 <Ionicons
-                                                    name='location-outline'
+                                                    name='time-outline'
                                                     size={16}
-                                                    color={colors.subtitle}
+                                                    color={
+                                                        isLive
+                                                            ? 'rgba(255,255,255,0.9)'
+                                                            : colors.subtitle
+                                                    }
                                                 />
                                                 <Text
                                                     style={[
                                                         s.iconRowText,
                                                         {
-                                                            color: colors.textSecondary,
+                                                            color: isLive
+                                                                ? 'rgba(255,255,255,0.9)'
+                                                                : colors.textSecondary,
                                                         },
                                                     ]}
                                                 >
-                                                    {hangout.location}
+                                                    {hangout.time}
+                                                </Text>
+                                            </View>
+                                            {hangout.location && (
+                                                <View style={s.iconRow}>
+                                                    <Ionicons
+                                                        name='location-outline'
+                                                        size={16}
+                                                        color={
+                                                            isLive
+                                                                ? 'rgba(255,255,255,0.9)'
+                                                                : colors.subtitle
+                                                        }
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            s.iconRowText,
+                                                            {
+                                                                color: isLive
+                                                                    ? 'rgba(255,255,255,0.9)'
+                                                                    : colors.textSecondary,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {hangout.location}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                        {isLive ? (
+                                            <View style={shared.liveBadge}>
+                                                <PulsingDot
+                                                    color={colors.livePulse}
+                                                />
+                                                <Text
+                                                    style={shared.liveBadgeText}
+                                                >
+                                                    LIVE
+                                                </Text>
+                                            </View>
+                                        ) : (
+                                            <View style={shared.timeBadge}>
+                                                <Text
+                                                    style={shared.timeBadgeText}
+                                                >
+                                                    {hangout.timeUntil}
                                                 </Text>
                                             </View>
                                         )}
                                     </View>
-                                    {hangout.status === 'live' ? (
-                                        <View style={shared.liveBadge}>
-                                            <PulsingDot
-                                                color={colors.livePulse}
-                                            />
-                                            <Text style={shared.liveBadgeText}>
-                                                LIVE
-                                            </Text>
-                                        </View>
-                                    ) : (
-                                        <View style={shared.timeBadge}>
-                                            <Text style={shared.timeBadgeText}>
-                                                {hangout.timeUntil}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </View>
 
-                                <View
-                                    style={[
-                                        s.statusRow,
-                                        { borderTopColor: colors.cardBorder },
-                                    ]}
-                                >
-                                    <View style={s.statusItem}>
-                                        <View
-                                            style={[
-                                                s.statusDot,
-                                                {
-                                                    backgroundColor:
-                                                        colors.statusGoing,
-                                                },
-                                            ]}
-                                        />
-                                        <Text
-                                            style={[
-                                                s.statusText,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {hangout.going} going
-                                        </Text>
+                                    <View
+                                        style={[
+                                            s.statusRow,
+                                            {
+                                                borderTopColor: isLive
+                                                    ? 'rgba(255,255,255,0.2)'
+                                                    : colors.cardBorder,
+                                            },
+                                        ]}
+                                    >
+                                        <View style={s.statusItem}>
+                                            <View
+                                                style={[
+                                                    s.statusDot,
+                                                    {
+                                                        backgroundColor: isLive
+                                                            ? '#4ADE80'
+                                                            : colors.statusGoing,
+                                                    },
+                                                ]}
+                                            />
+                                            <Text
+                                                style={[
+                                                    s.statusText,
+                                                    {
+                                                        color: isLive
+                                                            ? 'rgba(255,255,255,0.9)'
+                                                            : colors.text,
+                                                    },
+                                                ]}
+                                            >
+                                                {hangout.going} going
+                                            </Text>
+                                        </View>
+                                        <View style={s.statusItem}>
+                                            <View
+                                                style={[
+                                                    s.statusDot,
+                                                    {
+                                                        backgroundColor: isLive
+                                                            ? '#FACC15'
+                                                            : colors.statusMaybe,
+                                                    },
+                                                ]}
+                                            />
+                                            <Text
+                                                style={[
+                                                    s.statusText,
+                                                    {
+                                                        color: isLive
+                                                            ? 'rgba(255,255,255,0.9)'
+                                                            : colors.text,
+                                                    },
+                                                ]}
+                                            >
+                                                {hangout.maybe} maybe
+                                            </Text>
+                                        </View>
+                                        {hangout.userStatus === 'going' && (
+                                            <View
+                                                style={[
+                                                    isLive
+                                                        ? s.statusBadgeLive
+                                                        : shared.statusBadgeGoing,
+                                                    { marginLeft: 'auto' },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={
+                                                        isLive
+                                                            ? s.statusBadgeLiveText
+                                                            : shared.statusBadgeGoingText
+                                                    }
+                                                >
+                                                    {"You're going ✓"}
+                                                </Text>
+                                            </View>
+                                        )}
+                                        {hangout.userStatus === 'maybe' && (
+                                            <View
+                                                style={[
+                                                    isLive
+                                                        ? s.statusBadgeLive
+                                                        : shared.statusBadgeMaybe,
+                                                    { marginLeft: 'auto' },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={
+                                                        isLive
+                                                            ? s.statusBadgeLiveText
+                                                            : shared.statusBadgeMaybeText
+                                                    }
+                                                >
+                                                    Maybe
+                                                </Text>
+                                            </View>
+                                        )}
+                                        {hangout.userStatus === 'not-going' && (
+                                            <View
+                                                style={[
+                                                    isLive
+                                                        ? s.statusBadgeLive
+                                                        : shared.statusBadgeNotGoing,
+                                                    { marginLeft: 'auto' },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={
+                                                        isLive
+                                                            ? s.statusBadgeLiveText
+                                                            : shared.statusBadgeNotGoingText
+                                                    }
+                                                >
+                                                    {"Can't Go"}
+                                                </Text>
+                                            </View>
+                                        )}
                                     </View>
-                                    <View style={s.statusItem}>
-                                        <View
-                                            style={[
-                                                s.statusDot,
-                                                {
-                                                    backgroundColor:
-                                                        colors.statusMaybe,
-                                                },
-                                            ]}
-                                        />
-                                        <Text
-                                            style={[
-                                                s.statusText,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {hangout.maybe} maybe
-                                        </Text>
-                                    </View>
-                                    {hangout.userStatus === 'going' && (
-                                        <View
-                                            style={[
-                                                shared.statusBadgeGoing,
-                                                { marginLeft: 'auto' },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={
-                                                    shared.statusBadgeGoingText
-                                                }
-                                            >
-                                                {"You're going ✓"}
-                                            </Text>
-                                        </View>
-                                    )}
-                                    {hangout.userStatus === 'maybe' && (
-                                        <View
-                                            style={[
-                                                shared.statusBadgeMaybe,
-                                                { marginLeft: 'auto' },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={
-                                                    shared.statusBadgeMaybeText
-                                                }
-                                            >
-                                                Maybe
-                                            </Text>
-                                        </View>
-                                    )}
-                                    {hangout.userStatus === 'not-going' && (
-                                        <View
-                                            style={[
-                                                shared.statusBadgeNotGoing,
-                                                { marginLeft: 'auto' },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={
-                                                    shared.statusBadgeNotGoingText
-                                                }
-                                            >
-                                                {"Can't Go"}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </View>
-                            </TouchableOpacity>
-                        ))}
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 ) : !loading ? (
                     <View style={s.emptyState}>
@@ -341,6 +400,17 @@ const s = StyleSheet.create({
     statusItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     statusDot: { width: 8, height: 8, borderRadius: 4 },
     statusText: { fontSize: 14, fontWeight: '500' },
+    statusBadgeLive: {
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    statusBadgeLiveText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#fff',
+    },
     emptyState: {
         alignItems: 'center',
         paddingHorizontal: 24,
