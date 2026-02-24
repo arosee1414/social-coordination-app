@@ -12,4 +12,5 @@ public class HangoutSummaryResponse
     public DateTime? EndTime { get; set; }
     public int AttendeeCount { get; set; }
     public HangoutStatus Status { get; set; }
+    public RSVPStatus? CurrentUserRsvpStatus { get; set; }
 }

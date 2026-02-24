@@ -617,6 +617,18 @@
         }
       }
     },
+    "/api/Seed": {
+      "post": {
+        "tags": [
+          "Seed"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/users/me": {
       "post": {
         "tags": [
@@ -1097,6 +1109,9 @@
           },
           "status": {
             "$ref": "#/components/schemas/HangoutStatus"
+          },
+          "currentUserRsvpStatus": {
+            "$ref": "#/components/schemas/RSVPStatus"
           }
         },
         "additionalProperties": false

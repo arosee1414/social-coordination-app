@@ -99,7 +99,9 @@ public class HangoutsService : IHangoutsService
             StartTime = h.StartTime,
             EndTime = h.EndTime,
             AttendeeCount = h.Attendees.Count,
-            Status = h.Status
+            Status = h.Status,
+            CurrentUserRsvpStatus = h.Attendees
+                .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus
         }).ToList();
     }
 

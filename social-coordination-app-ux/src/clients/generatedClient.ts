@@ -78,6 +78,10 @@ export interface ISocialCoordinationApiClient {
      */
     health(): Promise<void>;
     /**
+     * @return Success
+     */
+    seed(): Promise<void>;
+    /**
      * @param body (optional) 
      * @return Success
      */
@@ -946,6 +950,53 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
     }
 
     /**
+     * @return Success
+     */
+    seed( cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Seed";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processSeed(_response);
+        });
+    }
+
+    protected processSeed(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param body (optional) 
      * @return Success
      */
@@ -1743,6 +1794,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
     endTime?: Date | undefined;
     attendeeCount?: number;
     status?: HangoutStatus;
+    currentUserRsvpStatus?: RSVPStatus;
 
     constructor(data?: IHangoutSummaryResponse) {
         if (data) {
@@ -1763,6 +1815,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
             this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : <any>undefined;
             this.attendeeCount = _data["attendeeCount"];
             this.status = _data["status"];
+            this.currentUserRsvpStatus = _data["currentUserRsvpStatus"];
         }
     }
 
@@ -1783,6 +1836,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
         data["endTime"] = this.endTime ? this.endTime.toISOString() : <any>undefined;
         data["attendeeCount"] = this.attendeeCount;
         data["status"] = this.status;
+        data["currentUserRsvpStatus"] = this.currentUserRsvpStatus;
         return data;
     }
 }
@@ -1796,6 +1850,7 @@ export interface IHangoutSummaryResponse {
     endTime?: Date | undefined;
     attendeeCount?: number;
     status?: HangoutStatus;
+    currentUserRsvpStatus?: RSVPStatus;
 }
 
 export enum RSVPStatus {

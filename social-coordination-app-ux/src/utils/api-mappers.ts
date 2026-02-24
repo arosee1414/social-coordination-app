@@ -125,7 +125,7 @@ export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Ha
         creator: '', // Not available in summary response
         going: response.attendeeCount ?? 0,
         maybe: 0, // Not available in summary
-        userStatus: null, // Not available in summary
+        userStatus: mapRsvpStatus(response.currentUserRsvpStatus),
         attendeesPreview: [],
         status: hangoutStatus,
         attendeeCount: response.attendeeCount,
