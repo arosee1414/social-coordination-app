@@ -3,10 +3,11 @@
 ## Current Work Focus
 
 - Hangout card UI improvements
-- Most recent: Made location row always visible on hangout cards with fallback "No location set" text
+- Most recent: Made location and notes always visible on hangout detail page with fallback text
 
 ## Recent Changes
 
+- **Always-visible location & notes on hangout detail**: Removed conditional rendering from location and description sections in `hangout/[id].tsx`. Now always shows "Where" row with "No location set" fallback and "Notes" row with "No notes added" fallback, both in italic lighter style when empty.
 - **Always-visible location on hangout cards**: Removed conditional rendering (`{hangout.location && (...)}`) from all 3 hangout card components so the location icon and text always display. When no location is set, shows italic "No location set" in a lighter color (`colors.textTertiary` for normal cards, `rgba(255,255,255,0.6)` for live cards). Updated in `UpcomingHangoutsSection.tsx`, `HappeningNowSection.tsx`, and `hangouts.tsx`.
 - **Edit Hangout Feature**: Created `src/app/edit-hangout/[id].tsx` — full edit screen that fetches existing hangout data and pre-populates form fields (title, date, time, duration, location, description). Includes Save Changes (`api.hangoutsPUT`), Manage Invites navigation, and Delete Hangout with confirmation modal (`api.hangoutsDELETE`). Registered route in `_layout.tsx`. Edit action wired to the ellipsis-vertical icon in hangout detail header — only visible when `user.id === hangout.creatorId`. Hangout detail screen uses `useFocusEffect` to refetch data on focus, ensuring updated info displays after editing. No backend changes or API client regeneration needed.
 - Added text truncation with ellipsis to all hangout card views: title limited to 1 line (`numberOfLines={1}`), location limited to 2 lines (`numberOfLines={2}`) with `flex: 1` for proper text wrapping. Applied across `hangouts.tsx`, `UpcomingHangoutsSection.tsx`, and `HappeningNowSection.tsx`.

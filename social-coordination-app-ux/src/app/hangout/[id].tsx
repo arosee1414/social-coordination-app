@@ -209,90 +209,96 @@ export default function HangoutDetailScreen() {
                                 </Text>
                             </View>
                         </View>
-                        {hangout?.location && (
-                            <View
-                                style={[
-                                    s.detailRow,
-                                    {
-                                        borderTopWidth: 1,
-                                        borderTopColor: colors.cardBorder,
-                                        paddingTop: 12,
-                                        marginTop: 12,
-                                    },
-                                ]}
-                            >
-                                <Ionicons
-                                    name='location-outline'
-                                    size={20}
-                                    color={colors.primary}
-                                />
-                                <View style={{ flex: 1 }}>
+                        <View
+                            style={[
+                                s.detailRow,
+                                {
+                                    borderTopWidth: 1,
+                                    borderTopColor: colors.cardBorder,
+                                    paddingTop: 12,
+                                    marginTop: 12,
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name='location-outline'
+                                size={20}
+                                color={colors.primary}
+                            />
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={[
+                                        s.detailLabel,
+                                        { color: colors.subtitle },
+                                    ]}
+                                >
+                                    Where
+                                </Text>
+                                <Text
+                                    style={[
+                                        s.detailValue,
+                                        { color: colors.text },
+                                        !hangout?.location && {
+                                            fontStyle: 'italic',
+                                            color: colors.textTertiary,
+                                            fontWeight: '400',
+                                        },
+                                    ]}
+                                >
+                                    {hangout?.location || 'No location set'}
+                                </Text>
+                                {hangout?.locationDetail && (
                                     <Text
                                         style={[
-                                            s.detailLabel,
-                                            { color: colors.subtitle },
+                                            s.detailSub,
+                                            { color: colors.textSecondary },
                                         ]}
                                     >
-                                        Where
+                                        {hangout?.locationDetail}
                                     </Text>
-                                    <Text
-                                        style={[
-                                            s.detailValue,
-                                            { color: colors.text },
-                                        ]}
-                                    >
-                                        {hangout?.location}
-                                    </Text>
-                                    {hangout?.locationDetail && (
-                                        <Text
-                                            style={[
-                                                s.detailSub,
-                                                { color: colors.textSecondary },
-                                            ]}
-                                        >
-                                            {hangout?.locationDetail}
-                                        </Text>
-                                    )}
-                                </View>
+                                )}
                             </View>
-                        )}
-                        {hangout?.description && (
-                            <View
-                                style={[
-                                    s.detailRow,
-                                    {
-                                        borderTopWidth: 1,
-                                        borderTopColor: colors.cardBorder,
-                                        paddingTop: 12,
-                                        marginTop: 12,
-                                    },
-                                ]}
-                            >
-                                <Ionicons
-                                    name='document-text-outline'
-                                    size={20}
-                                    color={colors.primary}
-                                />
-                                <View style={{ flex: 1 }}>
-                                    <Text
-                                        style={[
-                                            s.detailLabel,
-                                            { color: colors.subtitle },
-                                        ]}
-                                    >
-                                        Notes
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            s.detailValue,
-                                            { color: colors.text },
-                                        ]}
-                                    >
-                                        {hangout.description}
-                                    </Text>
-                                </View>
+                        </View>
+                        <View
+                            style={[
+                                s.detailRow,
+                                {
+                                    borderTopWidth: 1,
+                                    borderTopColor: colors.cardBorder,
+                                    paddingTop: 12,
+                                    marginTop: 12,
+                                },
+                            ]}
+                        >
+                            <Ionicons
+                                name='document-text-outline'
+                                size={20}
+                                color={colors.primary}
+                            />
+                            <View style={{ flex: 1 }}>
+                                <Text
+                                    style={[
+                                        s.detailLabel,
+                                        { color: colors.subtitle },
+                                    ]}
+                                >
+                                    Notes
+                                </Text>
+                                <Text
+                                    style={[
+                                        s.detailValue,
+                                        { color: colors.text },
+                                        !hangout?.description && {
+                                            fontStyle: 'italic',
+                                            color: colors.textTertiary,
+                                            fontWeight: '400',
+                                        },
+                                    ]}
+                                >
+                                    {hangout?.description || 'No notes added'}
+                                </Text>
                             </View>
-                        )}
+                        </View>
                     </View>
 
                     {/* RSVP Buttons */}
