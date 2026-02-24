@@ -66,13 +66,16 @@ export function createApiClient(getToken: () => Promise<string | null>): AxiosIn
     },
     (error) => {
       if (__DEV__) {
-        console.error('[API Error] Full error details:', {
+        const status = error.response?.status;
+        // 404s are expected in many flows (e.g. checking if a user exists)
+        const logFn = status === 404 ? console.warn : console.error;
+        logFn('[API Error] Full error details:', {
           message: error.message,
           code: error.code, // e.g. ERR_NETWORK, ECONNREFUSED, ECONNABORTED
           url: error.config?.url,
           baseURL: error.config?.baseURL,
           method: error.config?.method,
-          status: error.response?.status,
+          status,
           statusText: error.response?.statusText,
           responseData: error.response?.data,
           isNetworkError: !error.response, // true means no response received at all

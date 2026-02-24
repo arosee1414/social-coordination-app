@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Hangout, RSVPStatus } from '@/src/types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -106,7 +106,7 @@ export function UpcomingHangoutsSection({
                             <View style={styles.avatarStack}>
                                 {hangout.attendeesPreview
                                     .slice(0, 3)
-                                    .map((avatar, index) => (
+                                    .map((avatarUrl, index) => (
                                         <View
                                             key={index}
                                             style={[
@@ -118,17 +118,26 @@ export function UpcomingHangoutsSection({
                                                         hangout.attendeesPreview
                                                             .length - index,
                                                     backgroundColor:
-                                                        colors.card,
+                                                        colors.surfaceTertiary,
                                                     borderColor: colors.card,
                                                 },
                                             ]}
                                         >
-                                            <Text style={styles.avatarText}>
-                                                {avatar}
-                                            </Text>
+                                            {avatarUrl ? (
+                                                <Image
+                                                    source={{ uri: avatarUrl }}
+                                                    style={styles.avatarImage}
+                                                />
+                                            ) : (
+                                                <Ionicons
+                                                    name='person'
+                                                    size={14}
+                                                    color={colors.textTertiary}
+                                                />
+                                            )}
                                         </View>
                                     ))}
-                                {hangout.attendeesPreview.length > 3 && (
+                                {(hangout.attendeeCount ?? 0) > 3 && (
                                     <View
                                         style={[
                                             styles.avatar,
@@ -146,9 +155,7 @@ export function UpcomingHangoutsSection({
                                                 { color: colors.textSecondary },
                                             ]}
                                         >
-                                            +
-                                            {hangout.attendeesPreview.length -
-                                                3}
+                                            +{(hangout.attendeeCount ?? 0) - 3}
                                         </Text>
                                     </View>
                                 )}
@@ -288,8 +295,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    avatarText: {
-        fontSize: 12,
+    avatarImage: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
     },
     avatarOverflowText: {
         fontSize: 10,

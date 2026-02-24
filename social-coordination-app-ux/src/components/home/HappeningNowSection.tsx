@@ -5,6 +5,7 @@ import {
     ScrollView,
     TouchableOpacity,
     StyleSheet,
+    Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Hangout } from '@/src/types';
@@ -87,7 +88,7 @@ export function HappeningNowSection({
                             <View style={styles.avatarStack}>
                                 {hangout.attendeesPreview
                                     .slice(0, 4)
-                                    .map((avatar, index) => (
+                                    .map((avatarUrl, index) => (
                                         <View
                                             key={index}
                                             style={[
@@ -103,9 +104,18 @@ export function HappeningNowSection({
                                                 },
                                             ]}
                                         >
-                                            <Text style={styles.avatarText}>
-                                                {avatar}
-                                            </Text>
+                                            {avatarUrl ? (
+                                                <Image
+                                                    source={{ uri: avatarUrl }}
+                                                    style={styles.avatarImage}
+                                                />
+                                            ) : (
+                                                <Ionicons
+                                                    name='person'
+                                                    size={16}
+                                                    color='rgba(255,255,255,0.6)'
+                                                />
+                                            )}
                                         </View>
                                     ))}
                                 {(hangout.attendeeCount ?? 0) > 4 && (
@@ -207,8 +217,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    avatarText: {
-        fontSize: 14,
+    avatarImage: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
     },
     avatarOverflow: {
         backgroundColor: '#fff',

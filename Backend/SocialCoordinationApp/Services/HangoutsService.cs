@@ -90,6 +90,29 @@ public class HangoutsService : IHangoutsService
         var hangouts = await _cosmosContext.HangoutsContainer
             .QueryItemsCrossPartitionAsync<HangoutRecord>(queryDefinition);
 
+        // Collect all unique attendee user IDs (up to 5 per hangout for preview)
+        var allAttendeeIds = hangouts
+            .SelectMany(h => h.Attendees.Take(5).Select(a => a.UserId))
+            .Distinct()
+            .ToList();
+
+        // Batch-lookup user records for avatar URLs
+        var avatarMap = new Dictionary<string, string?>();
+        if (allAttendeeIds.Count > 0)
+        {
+            var userQuery = new QueryDefinition(
+                "SELECT c.id, c.profileImageUrl FROM c WHERE ARRAY_CONTAINS(@userIds, c.id)")
+                .WithParameter("@userIds", allAttendeeIds);
+
+            var users = await _cosmosContext.UsersContainer
+                .QueryItemsCrossPartitionAsync<UserRecord>(userQuery);
+
+            foreach (var u in users)
+            {
+                avatarMap[u.Id] = u.ProfileImageUrl;
+            }
+        }
+
         return hangouts.Select(h => new HangoutSummaryResponse
         {
             Id = h.Id,
@@ -101,7 +124,11 @@ public class HangoutsService : IHangoutsService
             AttendeeCount = h.Attendees.Count,
             Status = h.Status,
             CurrentUserRsvpStatus = h.Attendees
-                .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus
+                .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus,
+            AttendeeAvatarUrls = h.Attendees
+                .Take(5)
+                .Select(a => avatarMap.GetValueOrDefault(a.UserId))
+                .ToList()
         }).ToList();
     }
 

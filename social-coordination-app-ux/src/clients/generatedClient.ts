@@ -1795,6 +1795,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
     attendeeCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
+    attendeeAvatarUrls?: string[] | undefined;
 
     constructor(data?: IHangoutSummaryResponse) {
         if (data) {
@@ -1816,6 +1817,11 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
             this.attendeeCount = _data["attendeeCount"];
             this.status = _data["status"];
             this.currentUserRsvpStatus = _data["currentUserRsvpStatus"];
+            if (Array.isArray(_data["attendeeAvatarUrls"])) {
+                this.attendeeAvatarUrls = [] as any;
+                for (let item of _data["attendeeAvatarUrls"])
+                    this.attendeeAvatarUrls!.push(item);
+            }
         }
     }
 
@@ -1837,6 +1843,11 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
         data["attendeeCount"] = this.attendeeCount;
         data["status"] = this.status;
         data["currentUserRsvpStatus"] = this.currentUserRsvpStatus;
+        if (Array.isArray(this.attendeeAvatarUrls)) {
+            data["attendeeAvatarUrls"] = [];
+            for (let item of this.attendeeAvatarUrls)
+                data["attendeeAvatarUrls"].push(item);
+        }
         return data;
     }
 }
@@ -1851,6 +1862,7 @@ export interface IHangoutSummaryResponse {
     attendeeCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
+    attendeeAvatarUrls?: string[] | undefined;
 }
 
 export enum RSVPStatus {

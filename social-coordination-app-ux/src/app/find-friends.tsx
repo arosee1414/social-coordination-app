@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -13,10 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import { useUser } from '@clerk/clerk-expo';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { mockFriends } from '@/src/data/mock-data';
 import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
+import { useApiUser } from '@/src/hooks/useApiUser';
+import { CreateUserRequest } from '@/src/clients/generatedClient';
 
 export default function FindFriendsScreen() {
     const colors = useThemeColors();
@@ -30,6 +33,25 @@ export default function FindFriendsScreen() {
         loading: searchLoading,
         searchUsers,
     } = useApiUserSearch();
+    const { user: clerkUser } = useUser();
+    const { createUser } = useApiUser();
+    const hasSynced = useRef(false);
+
+    // One-time sync: seed backend user record with Clerk profile data on sign-up
+    useEffect(() => {
+        if (!clerkUser || hasSynced.current) return;
+        hasSynced.current = true;
+
+        const req = new CreateUserRequest();
+        req.email = clerkUser.primaryEmailAddress?.emailAddress ?? '';
+        req.firstName = clerkUser.firstName ?? '';
+        req.lastName = clerkUser.lastName ?? '';
+        req.profileImageUrl = clerkUser.imageUrl ?? undefined;
+
+        createUser(req).catch((err: any) => {
+            console.warn('Failed to seed backend user:', err);
+        });
+    }, [clerkUser, createUser]);
 
     const inviteLink = 'hangout.app/join/abc123';
 

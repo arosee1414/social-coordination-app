@@ -13,6 +13,7 @@ import {
     mapRsvpStatusToApi,
 } from '@/src/utils/api-mappers';
 import { UpdateRSVPRequest } from '@/src/clients/generatedClient';
+import { useAuth } from '@clerk/clerk-expo';
 
 interface HangoutsContextValue {
     hangouts: Hangout[];
@@ -28,11 +29,17 @@ const HangoutsContext = createContext<HangoutsContextValue | undefined>(
 
 export function HangoutsProvider({ children }: { children: ReactNode }) {
     const api = useApiClient();
+    const { isSignedIn } = useAuth();
     const [hangouts, setHangouts] = useState<Hangout[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchHangouts = useCallback(async () => {
+        if (!isSignedIn) {
+            setHangouts([]);
+            setLoading(false);
+            return;
+        }
         try {
             setLoading(true);
             setError(null);
@@ -44,7 +51,7 @@ export function HangoutsProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [api]);
+    }, [api, isSignedIn]);
 
     useEffect(() => {
         fetchHangouts();
