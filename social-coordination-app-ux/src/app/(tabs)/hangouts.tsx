@@ -10,7 +10,7 @@ import {
     RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -38,18 +38,6 @@ export default function HangoutsScreen() {
             });
         }
     }, [loading]);
-
-    // Refetch when the screen comes back into focus
-    const isFirstFocus = useRef(true);
-    useFocusEffect(
-        useCallback(() => {
-            if (isFirstFocus.current) {
-                isFirstFocus.current = false;
-                return;
-            }
-            refetch();
-        }, [refetch]),
-    );
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
