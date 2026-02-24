@@ -37,3 +37,141 @@ Whenever you modify **any** backend DTO, Response model, Request model, Controll
 - `pwsh` is NOT available; just run PowerShell scripts/commands directly.
 - Do NOT manually edit `generatedClient.ts` — it is auto-generated.
 - After regenerating, update any frontend mappers/hooks that need to use the new fields (e.g., `src/utils/api-mappers.ts`).
+
+---
+
+## Style & Design Consistency (MANDATORY)
+
+When iterating on this app, you **MUST** keep styles and design patterns consistent across the codebase, especially among similar components. Before creating or modifying any UI component:
+
+1. **Review existing similar components** — Before writing new styles or patterns, search for similar components already in the codebase (e.g., list items, cards, modals, form screens, detail pages) and match their established patterns.
+2. **Use shared style constants** — Always reference `src/constants/theme.ts` and `src/constants/shared-styles.ts` for colors, spacing, typography, border radii, shadows, and common layout patterns. Do NOT introduce hardcoded one-off values when a shared constant exists.
+3. **Match structural patterns** — Similar screens and components should follow the same structural conventions (e.g., header layout, padding, scroll behavior, empty states, loading states, error handling UI).
+4. **Propagate style changes** — When updating a design pattern (e.g., changing card border radius or section header style), identify and update **all** components that use the same pattern to keep them in sync.
+5. **Document new patterns** — If a genuinely new design pattern is introduced, add it to `src/constants/shared-styles.ts` or `src/constants/theme.ts` so it can be reused consistently.
+
+**Examples of things to keep consistent:**
+
+- Card/tile appearance (border radius, shadows, padding, background)
+- Section headers and labels (font size, weight, color, spacing)
+- Button styles and sizes across similar contexts
+- Empty state and loading state presentations
+- Screen-level padding, safe area handling, and scroll view configuration
+- Avatar/icon sizes and fallback styles
+
+---
+
+## Self-Improving Cline Reflection
+
+**Objective:** Continuously improve `.clinerules` based on user interactions and feedback.
+
+**Trigger:** Before using the `attempt_completion` tool for any task that involved user feedback provided at any point during the conversation, or involved multiple non-trivial steps (e.g., multiple file edits, complex logic generation).
+
+**Process:**
+
+1. **Offer Reflection:** Ask the user: _"Before I complete the task, would you like me to reflect on our interaction and suggest potential improvements to the active `.clinerules`?"_
+2. **Await User Confirmation:** Proceed to `attempt_completion` immediately if the user declines or doesn't respond affirmatively.
+3. **If User Confirms:**
+   a. **Review Interaction:** Synthesize all feedback provided by the user throughout the entire conversation history for the task. Analyze how this feedback relates to the active `.clinerules` and identify areas where modified instructions could have improved the outcome or better aligned with user preferences.
+   b. **Identify Active Rules:** List the specific global and workspace `.clinerules` files active during the task.
+   c. **Formulate & Propose Improvements:** Generate specific, actionable suggestions for improving the _content_ of the relevant active rule files. Prioritize suggestions directly addressing user feedback. Use `replace_in_file` diff blocks when practical, otherwise describe changes clearly.
+   d. **Await User Action on Suggestions:** Ask the user if they agree with the proposed improvements and if they'd like me to apply them _now_ using the appropriate tool (`replace_in_file` or `write_to_file`). Apply changes if approved, then proceed to `attempt_completion`.
+
+**Constraint:** Do not offer reflection if:
+
+- No `.clinerules` were active.
+- The task was very simple and involved no feedback.
+
+---
+
+## Cline's Memory Bank
+
+I am Cline, an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
+
+### Memory Bank Structure
+
+The Memory Bank consists of core files and optional context files, all in Markdown format. Files build upon each other in a clear hierarchy:
+
+#### Core Files (Required)
+
+1. `memory-bank/projectbrief.md`
+    - Foundation document that shapes all other files
+    - Created at project start if it doesn't exist
+    - Defines core requirements and goals
+    - Source of truth for project scope
+
+2. `memory-bank/productContext.md`
+    - Why this project exists
+    - Problems it solves
+    - How it should work
+    - User experience goals
+
+3. `memory-bank/activeContext.md`
+    - Current work focus
+    - Recent changes
+    - Next steps
+    - Active decisions and considerations
+    - Important patterns and preferences
+    - Learnings and project insights
+
+4. `memory-bank/systemPatterns.md`
+    - System architecture
+    - Key technical decisions
+    - Design patterns in use
+    - Component relationships
+    - Critical implementation paths
+
+5. `memory-bank/techContext.md`
+    - Technologies used
+    - Development setup
+    - Technical constraints
+    - Dependencies
+    - Tool usage patterns
+
+6. `memory-bank/progress.md`
+    - What works
+    - What's left to build
+    - Current status
+    - Known issues
+    - Evolution of project decisions
+
+#### Additional Context
+
+Create additional files/folders within `memory-bank/` when they help organize:
+
+- Complex feature documentation
+- Integration specifications
+- API documentation
+- Testing strategies
+- Deployment procedures
+
+### Documentation Updates
+
+Memory Bank updates occur when:
+
+1. Discovering new project patterns
+2. After implementing significant changes
+3. When user requests with **update memory bank** (MUST review ALL files)
+4. When context needs clarification
+
+### Post-Task Memory Bank Update (MANDATORY)
+
+After completing **every** task (before `attempt_completion`), you **MUST** review, revise, and update the Memory Bank to keep it current. This is not optional — stale documentation degrades future session effectiveness.
+
+**Process:**
+
+1. **Review all core Memory Bank files** — Quickly scan each file to identify anything that is now outdated or incomplete given the work just completed.
+2. **Update `activeContext.md`** — Always update this file to reflect:
+    - What was just accomplished
+    - Current state of work
+    - Immediate next steps
+    - Any new decisions, patterns, or learnings discovered
+3. **Update other files as needed:**
+    - `progress.md` — Update completion status, known issues, what's left to build
+    - `systemPatterns.md` — If new architectural patterns, component relationships, or technical decisions were introduced
+    - `techContext.md` — If new dependencies, tools, or technical constraints were encountered
+    - `productContext.md` — If product requirements or UX goals evolved
+    - `projectbrief.md` — Rarely changes, but update if project scope shifted
+4. **Be concise but accurate** — Don't pad files with unnecessary detail, but ensure all critical context is captured so the next session can pick up seamlessly.
+
+**REMEMBER:** After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
