@@ -18,29 +18,143 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@clerk/clerk-expo';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { PulsingDot } from '@/src/components/PulsingDot';
+import { useApiGroups } from '@/src/hooks/useApiGroups';
+import {
+    HangoutFilterSheet,
+    hasActiveFilters,
+    DEFAULT_FILTERS,
+    type HangoutFilters,
+} from '@/src/components/HangoutFilterSheet';
+import type { Hangout } from '@/src/types';
 
 type HangoutTab = 'upcoming' | 'past';
+
+function applyFilters(
+    hangouts: Hangout[],
+    filters: HangoutFilters,
+    activeTab: HangoutTab,
+    currentUserId: string | undefined,
+): Hangout[] {
+    let result = hangouts;
+
+    // Role filter
+    if (filters.role !== 'all' && currentUserId) {
+        switch (filters.role) {
+            case 'hosting':
+                result = result.filter((h) => h.creatorId === currentUserId);
+                break;
+            case 'invited':
+                result = result.filter((h) => h.creatorId !== currentUserId);
+                break;
+        }
+    }
+
+    // RSVP filter
+    if (filters.rsvp !== 'all') {
+        switch (filters.rsvp) {
+            case 'pending':
+                result = result.filter((h) => h.userStatus === null);
+                break;
+            case 'accepted':
+                result = result.filter(
+                    (h) => h.userStatus === 'going' || h.userStatus === 'maybe',
+                );
+                break;
+            case 'declined':
+                result = result.filter((h) => h.userStatus === 'not-going');
+                break;
+        }
+    }
+
+    // Group filter
+    if (filters.groupId !== 'all') {
+        result = result.filter((h) => h.groupId === filters.groupId);
+    }
+
+    // Date filter
+    if (filters.date !== 'all') {
+        const now = new Date();
+        if (activeTab === 'past') {
+            let cutoff: Date;
+            if (filters.date === 'month') {
+                cutoff = new Date(now.getFullYear(), now.getMonth(), 1);
+            } else {
+                // 3months
+                cutoff = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            }
+            result = result.filter((h) => {
+                if (!h.startTime) return true;
+                return new Date(h.startTime) >= cutoff;
+            });
+        } else {
+            // upcoming
+            let cutoff: Date;
+            if (filters.date === 'month') {
+                cutoff = new Date(
+                    now.getFullYear(),
+                    now.getMonth() + 1,
+                    0,
+                    23,
+                    59,
+                    59,
+                );
+            } else {
+                // 3months
+                cutoff = new Date(
+                    now.getFullYear(),
+                    now.getMonth() + 3,
+                    0,
+                    23,
+                    59,
+                    59,
+                );
+            }
+            result = result.filter((h) => {
+                if (!h.startTime) return true;
+                return new Date(h.startTime) <= cutoff;
+            });
+        }
+    }
+
+    return result;
+}
 
 export default function HangoutsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
+    const { userId } = useAuth();
     const { hangouts: mockHangouts, loading, refetch } = useHangouts();
+    const { groups } = useApiGroups();
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<HangoutTab>('upcoming');
+    const [showFilterSheet, setShowFilterSheet] = useState(false);
+    const [filters, setFilters] = useState<HangoutFilters>(DEFAULT_FILTERS);
 
     const filteredHangouts = useMemo(() => {
+        // First filter by tab
+        let tabFiltered: Hangout[];
         if (activeTab === 'upcoming') {
-            return mockHangouts.filter(
+            tabFiltered = mockHangouts.filter(
                 (h) => h.status === 'live' || h.status === 'upcoming',
             );
+        } else {
+            tabFiltered = mockHangouts.filter((h) => h.status === 'past');
         }
-        return mockHangouts.filter((h) => h.status === 'past');
-    }, [mockHangouts, activeTab]);
+
+        // Then apply user filters
+        return applyFilters(
+            tabFiltered,
+            filters,
+            activeTab,
+            userId ?? undefined,
+        );
+    }, [mockHangouts, activeTab, filters, userId]);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -63,6 +177,8 @@ export default function HangoutsScreen() {
         setRefreshing(false);
     }, [refetch]);
 
+    const filtersActive = hasActiveFilters(filters);
+
     return (
         <SafeAreaView
             style={shared.screenContainer}
@@ -71,12 +187,35 @@ export default function HangoutsScreen() {
             <View style={shared.screenHeaderBordered}>
                 <View style={s.headerRow}>
                     <Text style={shared.screenTitle}>Hangouts</Text>
-                    <TouchableOpacity
-                        style={shared.fab}
-                        onPress={() => router.push('/create-hangout')}
-                    >
-                        <Ionicons name='add' size={20} color='#fff' />
-                    </TouchableOpacity>
+                    <View style={s.headerActions}>
+                        <TouchableOpacity
+                            style={s.filterBtn}
+                            onPress={() => setShowFilterSheet(true)}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name='options-outline'
+                                size={22}
+                                color={colors.text}
+                            />
+                            {filtersActive && (
+                                <View
+                                    style={[
+                                        s.filterDot,
+                                        {
+                                            backgroundColor: colors.primary,
+                                        },
+                                    ]}
+                                />
+                            )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={shared.fab}
+                            onPress={() => router.push('/create-hangout')}
+                        >
+                            <Ionicons name='add' size={20} color='#fff' />
+                        </TouchableOpacity>
+                    </View>
                 </View>
                 <Text style={shared.screenSubtitle}>
                     All your planned hangouts
@@ -397,24 +536,41 @@ export default function HangoutsScreen() {
                             />
                         </View>
                         <Text style={[s.emptyTitle, { color: colors.text }]}>
-                            {activeTab === 'upcoming'
-                                ? 'No Upcoming Hangouts'
-                                : 'No Past Hangouts'}
+                            {filtersActive
+                                ? 'No Matching Hangouts'
+                                : activeTab === 'upcoming'
+                                  ? 'No Upcoming Hangouts'
+                                  : 'No Past Hangouts'}
                         </Text>
                         <Text style={[s.emptyText, { color: colors.subtitle }]}>
-                            {activeTab === 'upcoming'
-                                ? 'Create a hangout and invite friends or groups'
-                                : "You haven't been to any hangouts yet."}
+                            {filtersActive
+                                ? 'Try adjusting your filters to see more results'
+                                : activeTab === 'upcoming'
+                                  ? 'Create a hangout and invite friends or groups'
+                                  : "You haven't been to any hangouts yet."}
                         </Text>
-                        {activeTab === 'upcoming' && (
+                        {filtersActive ? (
                             <TouchableOpacity
                                 style={shared.primaryBtnLarge}
-                                onPress={() => router.push('/create-hangout')}
+                                onPress={() => setFilters(DEFAULT_FILTERS)}
                             >
                                 <Text style={shared.primaryBtnLargeText}>
-                                    Create Hangout
+                                    Clear Filters
                                 </Text>
                             </TouchableOpacity>
+                        ) : (
+                            activeTab === 'upcoming' && (
+                                <TouchableOpacity
+                                    style={shared.primaryBtnLarge}
+                                    onPress={() =>
+                                        router.push('/create-hangout')
+                                    }
+                                >
+                                    <Text style={shared.primaryBtnLargeText}>
+                                        Create Hangout
+                                    </Text>
+                                </TouchableOpacity>
+                            )
                         )}
                     </View>
                 ) : null}
@@ -437,6 +593,16 @@ export default function HangoutsScreen() {
                     <ActivityIndicator size='large' color={colors.primary} />
                 </Animated.View>
             )}
+
+            {/* Filter Bottom Sheet */}
+            <HangoutFilterSheet
+                visible={showFilterSheet}
+                onClose={() => setShowFilterSheet(false)}
+                filters={filters}
+                onApply={setFilters}
+                groups={groups}
+                activeTab={activeTab}
+            />
         </SafeAreaView>
     );
 }
@@ -447,6 +613,26 @@ const s = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 8,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    filterBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    filterDot: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
     },
     cardTop: {
         flexDirection: 'row',

@@ -1125,6 +1125,14 @@
           "currentUserRsvpStatus": {
             "$ref": "#/components/schemas/RSVPStatus"
           },
+          "createdByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "groupId": {
+            "type": "string",
+            "nullable": true
+          },
           "attendeeAvatarUrls": {
             "type": "array",
             "items": {

@@ -1807,6 +1807,8 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
     attendeeCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
+    createdByUserId?: string | undefined;
+    groupId?: string | undefined;
     attendeeAvatarUrls?: string[] | undefined;
 
     constructor(data?: IHangoutSummaryResponse) {
@@ -1829,6 +1831,8 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
             this.attendeeCount = _data["attendeeCount"];
             this.status = _data["status"];
             this.currentUserRsvpStatus = _data["currentUserRsvpStatus"];
+            this.createdByUserId = _data["createdByUserId"];
+            this.groupId = _data["groupId"];
             if (Array.isArray(_data["attendeeAvatarUrls"])) {
                 this.attendeeAvatarUrls = [] as any;
                 for (let item of _data["attendeeAvatarUrls"])
@@ -1855,6 +1859,8 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
         data["attendeeCount"] = this.attendeeCount;
         data["status"] = this.status;
         data["currentUserRsvpStatus"] = this.currentUserRsvpStatus;
+        data["createdByUserId"] = this.createdByUserId;
+        data["groupId"] = this.groupId;
         if (Array.isArray(this.attendeeAvatarUrls)) {
             data["attendeeAvatarUrls"] = [];
             for (let item of this.attendeeAvatarUrls)
@@ -1874,6 +1880,8 @@ export interface IHangoutSummaryResponse {
     attendeeCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
+    createdByUserId?: string | undefined;
+    groupId?: string | undefined;
     attendeeAvatarUrls?: string[] | undefined;
 }
 

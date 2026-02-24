@@ -10,6 +10,8 @@ export interface Hangout {
     location: string | null;
     locationDetail?: string;
     creator: string;
+    creatorId: string;
+    groupId: string | null;
     going: number;
     maybe: number;
     userStatus: RSVPStatus;
@@ -18,6 +20,7 @@ export interface Hangout {
     status: HangoutStatus;
     attendeeCount?: number;
     date?: string;
+    startTime?: Date;
 }
 
 export interface RecentActivity {

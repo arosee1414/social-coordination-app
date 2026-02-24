@@ -137,6 +137,8 @@ public class HangoutsService : IHangoutsService
             Status = h.Status,
             CurrentUserRsvpStatus = h.Attendees
                 .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus,
+            CreatedByUserId = h.CreatedByUserId,
+            GroupId = h.GroupId,
             AttendeeAvatarUrls = h.Attendees
                 .Take(5)
                 .Select(a => avatarMap.GetValueOrDefault(a.UserId))

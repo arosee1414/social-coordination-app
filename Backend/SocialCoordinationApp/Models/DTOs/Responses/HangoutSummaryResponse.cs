@@ -13,5 +13,7 @@ public class HangoutSummaryResponse
     public int AttendeeCount { get; set; }
     public HangoutStatus Status { get; set; }
     public RSVPStatus? CurrentUserRsvpStatus { get; set; }
+    public string CreatedByUserId { get; set; } = string.Empty;
+    public string? GroupId { get; set; }
     public List<string?> AttendeeAvatarUrls { get; set; } = new();
 }

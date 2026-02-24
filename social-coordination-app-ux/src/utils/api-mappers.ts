@@ -135,6 +135,8 @@ export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Ha
         timeUntil: live ? 'Happening now' : past ? formatDate(response.startTime) : formatTimeUntil(response.startTime),
         location: response.location ?? null,
         creator: '', // Not available in summary response
+        creatorId: response.createdByUserId ?? '',
+        groupId: response.groupId ?? null,
         going: response.attendeeCount ?? 0,
         maybe: 0, // Not available in summary
         userStatus: mapRsvpStatus(response.currentUserRsvpStatus),
@@ -144,6 +146,7 @@ export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Ha
         status: hangoutStatus,
         attendeeCount: response.attendeeCount,
         date: formatDate(response.startTime),
+        startTime: response.startTime ? new Date(response.startTime) : undefined,
     };
 }
 
@@ -165,6 +168,8 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
         timeUntil: live ? 'Happening now' : past ? formatDate(response.startTime) : formatTimeUntil(response.startTime),
         location: response.location ?? null,
         creator: response.createdByUserName || response.createdByUserId || '',
+        creatorId: response.createdByUserId ?? '',
+        groupId: response.groupId ?? null,
         going: goingCount,
         maybe: maybeCount,
         userStatus: null, // Will be set by the hook based on current user
@@ -175,6 +180,7 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
         status: hangoutStatus,
         attendeeCount: attendees.length,
         date: formatDate(response.startTime),
+        startTime: response.startTime ? new Date(response.startTime) : undefined,
     };
 }
 
