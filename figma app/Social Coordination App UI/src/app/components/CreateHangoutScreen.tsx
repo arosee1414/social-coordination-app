@@ -16,6 +16,12 @@ export function CreateHangoutScreen() {
     navigate('/create-hangout/invite');
   };
 
+  const handleCreateNow = () => {
+    // Create hangout immediately without invites
+    // In a real app, this would save the hangout and navigate to it
+    navigate('/');
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white">
       {/* Header */}
@@ -151,13 +157,20 @@ export function CreateHangoutScreen() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="p-6 border-t border-gray-100 bg-white">
+      <div className="p-6 border-t border-gray-100 bg-white space-y-3">
+        <button 
+          onClick={handleCreateNow}
+          disabled={!title || !date || !time}
+          className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#0066CC] transition-colors shadow-sm"
+        >
+          Create Hangout
+        </button>
         <button 
           onClick={handleContinue}
           disabled={!title || !date || !time}
-          className="w-full bg-[#007AFF] text-white py-4 rounded-xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed active:bg-[#0066CC] transition-colors"
+          className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed active:bg-gray-200 transition-colors"
         >
-          Continue to Invite
+          Invite Friends First
         </button>
       </div>
     </div>
