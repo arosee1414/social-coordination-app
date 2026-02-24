@@ -169,8 +169,7 @@ export default function ManageGroupMembersScreen() {
                                 style={[
                                     s.memberRow,
                                     {
-                                        backgroundColor:
-                                            colors.surfaceSecondary,
+                                        backgroundColor: colors.surfaceTertiary,
                                     },
                                 ]}
                             >
@@ -248,7 +247,7 @@ export default function ManageGroupMembersScreen() {
                         style={[
                             s.searchContainer,
                             {
-                                backgroundColor: colors.surfaceSecondary,
+                                backgroundColor: colors.surfaceTertiary,
                             },
                         ]}
                     >
