@@ -1700,6 +1700,7 @@ export class HangoutResponse implements IHangoutResponse {
     startTime?: Date;
     endTime?: Date | undefined;
     createdByUserId?: string | undefined;
+    createdByUserName?: string | undefined;
     groupId?: string | undefined;
     attendees?: HangoutAttendeeResponse[] | undefined;
     status?: HangoutStatus;
@@ -1724,6 +1725,7 @@ export class HangoutResponse implements IHangoutResponse {
             this.startTime = _data["startTime"] ? new Date(_data["startTime"].toString()) : <any>undefined;
             this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : <any>undefined;
             this.createdByUserId = _data["createdByUserId"];
+            this.createdByUserName = _data["createdByUserName"];
             this.groupId = _data["groupId"];
             if (Array.isArray(_data["attendees"])) {
                 this.attendees = [] as any;
@@ -1752,6 +1754,7 @@ export class HangoutResponse implements IHangoutResponse {
         data["startTime"] = this.startTime ? this.startTime.toISOString() : <any>undefined;
         data["endTime"] = this.endTime ? this.endTime.toISOString() : <any>undefined;
         data["createdByUserId"] = this.createdByUserId;
+        data["createdByUserName"] = this.createdByUserName;
         data["groupId"] = this.groupId;
         if (Array.isArray(this.attendees)) {
             data["attendees"] = [];
@@ -1773,6 +1776,7 @@ export interface IHangoutResponse {
     startTime?: Date;
     endTime?: Date | undefined;
     createdByUserId?: string | undefined;
+    createdByUserName?: string | undefined;
     groupId?: string | undefined;
     attendees?: HangoutAttendeeResponse[] | undefined;
     status?: HangoutStatus;

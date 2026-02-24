@@ -1,0 +1,39 @@
+# Cline Rules for Social Coordination App
+
+## API Client Regeneration (MANDATORY)
+
+Whenever you modify **any** backend DTO, Response model, Request model, Controller endpoint, or anything that affects the API contract (files under `Backend/SocialCoordinationApp/Models/DTOs/` or `Backend/SocialCoordinationApp/Controllers/`), you **MUST** regenerate the frontend TypeScript API client by following these steps **before** considering the task complete:
+
+### Steps:
+
+1. **Start the backend server:**
+
+    ```
+    cd Backend\SocialCoordinationApp; dotnet run
+    ```
+
+    Wait for the "Now listening on: http://0.0.0.0:5219" message.
+
+2. **Download the updated swagger spec:**
+
+    ```
+    curl -o social-coordination-app-ux\swagger\apiSpec.json http://localhost:5219/swagger/v1/swagger.json
+    ```
+
+3. **Regenerate the TypeScript client:**
+
+    ```
+    cd social-coordination-app-ux; nswag openapi2tsclient /input:"swagger\apiSpec.json" /output:"src\clients\generatedClient.ts" /className:SocialCoordinationApiClient /template:Axios /generateClientInterfaces:true
+    ```
+
+4. **Verify** the new/changed fields appear in `social-coordination-app-ux/src/clients/generatedClient.ts` using search_files.
+
+5. **Shut down the backend server** — stop the running `dotnet run` terminal process when done.
+
+### Important Notes:
+
+- The shell is **PowerShell** — use `;` to chain commands, NOT `&&`.
+- PowerShell's `curl` is an alias for `Invoke-WebRequest`; the `-o` flag works for output.
+- `pwsh` is NOT available; just run PowerShell scripts/commands directly.
+- Do NOT manually edit `generatedClient.ts` — it is auto-generated.
+- After regenerating, update any frontend mappers/hooks that need to use the new fields (e.g., `src/utils/api-mappers.ts`).

@@ -151,7 +151,7 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
         time: formatTime(response.startTime),
         timeUntil: live ? 'Happening now' : formatTimeUntil(response.startTime),
         location: response.location ?? null,
-        creator: response.createdByUserId ?? '',
+        creator: response.createdByUserName || response.createdByUserId || '',
         going: goingCount,
         maybe: maybeCount,
         userStatus: null, // Will be set by the hook based on current user

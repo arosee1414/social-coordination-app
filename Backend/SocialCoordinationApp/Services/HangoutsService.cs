@@ -66,7 +66,8 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Hangout {HangoutId} created by user {UserId}", hangout.Id, userId);
 
-        return MapToResponse(response.Resource);
+        var creatorName = await GetUserDisplayNameAsync(userId);
+        return MapToResponse(response.Resource, creatorName);
     }
 
     public async Task<HangoutResponse> GetHangoutAsync(string hangoutId, string userId)
@@ -77,7 +78,8 @@ public class HangoutsService : IHangoutsService
         if (hangout.CreatedByUserId != userId && !hangout.Attendees.Any(a => a.UserId == userId))
             throw new UnauthorizedAccessException("You do not have access to this hangout");
 
-        return MapToResponse(hangout);
+        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
+        return MapToResponse(hangout, creatorName);
     }
 
     public async Task<List<HangoutSummaryResponse>> GetUserHangoutsAsync(string userId)
@@ -152,7 +154,8 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Hangout {HangoutId} updated by user {UserId}", hangoutId, userId);
 
-        return MapToResponse(response.Resource);
+        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
+        return MapToResponse(response.Resource, creatorName);
     }
 
     public async Task DeleteHangoutAsync(string hangoutId, string userId)
@@ -197,7 +200,8 @@ public class HangoutsService : IHangoutsService
         _logger.LogInformation("User {UserId} RSVP'd {Status} to hangout {HangoutId}",
             userId, request.Status, hangoutId);
 
-        return MapToResponse(response.Resource);
+        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
+        return MapToResponse(response.Resource, creatorName);
     }
 
     public async Task<HangoutResponse> CancelHangoutAsync(string hangoutId, string userId)
@@ -215,7 +219,8 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Hangout {HangoutId} cancelled by user {UserId}", hangoutId, userId);
 
-        return MapToResponse(response.Resource);
+        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
+        return MapToResponse(response.Resource, creatorName);
     }
 
     private async Task<HangoutRecord> GetHangoutRecordAsync(string hangoutId)
@@ -231,7 +236,23 @@ public class HangoutsService : IHangoutsService
             ?? throw new KeyNotFoundException($"Hangout {hangoutId} not found");
     }
 
-    private static HangoutResponse MapToResponse(HangoutRecord hangout)
+    private async Task<string> GetUserDisplayNameAsync(string userId)
+    {
+        try
+        {
+            var response = await _cosmosContext.UsersContainer
+                .ReadItemAsync<UserRecord>(userId, new PartitionKey(userId));
+            var user = response.Resource;
+            var fullName = $"{user.FirstName} {user.LastName}".Trim();
+            return string.IsNullOrEmpty(fullName) ? user.Email : fullName;
+        }
+        catch
+        {
+            return userId;
+        }
+    }
+
+    private static HangoutResponse MapToResponse(HangoutRecord hangout, string createdByUserName = "")
     {
         return new HangoutResponse
         {
@@ -243,6 +264,7 @@ public class HangoutsService : IHangoutsService
             StartTime = hangout.StartTime,
             EndTime = hangout.EndTime,
             CreatedByUserId = hangout.CreatedByUserId,
+            CreatedByUserName = createdByUserName,
             GroupId = hangout.GroupId,
             Attendees = hangout.Attendees.Select(a => new HangoutAttendeeResponse
             {
