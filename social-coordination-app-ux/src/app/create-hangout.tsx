@@ -205,6 +205,7 @@ export default function CreateHangoutScreen() {
                             if (d) onValueChange(d);
                         }}
                         textColor={colors.text}
+                        style={{ width: '100%' }}
                     />
                 </Pressable>
             </Pressable>
@@ -580,6 +581,7 @@ export default function CreateHangoutScreen() {
                                 )
                             }
                             itemStyle={{ color: colors.text }}
+                            style={{ width: '100%' }}
                         >
                             {DURATION_OPTIONS.map((opt) => (
                                 <Picker.Item
@@ -637,12 +639,14 @@ const s = StyleSheet.create({
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         paddingBottom: 30,
+        alignItems: 'center',
     },
     modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 14,
+        width: '100%',
     },
     modalBtn: {
         fontSize: 17,
