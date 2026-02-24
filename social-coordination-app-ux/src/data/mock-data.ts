@@ -179,6 +179,7 @@ export const mockAttendees: AttendeesByStatus = {
             fromGroup: null,
         },
     ],
+    pending: [],
 };
 
 export const mockInvitedGroups: InvitedGroup[] = [

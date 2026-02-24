@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useApiClient } from './useApiClient';
 import type { HangoutResponse } from '@/src/clients/generatedClient';
-import type { Hangout, AttendeesByStatus } from '@/src/types';
-import { mapHangoutResponseToHangout, mapAttendeesToRsvpGroups, mapRsvpStatus } from '@/src/utils/api-mappers';
+import type { Hangout, AttendeesByStatus, InvitedGroup } from '@/src/types';
+import { mapHangoutResponseToHangout, mapAttendeesToRsvpGroups, mapRsvpStatus, mapInvitedGroupInfoToInvitedGroup } from '@/src/utils/api-mappers';
 import { RSVPStatus as ApiRSVPStatus } from '@/src/clients/generatedClient';
 
 export function useApiHangoutDetail(hangoutId: string, currentUserId?: string) {
@@ -31,7 +31,8 @@ export function useApiHangoutDetail(hangoutId: string, currentUserId?: string) {
     }, [fetchHangoutDetail]);
 
     let hangout: Hangout | null = null;
-    let attendeesByStatus: AttendeesByStatus = { going: [], maybe: [], notGoing: [] };
+    let attendeesByStatus: AttendeesByStatus = { going: [], maybe: [], notGoing: [], pending: [] };
+    let invitedGroups: InvitedGroup[] = [];
 
     if (hangoutResponse) {
         hangout = mapHangoutResponseToHangout(hangoutResponse);
@@ -47,11 +48,13 @@ export function useApiHangoutDetail(hangoutId: string, currentUserId?: string) {
         }
 
         attendeesByStatus = mapAttendeesToRsvpGroups(hangoutResponse.attendees ?? []);
+        invitedGroups = (hangoutResponse.invitedGroups ?? []).map(mapInvitedGroupInfoToInvitedGroup);
     }
 
     return {
         hangout,
         attendeesByStatus,
+        invitedGroups,
         description: hangoutResponse?.description ?? null,
         loading,
         error,

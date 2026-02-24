@@ -34,6 +34,14 @@ public class HangoutsService : IHangoutsService
         // Default EndTime to StartTime + 8 hours if not provided
         var endTime = request.EndTime ?? request.StartTime.AddHours(8);
 
+        // Collect all invited group IDs from both GroupId (legacy) and InvitedGroupIds
+        var allGroupIds = new List<string>();
+        if (!string.IsNullOrEmpty(request.GroupId))
+            allGroupIds.Add(request.GroupId);
+        if (request.InvitedGroupIds != null)
+            allGroupIds.AddRange(request.InvitedGroupIds);
+        allGroupIds = allGroupIds.Distinct().ToList();
+
         var hangout = new HangoutRecord
         {
             Id = Guid.NewGuid().ToString(),
@@ -45,6 +53,7 @@ public class HangoutsService : IHangoutsService
             EndTime = endTime,
             CreatedByUserId = userId,
             GroupId = request.GroupId,
+            InvitedGroupIds = allGroupIds,
             Attendees = new List<HangoutAttendee>
             {
                 new HangoutAttendee
@@ -59,10 +68,13 @@ public class HangoutsService : IHangoutsService
             UpdatedAt = now
         };
 
-        // Add invitees if provided
+        // Track already-added user IDs to avoid duplicates
+        var addedUserIds = new HashSet<string> { userId };
+
+        // Add individual invitees if provided
         if (request.InviteeUserIds != null)
         {
-            foreach (var inviteeId in request.InviteeUserIds.Where(id => id != userId))
+            foreach (var inviteeId in request.InviteeUserIds.Where(id => !addedUserIds.Contains(id)))
             {
                 hangout.Attendees.Add(new HangoutAttendee
                 {
@@ -70,6 +82,29 @@ public class HangoutsService : IHangoutsService
                     RsvpStatus = RSVPStatus.Pending,
                     RespondedAt = null
                 });
+                addedUserIds.Add(inviteeId);
+            }
+        }
+
+        // Expand group members into attendees
+        if (allGroupIds.Count > 0)
+        {
+            var groupRecords = await BatchLookupGroupsAsync(allGroupIds);
+            foreach (var group in groupRecords.Values)
+            {
+                foreach (var member in group.Members)
+                {
+                    if (!addedUserIds.Contains(member.UserId))
+                    {
+                        hangout.Attendees.Add(new HangoutAttendee
+                        {
+                            UserId = member.UserId,
+                            RsvpStatus = RSVPStatus.Pending,
+                            RespondedAt = null
+                        });
+                        addedUserIds.Add(member.UserId);
+                    }
+                }
             }
         }
 
@@ -298,6 +333,27 @@ public class HangoutsService : IHangoutsService
         return result;
     }
 
+    private async Task<Dictionary<string, GroupRecord>> BatchLookupGroupsAsync(IEnumerable<string> groupIds)
+    {
+        var uniqueIds = groupIds.Distinct().ToList();
+        var result = new Dictionary<string, GroupRecord>();
+        if (uniqueIds.Count == 0) return result;
+
+        var queryDefinition = new QueryDefinition(
+            "SELECT * FROM c WHERE ARRAY_CONTAINS(@groupIds, c.id)")
+            .WithParameter("@groupIds", uniqueIds);
+
+        var groups = await _cosmosContext.GroupsContainer
+            .QueryItemsCrossPartitionAsync<GroupRecord>(queryDefinition);
+
+        foreach (var group in groups)
+        {
+            result[group.Id] = group;
+        }
+
+        return result;
+    }
+
     private static string GetDisplayName(UserRecord user)
     {
         var fullName = $"{user.FirstName} {user.LastName}".Trim();
@@ -316,6 +372,23 @@ public class HangoutsService : IHangoutsService
             ? GetDisplayName(creator)
             : hangout.CreatedByUserId;
 
+        // Look up invited groups
+        var invitedGroups = new List<InvitedGroupInfoResponse>();
+        if (hangout.InvitedGroupIds.Count > 0)
+        {
+            var groupLookup = await BatchLookupGroupsAsync(hangout.InvitedGroupIds);
+            invitedGroups = hangout.InvitedGroupIds
+                .Where(id => groupLookup.ContainsKey(id))
+                .Select(id => new InvitedGroupInfoResponse
+                {
+                    Id = groupLookup[id].Id,
+                    Name = groupLookup[id].Name,
+                    Emoji = groupLookup[id].Emoji,
+                    MemberCount = groupLookup[id].Members.Count
+                })
+                .ToList();
+        }
+
         return new HangoutResponse
         {
             Id = hangout.Id,
@@ -328,6 +401,8 @@ public class HangoutsService : IHangoutsService
             CreatedByUserId = hangout.CreatedByUserId,
             CreatedByUserName = creatorName,
             GroupId = hangout.GroupId,
+            InvitedGroupIds = hangout.InvitedGroupIds,
+            InvitedGroups = invitedGroups,
             Attendees = hangout.Attendees.Select(a =>
             {
                 var displayName = userLookup.TryGetValue(a.UserId, out var u)

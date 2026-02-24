@@ -877,6 +877,13 @@
             "type": "string",
             "nullable": true
           },
+          "invitedGroupIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
           "inviteeUserIds": {
             "type": "array",
             "items": {
@@ -1070,6 +1077,20 @@
             "type": "string",
             "nullable": true
           },
+          "invitedGroupIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "invitedGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvitedGroupInfoResponse"
+            },
+            "nullable": true
+          },
           "attendees": {
             "type": "array",
             "items": {
@@ -1147,6 +1168,28 @@
               "type": "string"
             },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InvitedGroupInfoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "emoji": {
+            "type": "string",
+            "nullable": true
+          },
+          "memberCount": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

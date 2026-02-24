@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,17 +8,19 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
+    Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockFriends } from '@/src/data/mock-data';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import { useApiGroups } from '@/src/hooks/useApiGroups';
+import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { CreateHangoutRequest } from '@/src/clients/generatedClient';
+import type { UserResponse } from '@/src/clients/generatedClient';
 
 type ActiveTab = 'friends' | 'groups';
 
@@ -58,23 +60,61 @@ export default function InviteSelectionScreen() {
     const [search, setSearch] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    // Real user search for friends tab
+    const {
+        results: userSearchResults,
+        loading: userSearchLoading,
+        searchUsers,
+    } = useApiUserSearch();
+
+    // Keep a map of selected users so we can display them even when search changes
+    const [selectedUserMap, setSelectedUserMap] = useState<
+        Map<string, UserResponse>
+    >(new Map());
+
+    // Debounced user search when on friends tab
+    useEffect(() => {
+        if (activeTab !== 'friends') return;
+        const timer = setTimeout(() => {
+            searchUsers(search);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search, activeTab, searchUsers]);
+
     const toggleGroup = (id: string) => {
         const next = new Set(selectedGroups);
         next.has(id) ? next.delete(id) : next.add(id);
         setSelectedGroups(next);
     };
 
-    const toggleFriend = (id: string) => {
+    const toggleFriend = (user: UserResponse) => {
+        const id = user.id!;
         const next = new Set(selectedFriends);
-        next.has(id) ? next.delete(id) : next.add(id);
+        const nextMap = new Map(selectedUserMap);
+        if (next.has(id)) {
+            next.delete(id);
+            nextMap.delete(id);
+        } else {
+            next.add(id);
+            nextMap.set(id, user);
+        }
         setSelectedFriends(next);
+        setSelectedUserMap(nextMap);
     };
 
     const totalSelected = selectedGroups.size + selectedFriends.size;
 
-    const filteredFriends = mockFriends.filter((f) =>
-        f.name.toLowerCase().includes(search.toLowerCase()),
-    );
+    // Merge search results with already-selected users (so selected users always show)
+    const displayedUsers: UserResponse[] = (() => {
+        const map = new Map<string, UserResponse>();
+        // Add selected users first
+        selectedUserMap.forEach((u, id) => map.set(id, u));
+        // Add search results
+        userSearchResults.forEach((u) => {
+            if (u.id) map.set(u.id, u);
+        });
+        return Array.from(map.values());
+    })();
 
     const filteredGroups = groups.filter((g) =>
         g.name.toLowerCase().includes(search.toLowerCase()),
@@ -91,13 +131,13 @@ export default function InviteSelectionScreen() {
             if (params.location) req.location = params.location;
             if (params.endTime) req.endTime = new Date(params.endTime);
 
-            // If exactly one group is selected, set it as the groupId
+            // Send all selected group IDs
             const groupIds = Array.from(selectedGroups);
-            if (groupIds.length === 1) {
-                req.groupId = groupIds[0];
+            if (groupIds.length > 0) {
+                req.invitedGroupIds = groupIds;
             }
 
-            // Collect selected friend IDs as invitees
+            // Collect selected user IDs as invitees
             const friendIds = Array.from(selectedFriends);
             if (friendIds.length > 0) {
                 req.inviteeUserIds = friendIds;
@@ -219,32 +259,94 @@ export default function InviteSelectionScreen() {
                 {/* Friends Tab Content */}
                 {activeTab === 'friends' && (
                     <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
+                        {userSearchLoading && (
+                            <ActivityIndicator
+                                color={colors.primary}
+                                style={{ marginVertical: 16 }}
+                            />
+                        )}
+                        {!userSearchLoading &&
+                            search.length >= 2 &&
+                            displayedUsers.length === 0 && (
+                                <Text
+                                    style={{
+                                        color: colors.textSecondary,
+                                        fontSize: 14,
+                                        paddingVertical: 16,
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    No users found
+                                </Text>
+                            )}
+                        {!userSearchLoading &&
+                            search.length < 2 &&
+                            displayedUsers.length === 0 && (
+                                <Text
+                                    style={{
+                                        color: colors.textSecondary,
+                                        fontSize: 14,
+                                        paddingVertical: 16,
+                                        textAlign: 'center',
+                                    }}
+                                >
+                                    Type at least 2 characters to search for
+                                    friends
+                                </Text>
+                            )}
                         <View style={{ gap: 8 }}>
-                            {filteredFriends.map((friend) => {
-                                const selected = selectedFriends.has(friend.id);
+                            {displayedUsers.map((user) => {
+                                const selected = selectedFriends.has(user.id!);
+                                const displayName =
+                                    `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
+                                    user.email ||
+                                    'Unknown';
                                 return (
                                     <TouchableOpacity
-                                        key={friend.id}
+                                        key={user.id}
                                         style={
                                             selected
                                                 ? shared.selectableItemSelected
                                                 : shared.selectableItem
                                         }
-                                        onPress={() => toggleFriend(friend.id)}
+                                        onPress={() => toggleFriend(user)}
                                         activeOpacity={0.7}
                                     >
-                                        <View style={shared.avatarLarge}>
-                                            <Text style={{ fontSize: 24 }}>
-                                                {friend.avatar}
-                                            </Text>
-                                        </View>
+                                        {user.profileImageUrl ? (
+                                            <Image
+                                                source={{
+                                                    uri: user.profileImageUrl,
+                                                }}
+                                                style={{
+                                                    width: 44,
+                                                    height: 44,
+                                                    borderRadius: 22,
+                                                }}
+                                            />
+                                        ) : (
+                                            <View
+                                                style={[
+                                                    shared.avatarLarge,
+                                                    {
+                                                        backgroundColor:
+                                                            colors.surfaceTertiary,
+                                                    },
+                                                ]}
+                                            >
+                                                <Ionicons
+                                                    name='person'
+                                                    size={22}
+                                                    color={colors.textTertiary}
+                                                />
+                                            </View>
+                                        )}
                                         <Text
                                             style={[
                                                 s.itemName,
                                                 { color: colors.text, flex: 1 },
                                             ]}
                                         >
-                                            {friend.name}
+                                            {displayName}
                                         </Text>
                                         {selected && (
                                             <View style={shared.checkCircle}>

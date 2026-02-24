@@ -1370,6 +1370,7 @@ export class CreateHangoutRequest implements ICreateHangoutRequest {
     startTime?: Date;
     endTime?: Date | undefined;
     groupId?: string | undefined;
+    invitedGroupIds?: string[] | undefined;
     inviteeUserIds?: string[] | undefined;
 
     constructor(data?: ICreateHangoutRequest) {
@@ -1390,6 +1391,11 @@ export class CreateHangoutRequest implements ICreateHangoutRequest {
             this.startTime = _data["startTime"] ? new Date(_data["startTime"].toString()) : <any>undefined;
             this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : <any>undefined;
             this.groupId = _data["groupId"];
+            if (Array.isArray(_data["invitedGroupIds"])) {
+                this.invitedGroupIds = [] as any;
+                for (let item of _data["invitedGroupIds"])
+                    this.invitedGroupIds!.push(item);
+            }
             if (Array.isArray(_data["inviteeUserIds"])) {
                 this.inviteeUserIds = [] as any;
                 for (let item of _data["inviteeUserIds"])
@@ -1414,6 +1420,11 @@ export class CreateHangoutRequest implements ICreateHangoutRequest {
         data["startTime"] = this.startTime ? this.startTime.toISOString() : <any>undefined;
         data["endTime"] = this.endTime ? this.endTime.toISOString() : <any>undefined;
         data["groupId"] = this.groupId;
+        if (Array.isArray(this.invitedGroupIds)) {
+            data["invitedGroupIds"] = [];
+            for (let item of this.invitedGroupIds)
+                data["invitedGroupIds"].push(item);
+        }
         if (Array.isArray(this.inviteeUserIds)) {
             data["inviteeUserIds"] = [];
             for (let item of this.inviteeUserIds)
@@ -1431,6 +1442,7 @@ export interface ICreateHangoutRequest {
     startTime?: Date;
     endTime?: Date | undefined;
     groupId?: string | undefined;
+    invitedGroupIds?: string[] | undefined;
     inviteeUserIds?: string[] | undefined;
 }
 
@@ -1718,6 +1730,8 @@ export class HangoutResponse implements IHangoutResponse {
     createdByUserId?: string | undefined;
     createdByUserName?: string | undefined;
     groupId?: string | undefined;
+    invitedGroupIds?: string[] | undefined;
+    invitedGroups?: InvitedGroupInfoResponse[] | undefined;
     attendees?: HangoutAttendeeResponse[] | undefined;
     status?: HangoutStatus;
     createdAt?: Date;
@@ -1743,6 +1757,16 @@ export class HangoutResponse implements IHangoutResponse {
             this.createdByUserId = _data["createdByUserId"];
             this.createdByUserName = _data["createdByUserName"];
             this.groupId = _data["groupId"];
+            if (Array.isArray(_data["invitedGroupIds"])) {
+                this.invitedGroupIds = [] as any;
+                for (let item of _data["invitedGroupIds"])
+                    this.invitedGroupIds!.push(item);
+            }
+            if (Array.isArray(_data["invitedGroups"])) {
+                this.invitedGroups = [] as any;
+                for (let item of _data["invitedGroups"])
+                    this.invitedGroups!.push(InvitedGroupInfoResponse.fromJS(item));
+            }
             if (Array.isArray(_data["attendees"])) {
                 this.attendees = [] as any;
                 for (let item of _data["attendees"])
@@ -1772,6 +1796,16 @@ export class HangoutResponse implements IHangoutResponse {
         data["createdByUserId"] = this.createdByUserId;
         data["createdByUserName"] = this.createdByUserName;
         data["groupId"] = this.groupId;
+        if (Array.isArray(this.invitedGroupIds)) {
+            data["invitedGroupIds"] = [];
+            for (let item of this.invitedGroupIds)
+                data["invitedGroupIds"].push(item);
+        }
+        if (Array.isArray(this.invitedGroups)) {
+            data["invitedGroups"] = [];
+            for (let item of this.invitedGroups)
+                data["invitedGroups"].push(item.toJSON());
+        }
         if (Array.isArray(this.attendees)) {
             data["attendees"] = [];
             for (let item of this.attendees)
@@ -1794,6 +1828,8 @@ export interface IHangoutResponse {
     createdByUserId?: string | undefined;
     createdByUserName?: string | undefined;
     groupId?: string | undefined;
+    invitedGroupIds?: string[] | undefined;
+    invitedGroups?: InvitedGroupInfoResponse[] | undefined;
     attendees?: HangoutAttendeeResponse[] | undefined;
     status?: HangoutStatus;
     createdAt?: Date;
@@ -1891,6 +1927,54 @@ export interface IHangoutSummaryResponse {
     createdByUserId?: string | undefined;
     groupId?: string | undefined;
     attendeeAvatarUrls?: string[] | undefined;
+}
+
+export class InvitedGroupInfoResponse implements IInvitedGroupInfoResponse {
+    id?: string | undefined;
+    name?: string | undefined;
+    emoji?: string | undefined;
+    memberCount?: number;
+
+    constructor(data?: IInvitedGroupInfoResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.emoji = _data["emoji"];
+            this.memberCount = _data["memberCount"];
+        }
+    }
+
+    static fromJS(data: any): InvitedGroupInfoResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new InvitedGroupInfoResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["emoji"] = this.emoji;
+        data["memberCount"] = this.memberCount;
+        return data;
+    }
+}
+
+export interface IInvitedGroupInfoResponse {
+    id?: string | undefined;
+    name?: string | undefined;
+    emoji?: string | undefined;
+    memberCount?: number;
 }
 
 export enum RSVPStatus {

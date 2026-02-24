@@ -9,5 +9,6 @@ public class CreateHangoutRequest
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public string? GroupId { get; set; }
+    public List<string>? InvitedGroupIds { get; set; }
     public List<string>? InviteeUserIds { get; set; }
 }

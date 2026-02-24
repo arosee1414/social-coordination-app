@@ -32,6 +32,9 @@ public class HangoutRecord
     [JsonPropertyName("groupId")]
     public string? GroupId { get; set; }
 
+    [JsonPropertyName("invitedGroupIds")]
+    public List<string> InvitedGroupIds { get; set; } = new();
+
     [JsonPropertyName("attendees")]
     public List<HangoutAttendee> Attendees { get; set; } = new();
 

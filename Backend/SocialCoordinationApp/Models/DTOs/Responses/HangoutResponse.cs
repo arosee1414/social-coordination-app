@@ -14,6 +14,8 @@ public class HangoutResponse
     public string CreatedByUserId { get; set; } = string.Empty;
     public string CreatedByUserName { get; set; } = string.Empty;
     public string? GroupId { get; set; }
+    public List<string> InvitedGroupIds { get; set; } = new();
+    public List<InvitedGroupInfoResponse> InvitedGroups { get; set; } = new();
     public List<HangoutAttendeeResponse> Attendees { get; set; } = new();
     public HangoutStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }

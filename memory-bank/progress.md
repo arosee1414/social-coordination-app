@@ -2,6 +2,7 @@
 
 ## What Works
 
+- **Hangout Invitations** — Full-stack invite flow: when creating a hangout, users can invite groups and individual users. Group members are expanded into individual attendees with Pending RSVP status. Hangout detail page shows invited groups (tappable to navigate to group) and a Pending tab in RSVP responses. Backend stores `InvitedGroupIds` and populates `InvitedGroups` on detail fetch.
 - **Edit Group**: Full edit screen (`edit-group/[id].tsx`) with name/emoji editing, delete group with confirmation, and manage members navigation. Manage Members screen (`manage-group-members/[id].tsx`) with current member list, remove members, and search-to-add. Edit button only visible to group creator. Group detail refetches on focus.
 - **Edit Hangout** — Creator can edit their hangouts (title, date/time, duration, location, notes) via `edit-hangout/[id]` screen; delete hangout with confirmation; conditional edit button on detail page (only for creator)
 

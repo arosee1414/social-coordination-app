@@ -4,9 +4,10 @@ import type {
     HangoutAttendeeResponse,
     GroupSummaryResponse,
     GroupMemberResponse,
+    InvitedGroupInfoResponse,
 } from '@/src/clients/generatedClient';
 import { HangoutStatus as ApiHangoutStatus, RSVPStatus as ApiRSVPStatus } from '@/src/clients/generatedClient';
-import type { Hangout, RSVPStatus, HangoutStatus, Attendee, AttendeesByStatus, Group, GroupMember } from '@/src/types';
+import type { Hangout, RSVPStatus, HangoutStatus, Attendee, AttendeesByStatus, Group, GroupMember, InvitedGroup } from '@/src/types';
 
 /**
  * Convert API HangoutStatus enum to frontend HangoutStatus string
@@ -204,6 +205,7 @@ export function mapAttendeesToRsvpGroups(attendees: HangoutAttendeeResponse[]): 
     const going: Attendee[] = [];
     const maybe: Attendee[] = [];
     const notGoing: Attendee[] = [];
+    const pending: Attendee[] = [];
 
     for (const attendee of attendees) {
         const mapped = mapAttendeeToDisplayAttendee(attendee);
@@ -217,11 +219,14 @@ export function mapAttendeesToRsvpGroups(attendees: HangoutAttendeeResponse[]): 
             case ApiRSVPStatus.NotGoing:
                 notGoing.push(mapped);
                 break;
-            // Pending attendees not shown in RSVP tabs
+            case ApiRSVPStatus.Pending:
+            default:
+                pending.push(mapped);
+                break;
         }
     }
 
-    return { going, maybe, notGoing };
+    return { going, maybe, notGoing, pending };
 }
 
 /**
@@ -245,5 +250,18 @@ export function mapGroupMemberToDisplayMember(member: GroupMemberResponse): Grou
         name: member.displayName || member.userId || 'Unknown',
         avatar: member.profileImageUrl ?? null,
         role: member.role === 'Admin' ? 'Admin' : 'Member',
+    };
+}
+
+/**
+ * Map InvitedGroupInfoResponse to frontend InvitedGroup type
+ */
+export function mapInvitedGroupInfoToInvitedGroup(response: InvitedGroupInfoResponse): InvitedGroup {
+    return {
+        id: response.id ?? '',
+        name: response.name ?? '',
+        icon: response.emoji ?? '👥',
+        memberCount: response.memberCount ?? 0,
+        membersPreview: [],
     };
 }

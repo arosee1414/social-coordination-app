@@ -10,15 +10,15 @@ public class SeedService : ISeedService
     private readonly ICosmosContext _cosmosContext;
     private readonly ILogger<SeedService> _logger;
 
-    // The real Clerk user ID for the test user
-    private const string RealUserId = "user_3A2C64uTqFecw5hrDfTAugiid0s";
-
-    // Fake friend user IDs
-    private const string FriendId1 = "seed-friend-01";
-    private const string FriendId2 = "seed-friend-02";
-    private const string FriendId3 = "seed-friend-03";
-    private const string FriendId4 = "seed-friend-04";
-    private const string FriendId5 = "seed-friend-05";
+    // Real Clerk user IDs
+    private const string AlexId = "user_3A69U2QLogajjLg2fz5HYtY1d8z";       // Alexander Rosenthal (already exists — not seeded)
+    private const string LaceyId = "user_3A8Zw5vouH1DKVysQEKa6Ly3zk4";       // Lacey Rubin
+    private const string JordanId = "user_3A8a2DPscQOpsCm1MYXqCO7oEhD";      // Jordan Moldowsky
+    private const string MattId = "user_3A8a57ZzP2OLpXWhPJSGGiIll2M";        // Matt Korn
+    private const string PietroId = "user_3A8aANI59MPyhZGAO0ZbG3NE3yv";      // Pietro Buonfrisco
+    private const string KirstinId = "user_3A8aCpmKLGn0NgM9nPei32UiL6R";     // Kirstin Cox
+    private const string LukeId = "user_3A8aFuVqs6CYyepF5UWfep2CwL3";       // Luke Rosenthal
+    private const string JakeId = "user_3A8aIYLpq5PosjzeaDKOxj4MHv0";       // Jake Rosenthal
 
     // Group IDs
     private const string GroupId1 = "seed-group-01";
@@ -55,64 +55,76 @@ public class SeedService : ISeedService
     private async Task<int> SeedUsersAsync()
     {
         var now = DateTime.UtcNow;
+
+        // Only seed the 7 other users — Alexander (AlexId) already exists in the DB
         var users = new List<UserRecord>
         {
             new()
             {
-                Id = RealUserId,
-                Email = "testuser@example.com",
-                FirstName = "Alex",
-                LastName = "Rose",
-                ProfileImageUrl = null,
-                CreatedAt = now.AddDays(-30),
-                UpdatedAt = now
-            },
-            new()
-            {
-                Id = FriendId1,
-                Email = "sarah.chen@example.com",
-                FirstName = "Sarah",
-                LastName = "Chen",
+                Id = LaceyId,
+                Email = "lax14alex@gmail.com",
+                FirstName = "Lacey",
+                LastName = "Rubin",
                 ProfileImageUrl = null,
                 CreatedAt = now.AddDays(-28),
                 UpdatedAt = now
             },
             new()
             {
-                Id = FriendId2,
-                Email = "marcus.johnson@example.com",
-                FirstName = "Marcus",
-                LastName = "Johnson",
+                Id = JordanId,
+                Email = "jordan@gmail.com",
+                FirstName = "Jordan",
+                LastName = "Moldowsky",
                 ProfileImageUrl = null,
                 CreatedAt = now.AddDays(-25),
                 UpdatedAt = now
             },
             new()
             {
-                Id = FriendId3,
-                Email = "emma.wilson@example.com",
-                FirstName = "Emma",
-                LastName = "Wilson",
+                Id = MattId,
+                Email = "matt.korn@gmail.com",
+                FirstName = "Matt",
+                LastName = "Korn",
                 ProfileImageUrl = null,
                 CreatedAt = now.AddDays(-20),
                 UpdatedAt = now
             },
             new()
             {
-                Id = FriendId4,
-                Email = "jay.patel@example.com",
-                FirstName = "Jay",
-                LastName = "Patel",
+                Id = PietroId,
+                Email = "pete.b@gmail.com",
+                FirstName = "Pietro",
+                LastName = "Buonfrisco",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-18),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = KirstinId,
+                Email = "kcox@gmail.com",
+                FirstName = "Kirstin",
+                LastName = "Cox",
                 ProfileImageUrl = null,
                 CreatedAt = now.AddDays(-15),
                 UpdatedAt = now
             },
             new()
             {
-                Id = FriendId5,
-                Email = "olivia.martinez@example.com",
-                FirstName = "Olivia",
-                LastName = "Martinez",
+                Id = LukeId,
+                Email = "luke.rosenthal@gmail.com",
+                FirstName = "Luke",
+                LastName = "Rosenthal",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-12),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = JakeId,
+                Email = "jake.rosenthal@gmail.com",
+                FirstName = "Jake",
+                LastName = "Rosenthal",
                 ProfileImageUrl = null,
                 CreatedAt = now.AddDays(-10),
                 UpdatedAt = now
@@ -148,13 +160,13 @@ public class SeedService : ISeedService
                 Name = "Weekend Warriors",
                 Emoji = "⚔️",
                 Description = "Friends who hang out on weekends",
-                CreatedByUserId = RealUserId,
+                CreatedByUserId = AlexId,
                 Members = new List<GroupMember>
                 {
-                    new() { UserId = RealUserId, Role = GroupMemberRole.Admin, JoinedAt = now.AddDays(-20) },
-                    new() { UserId = FriendId1, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-19) },
-                    new() { UserId = FriendId2, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-18) },
-                    new() { UserId = FriendId3, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-17) }
+                    new() { UserId = AlexId, Role = GroupMemberRole.Admin, JoinedAt = now.AddDays(-20) },
+                    new() { UserId = LaceyId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-19) },
+                    new() { UserId = JordanId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-18) },
+                    new() { UserId = MattId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-17) }
                 },
                 CreatedAt = now.AddDays(-20),
                 UpdatedAt = now
@@ -165,13 +177,13 @@ public class SeedService : ISeedService
                 Name = "Foodies Club",
                 Emoji = "🍕",
                 Description = "We love trying new restaurants",
-                CreatedByUserId = FriendId1,
+                CreatedByUserId = LaceyId,
                 Members = new List<GroupMember>
                 {
-                    new() { UserId = FriendId1, Role = GroupMemberRole.Admin, JoinedAt = now.AddDays(-15) },
-                    new() { UserId = RealUserId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-14) },
-                    new() { UserId = FriendId4, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-13) },
-                    new() { UserId = FriendId5, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-12) }
+                    new() { UserId = LaceyId, Role = GroupMemberRole.Admin, JoinedAt = now.AddDays(-15) },
+                    new() { UserId = AlexId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-14) },
+                    new() { UserId = PietroId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-13) },
+                    new() { UserId = KirstinId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-12) }
                 },
                 CreatedAt = now.AddDays(-15),
                 UpdatedAt = now
@@ -179,15 +191,15 @@ public class SeedService : ISeedService
             new()
             {
                 Id = GroupId3,
-                Name = "Movie Nights",
-                Emoji = "🎬",
-                Description = "Weekly movie night crew",
-                CreatedByUserId = RealUserId,
+                Name = "Rosenthal Fam",
+                Emoji = "🏠",
+                Description = "Family hangouts",
+                CreatedByUserId = AlexId,
                 Members = new List<GroupMember>
                 {
-                    new() { UserId = RealUserId, Role = GroupMemberRole.Admin, JoinedAt = now.AddDays(-10) },
-                    new() { UserId = FriendId2, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-9) },
-                    new() { UserId = FriendId5, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-8) }
+                    new() { UserId = AlexId, Role = GroupMemberRole.Admin, JoinedAt = now.AddDays(-10) },
+                    new() { UserId = LukeId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-9) },
+                    new() { UserId = JakeId, Role = GroupMemberRole.Member, JoinedAt = now.AddDays(-8) }
                 },
                 CreatedAt = now.AddDays(-10),
                 UpdatedAt = now
@@ -227,14 +239,14 @@ public class SeedService : ISeedService
                 Location = "Blue Bottle Coffee",
                 StartTime = now.AddHours(3),
                 EndTime = now.AddHours(5),
-                CreatedByUserId = RealUserId,
+                CreatedByUserId = AlexId,
                 GroupId = GroupId1,
                 Attendees = new List<HangoutAttendee>
                 {
-                    new() { UserId = RealUserId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
-                    new() { UserId = FriendId1, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
-                    new() { UserId = FriendId2, RsvpStatus = RSVPStatus.Maybe, RespondedAt = now.AddHours(-12) },
-                    new() { UserId = FriendId3, RsvpStatus = RSVPStatus.Pending, RespondedAt = null }
+                    new() { UserId = AlexId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
+                    new() { UserId = LaceyId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
+                    new() { UserId = JordanId, RsvpStatus = RSVPStatus.Maybe, RespondedAt = now.AddHours(-12) },
+                    new() { UserId = MattId, RsvpStatus = RSVPStatus.Pending, RespondedAt = null }
                 },
                 Status = HangoutStatus.Active,
                 CreatedAt = now.AddDays(-2),
@@ -250,14 +262,14 @@ public class SeedService : ISeedService
                 Location = "Joe's Pizza",
                 StartTime = now.AddDays(1).AddHours(2),
                 EndTime = now.AddDays(1).AddHours(4),
-                CreatedByUserId = FriendId1,
+                CreatedByUserId = LaceyId,
                 GroupId = GroupId2,
                 Attendees = new List<HangoutAttendee>
                 {
-                    new() { UserId = FriendId1, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-3) },
-                    new() { UserId = RealUserId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-2) },
-                    new() { UserId = FriendId4, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-2) },
-                    new() { UserId = FriendId5, RsvpStatus = RSVPStatus.NotGoing, RespondedAt = now.AddDays(-1) }
+                    new() { UserId = LaceyId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-3) },
+                    new() { UserId = AlexId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-2) },
+                    new() { UserId = PietroId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-2) },
+                    new() { UserId = KirstinId, RsvpStatus = RSVPStatus.NotGoing, RespondedAt = now.AddDays(-1) }
                 },
                 Status = HangoutStatus.Active,
                 CreatedAt = now.AddDays(-3),
@@ -267,19 +279,19 @@ public class SeedService : ISeedService
             new()
             {
                 Id = HangoutId3,
-                Title = "Movie Marathon",
-                Emoji = "🎬",
-                Description = "Lord of the Rings extended edition marathon!",
-                Location = "My Place",
+                Title = "Family Dinner",
+                Emoji = "🏠",
+                Description = "Rosenthal family dinner at mom's place",
+                Location = "Mom's House",
                 StartTime = now.AddDays(3),
-                EndTime = now.AddDays(3).AddHours(10),
-                CreatedByUserId = RealUserId,
+                EndTime = now.AddDays(3).AddHours(4),
+                CreatedByUserId = AlexId,
                 GroupId = GroupId3,
                 Attendees = new List<HangoutAttendee>
                 {
-                    new() { UserId = RealUserId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
-                    new() { UserId = FriendId2, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
-                    new() { UserId = FriendId5, RsvpStatus = RSVPStatus.Maybe, RespondedAt = now.AddHours(-6) }
+                    new() { UserId = AlexId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
+                    new() { UserId = LukeId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
+                    new() { UserId = JakeId, RsvpStatus = RSVPStatus.Maybe, RespondedAt = now.AddHours(-6) }
                 },
                 Status = HangoutStatus.Active,
                 CreatedAt = now.AddDays(-5),
@@ -295,14 +307,14 @@ public class SeedService : ISeedService
                 Location = "Central Park",
                 StartTime = now.AddDays(5),
                 EndTime = now.AddDays(5).AddHours(3),
-                CreatedByUserId = FriendId3,
+                CreatedByUserId = JordanId,
                 GroupId = null,
                 Attendees = new List<HangoutAttendee>
                 {
-                    new() { UserId = FriendId3, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
-                    new() { UserId = RealUserId, RsvpStatus = RSVPStatus.Pending, RespondedAt = null },
-                    new() { UserId = FriendId1, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddHours(-3) },
-                    new() { UserId = FriendId4, RsvpStatus = RSVPStatus.Maybe, RespondedAt = now.AddHours(-2) }
+                    new() { UserId = JordanId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddDays(-1) },
+                    new() { UserId = AlexId, RsvpStatus = RSVPStatus.Pending, RespondedAt = null },
+                    new() { UserId = MattId, RsvpStatus = RSVPStatus.Going, RespondedAt = now.AddHours(-3) },
+                    new() { UserId = PietroId, RsvpStatus = RSVPStatus.Maybe, RespondedAt = now.AddHours(-2) }
                 },
                 Status = HangoutStatus.Active,
                 CreatedAt = now.AddDays(-1),

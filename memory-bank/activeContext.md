@@ -2,11 +2,15 @@
 
 ## Current Work Focus
 
-- Bug fixes and polish on group detail page
-- Most recent: Fixed "+ Add" button on group detail page navigating to wrong screen
+- Hangout invite system: inviting members and groups to hangouts, displaying them on hangout detail page
+- Most recent: Full-stack implementation of hangout invitations (group + individual user invites)
 
 ## Recent Changes
 
+- **Hangout Invitations (full-stack)**: Implemented end-to-end invite flow for hangouts:
+    - **Backend**: Added `InvitedGroupIds` and `InviteeUserIds` to `CreateHangoutRequest` and `HangoutRecord`. Created `InvitedGroupInfoResponse` DTO. Updated `HangoutResponse` to include `InvitedGroups` list. Updated `HangoutsService.CreateHangoutAsync` to expand group members into individual attendees with Pending RSVP status, and to store invited group IDs on the record. Updated `GetHangoutByIdAsync` to populate `InvitedGroups` from stored group IDs.
+    - **Frontend**: Updated `invite-selection.tsx` to send selected group IDs and individual user IDs to the API. Updated `useApiHangoutDetail` hook to expose `invitedGroups`. Updated `api-mappers.ts` with `mapInvitedGroupInfoToInvitedGroup` and added Pending status to RSVP grouping. Updated `hangout/[id].tsx` to show real invited groups (tappable, navigates to group detail) and a "Pending" tab in the RSVP responses section. Removed mock data dependencies (`mockInvitedGroups`, `mockInvitedFriends`). Added `pending` field to `AttendeesByStatus` type and all usages.
+    - Regenerated TypeScript API client via NSwag.
 - **Fixed "+ Add" members navigation on group detail page**: The "+ Add" button in the members section of `group/[id].tsx` was navigating to `/add-members` (a create-group-flow screen with "Create Group" button and mock data). Changed it to navigate to `/manage-group-members/${groupId}` which is the proper API-backed screen for adding/removing members on an existing group, with a "Done" button.
 - **Edit Group Feature**: Created `src/app/edit-group/[id].tsx` — full edit screen that fetches existing group data and pre-populates form fields (name, emoji). Includes Save Changes (`api.groupsPUT`), Manage Members navigation, and Delete Group with confirmation modal (`api.groupsDELETE`). Created `src/app/manage-group-members/[id].tsx` — screen showing current members with remove ability, and search-to-add-members functionality using `useApiUserSearch`. Registered both routes in `_layout.tsx`. Edit action wired to the `create-outline` icon in group detail header — only visible when `user.id === createdByUserId`. Group detail screen uses `useFocusEffect` to refetch data on focus, ensuring updated info displays after editing. No backend changes or API client regeneration needed (all endpoints already existed).
 - **Group member display names & avatars (full-stack)**: Added `DisplayName` and `ProfileImageUrl` fields to `GroupMemberResponse` DTO. Updated `GroupsService.GetGroupByIdAsync` to look up each member's `UserRecord` from Cosmos DB and populate display name (firstName + lastName, falling back to email) and profile image URL. Regenerated TypeScript API client. Updated `mapGroupMemberToDisplayMember` in `api-mappers.ts` to use new fields. Added `userId` field to `GroupMember` type for proper navigation. Updated `group/[id].tsx` to render real avatar images (with Ionicons person fallback when no image). Navigation now uses `member.userId` instead of display name.
@@ -26,6 +30,7 @@
 
 ## Next Steps
 
+- Test hangout invite flow end-to-end (create hangout → invite groups/friends → verify on detail page)
 - Continue feature development per implementation plans
 - Future Phase 2: Friends system, push notifications, activity feed, friend profiles, integration tests
 

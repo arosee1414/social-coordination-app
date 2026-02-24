@@ -1,4 +1,4 @@
-export type RSVPStatus = 'going' | 'maybe' | 'not-going' | null;
+export type RSVPStatus = 'going' | 'maybe' | 'not-going' | 'pending' | null;
 
 export type HangoutStatus = 'live' | 'upcoming' | 'past' | 'cancelled';
 
@@ -47,6 +47,7 @@ export interface AttendeesByStatus {
     going: Attendee[];
     maybe: Attendee[];
     notGoing: Attendee[];
+    pending: Attendee[];
 }
 
 export interface InvitedGroup {

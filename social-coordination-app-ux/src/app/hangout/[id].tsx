@@ -12,11 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import {
-    mockInvitedGroups,
-    mockInvitedFriends,
-    findFriendIdByName,
-} from '@/src/data/mock-data';
+import { findFriendIdByName } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { useApiHangoutDetail } from '@/src/hooks/useApiHangoutDetail';
 import { useApiUser } from '@/src/hooks/useApiUser';
@@ -30,8 +26,14 @@ export default function HangoutDetailScreen() {
     const hangoutId = typeof id === 'string' ? id : (id?.[0] ?? '');
     const { updateRSVP } = useHangouts();
     const { user } = useApiUser();
-    const { hangout, attendeesByStatus, loading, error, refetch } =
-        useApiHangoutDetail(hangoutId, user?.id);
+    const {
+        hangout,
+        attendeesByStatus,
+        invitedGroups,
+        loading,
+        error,
+        refetch,
+    } = useApiHangoutDetail(hangoutId, user?.id);
     const isCreator = !!(
         user?.id &&
         hangout?.creatorId &&
@@ -46,9 +48,9 @@ export default function HangoutDetailScreen() {
     );
 
     const rsvp = hangout?.userStatus ?? null;
-    const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
-        'going',
-    );
+    const [activeTab, setActiveTab] = useState<
+        'going' | 'maybe' | 'not-going' | 'pending'
+    >('going');
 
     const ITEM_HEIGHT = 72;
     const ITEM_GAP = 8;
@@ -57,6 +59,7 @@ export default function HangoutDetailScreen() {
             attendeesByStatus.going.length,
             attendeesByStatus.maybe.length,
             attendeesByStatus.notGoing.length,
+            attendeesByStatus.pending.length,
         );
         const cappedCount = Math.min(maxCount, 6);
         return (
@@ -65,7 +68,7 @@ export default function HangoutDetailScreen() {
     }, [attendeesByStatus]);
 
     const tabs: {
-        key: 'going' | 'maybe' | 'not-going';
+        key: 'going' | 'maybe' | 'not-going' | 'pending';
         label: string;
         count: number;
     }[] = [
@@ -76,6 +79,11 @@ export default function HangoutDetailScreen() {
             label: 'Not Going',
             count: attendeesByStatus.notGoing.length,
         },
+        {
+            key: 'pending',
+            label: 'Pending',
+            count: attendeesByStatus.pending.length,
+        },
     ];
 
     const attendeeList =
@@ -83,7 +91,9 @@ export default function HangoutDetailScreen() {
             ? attendeesByStatus.going
             : activeTab === 'maybe'
               ? attendeesByStatus.maybe
-              : attendeesByStatus.notGoing;
+              : activeTab === 'pending'
+                ? attendeesByStatus.pending
+                : attendeesByStatus.notGoing;
 
     if (!hangout && !loading) {
         return (
@@ -399,7 +409,7 @@ export default function HangoutDetailScreen() {
                     </View>
 
                     {/* Invited Groups */}
-                    {mockInvitedGroups.length > 0 && (
+                    {invitedGroups.length > 0 && (
                         <View style={{ marginTop: 24 }}>
                             <Text
                                 style={[
@@ -409,10 +419,14 @@ export default function HangoutDetailScreen() {
                             >
                                 INVITED GROUPS
                             </Text>
-                            {mockInvitedGroups.map((g) => (
-                                <View
+                            {invitedGroups.map((g) => (
+                                <TouchableOpacity
                                     key={g.id}
                                     style={[shared.card, { marginBottom: 8 }]}
+                                    onPress={() =>
+                                        router.push(`/group/${g.id}` as any)
+                                    }
+                                    activeOpacity={0.7}
                                 >
                                     <View style={s.groupRow}>
                                         <Text style={{ fontSize: 32 }}>
@@ -439,54 +453,8 @@ export default function HangoutDetailScreen() {
                                             </Text>
                                         </View>
                                     </View>
-                                </View>
+                                </TouchableOpacity>
                             ))}
-                        </View>
-                    )}
-
-                    {/* Individual Invites */}
-                    {mockInvitedFriends.length > 0 && (
-                        <View style={{ marginTop: 24 }}>
-                            <Text
-                                style={[
-                                    shared.sectionLabel,
-                                    { textTransform: 'uppercase' },
-                                ]}
-                            >
-                                INDIVIDUAL INVITES
-                            </Text>
-                            <View style={{ gap: 8 }}>
-                                {mockInvitedFriends.map((f, i) => (
-                                    <TouchableOpacity
-                                        key={i}
-                                        style={[shared.listItem]}
-                                        onPress={() => {
-                                            const friendId = findFriendIdByName(
-                                                f.name,
-                                            );
-                                            if (friendId) {
-                                                router.push(
-                                                    `/friend/${friendId}` as any,
-                                                );
-                                            }
-                                        }}
-                                    >
-                                        <View style={shared.avatarLarge}>
-                                            <Text style={{ fontSize: 24 }}>
-                                                {f.avatar}
-                                            </Text>
-                                        </View>
-                                        <Text
-                                            style={[
-                                                s.friendName,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {f.name}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
                         </View>
                     )}
 
