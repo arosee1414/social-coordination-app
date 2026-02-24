@@ -46,7 +46,10 @@ export function HappeningNowSection({
                         onPress={() => onPress(hangout.id)}
                         style={[
                             styles.card,
-                            { backgroundColor: colors.gradientFrom },
+                            {
+                                backgroundColor: colors.gradientFrom,
+                                borderColor: 'rgba(0, 0, 0, 0.15)',
+                            },
                         ]}
                     >
                         {/* LIVE Badge */}
@@ -174,11 +177,12 @@ const styles = StyleSheet.create({
         width: 280,
         borderRadius: 16,
         padding: 16,
+        borderWidth: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.05,
         shadowRadius: 3,
-        elevation: 2,
+        elevation: 1,
     },
     cardTitle: {
         color: '#fff',
