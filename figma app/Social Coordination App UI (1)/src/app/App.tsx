@@ -14,6 +14,8 @@ import { CreateGroupScreen } from './components/CreateGroupScreen';
 import { AddMembersScreen } from './components/AddMembersScreen';
 import { GroupCreatedScreen } from './components/GroupCreatedScreen';
 import { GroupDetailScreen } from './components/GroupDetailScreen';
+import { EditGroupScreen } from './components/EditGroupScreen';
+import { ManageGroupMembersScreen } from './components/ManageGroupMembersScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { FriendProfileScreen } from './components/FriendProfileScreen';
@@ -52,6 +54,8 @@ export default function App() {
               <Route path="/create-group/add-members" element={<AddMembersScreen />} />
               <Route path="/group-created" element={<GroupCreatedScreen />} />
               <Route path="/group/:id" element={<GroupDetailScreen />} />
+              <Route path="/group/:id/edit" element={<EditGroupScreen />} />
+              <Route path="/group/:id/manage-members" element={<ManageGroupMembersScreen />} />
               
               {/* Friend profile */}
               <Route path="/friend/:id" element={<FriendProfileScreen />} />

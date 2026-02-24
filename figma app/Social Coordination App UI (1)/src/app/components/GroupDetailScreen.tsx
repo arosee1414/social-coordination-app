@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router';
-import { ArrowLeft, Settings, UserPlus, Calendar } from 'lucide-react';
+import { ArrowLeft, Settings, UserPlus, Calendar, Edit2, MoreVertical } from 'lucide-react';
+import { useState } from 'react';
 
 const mockMembers = [
   { name: 'Sarah Chen', avatar: '👩🏻', role: 'Admin' },
@@ -12,10 +13,19 @@ const mockMembers = [
 export function GroupDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Mock: assume current user is the admin
+  const isAdmin = true;
 
   const handleInviteToHangout = () => {
     // In a real app, this would pre-select this group in the create hangout flow
     navigate('/create-hangout');
+  };
+
+  const handleAddMember = () => {
+    // Navigate to manage members screen
+    navigate(`/group/${id}/manage-members`);
   };
 
   return (
@@ -28,9 +38,41 @@ export function GroupDetailScreen() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <button className="p-2 active:bg-gray-100 rounded-full transition-colors">
-          <Settings className="w-5 h-5" />
-        </button>
+        {isAdmin && (
+          <div className="relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-2 active:bg-gray-100 rounded-full transition-colors"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <>
+                {/* Backdrop */}
+                <div 
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowMenu(false)}
+                ></div>
+                
+                {/* Menu */}
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-40">
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      navigate(`/group/${id}/edit`);
+                    }}
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <Edit2 className="w-5 h-5 text-[#007AFF]" />
+                    <span className="font-medium">Edit Group</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -54,7 +96,10 @@ export function GroupDetailScreen() {
               <Calendar className="w-5 h-5" />
               Invite to Hangout
             </button>
-            <button className="bg-white text-gray-700 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:bg-gray-50 transition-colors border-2 border-gray-200">
+            <button 
+              onClick={handleAddMember}
+              className="bg-white text-gray-700 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 active:bg-gray-50 transition-colors border-2 border-gray-200"
+            >
               <UserPlus className="w-5 h-5" />
               Add Member
             </button>
@@ -89,13 +134,6 @@ export function GroupDetailScreen() {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Bottom CTA */}
-      <div className="p-6 border-t border-gray-100 bg-white">
-        <button className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold active:bg-gray-200 transition-colors">
-          Edit Group
-        </button>
       </div>
     </div>
   );
