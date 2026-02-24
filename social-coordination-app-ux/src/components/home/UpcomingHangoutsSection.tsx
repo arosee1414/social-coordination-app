@@ -21,6 +21,8 @@ export function UpcomingHangoutsSection({
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
 
+    if (hangouts.length === 0) return null;
+
     const displayHangouts = hangouts.slice(0, 3);
 
     return (

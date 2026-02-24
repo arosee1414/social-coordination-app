@@ -7,9 +7,11 @@ import {
     Animated,
     StyleSheet,
     RefreshControl,
+    TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import {
@@ -143,22 +145,70 @@ export default function HomeScreen() {
                     />
                 }
             >
-                <HappeningNowSection
-                    hangouts={liveHangouts}
-                    onJoin={handleJoinLive}
-                    onPress={handleHangoutPress}
-                />
+                {hangouts.length === 0 && !loading ? (
+                    <View style={homeStyles.emptyState}>
+                        <View
+                            style={[
+                                homeStyles.emptyIcon,
+                                { backgroundColor: colors.surfaceTertiary },
+                            ]}
+                        >
+                            <Ionicons
+                                name='people-outline'
+                                size={48}
+                                color={colors.textTertiary}
+                            />
+                        </View>
+                        <Text
+                            style={[
+                                homeStyles.emptyTitle,
+                                { color: colors.text },
+                            ]}
+                        >
+                            No Hangouts Yet
+                        </Text>
+                        <Text
+                            style={[
+                                homeStyles.emptyText,
+                                { color: colors.subtitle },
+                            ]}
+                        >
+                            Create your first hangout and start coordinating
+                            with friends
+                        </Text>
+                        <TouchableOpacity
+                            style={shared.primaryBtnLarge}
+                            onPress={handleCreateHangout}
+                        >
+                            <Text style={shared.primaryBtnLargeText}>
+                                Create Hangout
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <>
+                        <HappeningNowSection
+                            hangouts={liveHangouts}
+                            onJoin={handleJoinLive}
+                            onPress={handleHangoutPress}
+                        />
 
-                <View style={{ paddingTop: 16, paddingBottom: 16 }}>
-                    <ReminderBannerCard reminder={mockReminderBanner} />
-                </View>
+                        {hangouts.length > 0 && (
+                            <View style={{ paddingTop: 16, paddingBottom: 16 }}>
+                                <ReminderBannerCard
+                                    reminder={mockReminderBanner}
+                                />
+                            </View>
+                        )}
 
-                <UpcomingHangoutsSection
-                    hangouts={upcomingHangouts}
-                    onSeeAll={handleSeeAll}
-                    onHangoutPress={handleHangoutPress}
-                    onRSVP={handleRSVP}
-                />
+                        <UpcomingHangoutsSection
+                            hangouts={upcomingHangouts}
+                            onSeeAll={handleSeeAll}
+                            onHangoutPress={handleHangoutPress}
+                            onRSVP={handleRSVP}
+                        />
+                    </>
+                )}
 
                 <RecentActivitySection
                     activities={mockRecentActivity}
@@ -192,3 +242,30 @@ export default function HomeScreen() {
         </SafeAreaView>
     );
 }
+
+const homeStyles = StyleSheet.create({
+    emptyState: {
+        alignItems: 'center',
+        paddingHorizontal: 24,
+        paddingVertical: 64,
+    },
+    emptyIcon: {
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    emptyText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: 32,
+        maxWidth: 280,
+    },
+});
