@@ -61,7 +61,7 @@ public class GroupsService : IGroupsService
 
         _logger.LogInformation("Group {GroupId} created by user {UserId}", group.Id, userId);
 
-        return MapToResponse(response.Resource);
+        return await MapToResponseAsync(response.Resource);
     }
 
     public async Task<GroupResponse> GetGroupAsync(string groupId, string userId)
@@ -81,7 +81,7 @@ public class GroupsService : IGroupsService
         if (!group.Members.Any(m => m.UserId == userId))
             throw new UnauthorizedAccessException("You are not a member of this group");
 
-        return MapToResponse(group);
+        return await MapToResponseAsync(group);
     }
 
     public async Task<List<GroupSummaryResponse>> GetUserGroupsAsync(string userId)
@@ -122,7 +122,7 @@ public class GroupsService : IGroupsService
 
         _logger.LogInformation("Group {GroupId} updated by user {UserId}", groupId, userId);
 
-        return MapToResponse(response.Resource);
+        return await MapToResponseAsync(response.Resource);
     }
 
     public async Task DeleteGroupAsync(string groupId, string userId)
@@ -165,7 +165,7 @@ public class GroupsService : IGroupsService
         _logger.LogInformation("User {MemberId} added to group {GroupId} by user {UserId}",
             request.UserId, groupId, userId);
 
-        return MapToResponse(response.Resource);
+        return await MapToResponseAsync(response.Resource);
     }
 
     public async Task<GroupResponse> RemoveMemberAsync(string groupId, string userId, string memberUserId)
@@ -196,7 +196,7 @@ public class GroupsService : IGroupsService
         _logger.LogInformation("User {MemberId} removed from group {GroupId} by user {UserId}",
             memberUserId, groupId, userId);
 
-        return MapToResponse(response.Resource);
+        return await MapToResponseAsync(response.Resource);
     }
 
     private async Task<GroupRecord> GetGroupRecordAsync(string groupId)
@@ -212,8 +212,50 @@ public class GroupsService : IGroupsService
             ?? throw new KeyNotFoundException($"Group {groupId} not found");
     }
 
-    private static GroupResponse MapToResponse(GroupRecord group)
+    private async Task<Dictionary<string, UserRecord>> BatchLookupUsersAsync(IEnumerable<string> userIds)
     {
+        var uniqueIds = userIds.Distinct().ToList();
+        var result = new Dictionary<string, UserRecord>();
+        if (uniqueIds.Count == 0) return result;
+
+        // Build IN clause
+        var parameters = new List<(string name, string value)>();
+        for (int i = 0; i < uniqueIds.Count; i++)
+        {
+            parameters.Add(($"@id{i}", uniqueIds[i]));
+        }
+        var inClause = string.Join(", ", parameters.Select(p => p.name));
+        var sql = $"SELECT * FROM c WHERE c.id IN ({inClause})";
+
+        var queryDefinition = new QueryDefinition(sql);
+        foreach (var (name, value) in parameters)
+        {
+            queryDefinition = queryDefinition.WithParameter(name, value);
+        }
+
+        var users = await _cosmosContext.UsersContainer
+            .QueryItemsCrossPartitionAsync<UserRecord>(queryDefinition);
+
+        foreach (var user in users)
+        {
+            result[user.Id] = user;
+        }
+
+        return result;
+    }
+
+    private static string GetDisplayName(UserRecord user)
+    {
+        var fullName = $"{user.FirstName} {user.LastName}".Trim();
+        if (!string.IsNullOrEmpty(fullName)) return fullName;
+        if (!string.IsNullOrEmpty(user.Email)) return user.Email;
+        return user.Id;
+    }
+
+    private async Task<GroupResponse> MapToResponseAsync(GroupRecord group)
+    {
+        var userLookup = await BatchLookupUsersAsync(group.Members.Select(m => m.UserId));
+
         return new GroupResponse
         {
             Id = group.Id,
@@ -221,11 +263,23 @@ public class GroupsService : IGroupsService
             Emoji = group.Emoji,
             Description = group.Description,
             CreatedByUserId = group.CreatedByUserId,
-            Members = group.Members.Select(m => new GroupMemberResponse
+            Members = group.Members.Select(m =>
             {
-                UserId = m.UserId,
-                Role = m.Role,
-                JoinedAt = m.JoinedAt
+                var displayName = userLookup.TryGetValue(m.UserId, out var u)
+                    ? GetDisplayName(u)
+                    : m.UserId;
+                var profileImageUrl = userLookup.TryGetValue(m.UserId, out var u2)
+                    ? u2.ProfileImageUrl
+                    : null;
+
+                return new GroupMemberResponse
+                {
+                    UserId = m.UserId,
+                    DisplayName = displayName,
+                    ProfileImageUrl = profileImageUrl,
+                    Role = m.Role,
+                    JoinedAt = m.JoinedAt
+                };
             }).ToList(),
             CreatedAt = group.CreatedAt
         };

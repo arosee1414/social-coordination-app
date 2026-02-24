@@ -241,8 +241,9 @@ export function mapGroupSummaryToGroup(response: GroupSummaryResponse): Group {
  */
 export function mapGroupMemberToDisplayMember(member: GroupMemberResponse): GroupMember {
     return {
-        name: member.userId ?? 'Unknown',
-        avatar: '👤',
+        userId: member.userId ?? '',
+        name: member.displayName || member.userId || 'Unknown',
+        avatar: member.profileImageUrl ?? null,
         role: member.role === 'Admin' ? 'Admin' : 'Member',
     };
 }

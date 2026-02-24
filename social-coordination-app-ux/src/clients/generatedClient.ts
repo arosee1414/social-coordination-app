@@ -1484,6 +1484,8 @@ export interface ICreateUserRequest {
 
 export class GroupMemberResponse implements IGroupMemberResponse {
     userId?: string | undefined;
+    displayName?: string | undefined;
+    profileImageUrl?: string | undefined;
     role?: GroupMemberRole;
     joinedAt?: Date;
 
@@ -1499,6 +1501,8 @@ export class GroupMemberResponse implements IGroupMemberResponse {
     init(_data?: any) {
         if (_data) {
             this.userId = _data["userId"];
+            this.displayName = _data["displayName"];
+            this.profileImageUrl = _data["profileImageUrl"];
             this.role = _data["role"];
             this.joinedAt = _data["joinedAt"] ? new Date(_data["joinedAt"].toString()) : <any>undefined;
         }
@@ -1514,6 +1518,8 @@ export class GroupMemberResponse implements IGroupMemberResponse {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
+        data["displayName"] = this.displayName;
+        data["profileImageUrl"] = this.profileImageUrl;
         data["role"] = this.role;
         data["joinedAt"] = this.joinedAt ? this.joinedAt.toISOString() : <any>undefined;
         return data;
@@ -1522,6 +1528,8 @@ export class GroupMemberResponse implements IGroupMemberResponse {
 
 export interface IGroupMemberResponse {
     userId?: string | undefined;
+    displayName?: string | undefined;
+    profileImageUrl?: string | undefined;
     role?: GroupMemberRole;
     joinedAt?: Date;
 }

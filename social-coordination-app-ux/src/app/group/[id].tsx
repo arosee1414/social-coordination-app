@@ -5,6 +5,7 @@ import {
     ScrollView,
     TouchableOpacity,
     StyleSheet,
+    Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -128,9 +129,18 @@ export default function GroupDetailScreen() {
                                         },
                                     ]}
                                 >
-                                    <Text style={{ fontSize: 20 }}>
-                                        {m.avatar}
-                                    </Text>
+                                    {m.avatar ? (
+                                        <Image
+                                            source={{ uri: m.avatar }}
+                                            style={s.avatarCircleImage}
+                                        />
+                                    ) : (
+                                        <Ionicons
+                                            name='person'
+                                            size={22}
+                                            color='#999'
+                                        />
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -183,16 +193,24 @@ export default function GroupDetailScreen() {
                                 key={index}
                                 style={shared.listItem}
                                 onPress={() => {
-                                    // member.name is the userId for API members
                                     router.push(
-                                        `/friend/${member.name}` as any,
+                                        `/friend/${member.userId}` as any,
                                     );
                                 }}
                             >
                                 <View style={shared.avatarLarge}>
-                                    <Text style={{ fontSize: 24 }}>
-                                        {member.avatar}
-                                    </Text>
+                                    {member.avatar ? (
+                                        <Image
+                                            source={{ uri: member.avatar }}
+                                            style={s.memberAvatarImage}
+                                        />
+                                    ) : (
+                                        <Ionicons
+                                            name='person'
+                                            size={28}
+                                            color='#999'
+                                        />
+                                    )}
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text
@@ -259,7 +277,7 @@ const s = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#fff',
+        backgroundColor: '#e0e0e0',
         borderWidth: 2,
         borderColor: '#fff',
         justifyContent: 'center',
@@ -269,6 +287,17 @@ const s = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3,
         elevation: 2,
+        overflow: 'hidden',
+    },
+    avatarCircleImage: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+    },
+    memberAvatarImage: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
     },
     sectionHeader: {
         flexDirection: 'row',

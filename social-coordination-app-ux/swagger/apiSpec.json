@@ -916,6 +916,14 @@
             "type": "string",
             "nullable": true
           },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
           "role": {
             "$ref": "#/components/schemas/GroupMemberRole"
           },

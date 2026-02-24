@@ -2,11 +2,12 @@
 
 ## Current Work Focus
 
-- Hangout card UI improvements
-- Most recent: Made location and notes always visible on hangout detail page with fallback text
+- Group member display: showing real names, emails, and avatars for group members
+- Most recent: Added DisplayName and ProfileImageUrl to group member API response and updated frontend to render real avatar images
 
 ## Recent Changes
 
+- **Group member display names & avatars (full-stack)**: Added `DisplayName` and `ProfileImageUrl` fields to `GroupMemberResponse` DTO. Updated `GroupsService.GetGroupByIdAsync` to look up each member's `UserRecord` from Cosmos DB and populate display name (firstName + lastName, falling back to email) and profile image URL. Regenerated TypeScript API client. Updated `mapGroupMemberToDisplayMember` in `api-mappers.ts` to use new fields. Added `userId` field to `GroupMember` type for proper navigation. Updated `group/[id].tsx` to render real avatar images (with Ionicons person fallback when no image). Navigation now uses `member.userId` instead of display name.
 - **Always-visible location & notes on hangout detail**: Removed conditional rendering from location and description sections in `hangout/[id].tsx`. Now always shows "Where" row with "No location set" fallback and "Notes" row with "No notes added" fallback, both in italic lighter style when empty.
 - **Always-visible location on hangout cards**: Removed conditional rendering (`{hangout.location && (...)}`) from all 3 hangout card components so the location icon and text always display. When no location is set, shows italic "No location set" in a lighter color (`colors.textTertiary` for normal cards, `rgba(255,255,255,0.6)` for live cards). Updated in `UpcomingHangoutsSection.tsx`, `HappeningNowSection.tsx`, and `hangouts.tsx`.
 - **Edit Hangout Feature**: Created `src/app/edit-hangout/[id].tsx` — full edit screen that fetches existing hangout data and pre-populates form fields (title, date, time, duration, location, description). Includes Save Changes (`api.hangoutsPUT`), Manage Invites navigation, and Delete Hangout with confirmation modal (`api.hangoutsDELETE`). Registered route in `_layout.tsx`. Edit action wired to the ellipsis-vertical icon in hangout detail header — only visible when `user.id === hangout.creatorId`. Hangout detail screen uses `useFocusEffect` to refetch data on focus, ensuring updated info displays after editing. No backend changes or API client regeneration needed.

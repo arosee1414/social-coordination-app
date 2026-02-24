@@ -230,11 +230,11 @@ export const mockGroups: Group[] = [
 ];
 
 export const mockGroupMembers: GroupMember[] = [
-    { name: 'Sarah Chen', avatar: '👩🏻', role: 'Admin' },
-    { name: 'Mike Johnson', avatar: '👨🏽', role: 'Member' },
-    { name: 'Emma Wilson', avatar: '👩🏼', role: 'Member' },
-    { name: 'David Kim', avatar: '👨🏻', role: 'Member' },
-    { name: 'Lisa Martinez', avatar: '👩🏽', role: 'Member' },
+    { userId: 'mock-sarah', name: 'Sarah Chen', avatar: '👩🏻', role: 'Admin' },
+    { userId: 'mock-mike', name: 'Mike Johnson', avatar: '👨🏽', role: 'Member' },
+    { userId: 'mock-emma', name: 'Emma Wilson', avatar: '👩🏼', role: 'Member' },
+    { userId: 'mock-david', name: 'David Kim', avatar: '👨🏻', role: 'Member' },
+    { userId: 'mock-lisa', name: 'Lisa Martinez', avatar: '👩🏽', role: 'Member' },
 ];
 
 export const mockNotifications: Notification[] = [

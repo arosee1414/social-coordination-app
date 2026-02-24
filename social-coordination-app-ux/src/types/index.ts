@@ -65,8 +65,9 @@ export interface Group {
 }
 
 export interface GroupMember {
+    userId: string;
     name: string;
-    avatar: string;
+    avatar: string | null;
     role: 'Admin' | 'Member';
 }
 
