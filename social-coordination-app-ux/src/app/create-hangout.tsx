@@ -10,6 +10,7 @@ import {
     Platform,
     Modal,
     Pressable,
+    Keyboard,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -65,6 +66,7 @@ export default function CreateHangoutScreen() {
     const [tempDuration, setTempDuration] = useState<number | null>(null);
 
     const openDurationPicker = () => {
+        Keyboard.dismiss();
         setTempDuration(selectedDuration);
         setShowDurationPicker(true);
     };
@@ -93,12 +95,14 @@ export default function CreateHangoutScreen() {
     };
 
     const openDatePicker = () => {
+        Keyboard.dismiss();
         setShowTimePicker(false);
         setTempDate(selectedDate || new Date());
         setShowDatePicker(true);
     };
 
     const openTimePicker = () => {
+        Keyboard.dismiss();
         setShowDatePicker(false);
         setTempTime(selectedTime || new Date());
         setShowTimePicker(true);
@@ -261,6 +265,7 @@ export default function CreateHangoutScreen() {
                         paddingHorizontal: 24,
                         paddingVertical: 24,
                     }}
+                    keyboardShouldPersistTaps='handled'
                 >
                     <View style={{ gap: 24 }}>
                         {/* Title */}
