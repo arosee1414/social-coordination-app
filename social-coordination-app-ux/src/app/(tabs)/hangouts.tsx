@@ -347,33 +347,38 @@ export default function HangoutsScreen() {
                                                     {hangout.time}
                                                 </Text>
                                             </View>
-                                            {hangout.location && (
-                                                <View style={s.iconRow}>
-                                                    <Ionicons
-                                                        name='location-outline'
-                                                        size={16}
-                                                        color={
-                                                            isLive
+                                            <View style={s.iconRow}>
+                                                <Ionicons
+                                                    name='location-outline'
+                                                    size={16}
+                                                    color={
+                                                        isLive
+                                                            ? 'rgba(255,255,255,0.9)'
+                                                            : colors.subtitle
+                                                    }
+                                                />
+                                                <Text
+                                                    style={[
+                                                        s.iconRowText,
+                                                        {
+                                                            color: isLive
                                                                 ? 'rgba(255,255,255,0.9)'
-                                                                : colors.subtitle
-                                                        }
-                                                    />
-                                                    <Text
-                                                        style={[
-                                                            s.iconRowText,
-                                                            {
-                                                                color: isLive
-                                                                    ? 'rgba(255,255,255,0.9)'
-                                                                    : colors.textSecondary,
-                                                                flex: 1,
-                                                            },
-                                                        ]}
-                                                        numberOfLines={2}
-                                                    >
-                                                        {hangout.location}
-                                                    </Text>
-                                                </View>
-                                            )}
+                                                                : colors.textSecondary,
+                                                            flex: 1,
+                                                        },
+                                                        !hangout.location && {
+                                                            fontStyle: 'italic',
+                                                            color: isLive
+                                                                ? 'rgba(255,255,255,0.6)'
+                                                                : colors.textTertiary,
+                                                        },
+                                                    ]}
+                                                    numberOfLines={2}
+                                                >
+                                                    {hangout.location ||
+                                                        'No location set'}
+                                                </Text>
+                                            </View>
                                         </View>
                                         {isLive ? (
                                             <View style={shared.liveBadge}>

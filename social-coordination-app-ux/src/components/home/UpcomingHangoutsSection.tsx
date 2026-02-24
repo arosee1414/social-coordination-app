@@ -81,24 +81,25 @@ export function UpcomingHangoutsSection({
                                     {hangout.time}
                                 </Text>
                             </View>
-                            {hangout.location && (
-                                <View style={styles.infoRow}>
-                                    <Ionicons
-                                        name='location-outline'
-                                        size={14}
-                                        color={colors.subtitle}
-                                    />
-                                    <Text
-                                        style={[
-                                            styles.infoText,
-                                            { color: colors.subtitle, flex: 1 },
-                                        ]}
-                                        numberOfLines={2}
-                                    >
-                                        {hangout.location}
-                                    </Text>
-                                </View>
-                            )}
+                            <View style={styles.infoRow}>
+                                <Ionicons
+                                    name='location-outline'
+                                    size={14}
+                                    color={colors.subtitle}
+                                />
+                                <Text
+                                    style={[
+                                        styles.infoText,
+                                        { color: colors.subtitle, flex: 1 },
+                                        !hangout.location && {
+                                            fontStyle: 'italic',
+                                        },
+                                    ]}
+                                    numberOfLines={2}
+                                >
+                                    {hangout.location || 'No location set'}
+                                </Text>
+                            </View>
                         </View>
 
                         {/* Bottom row: avatars + RSVP */}

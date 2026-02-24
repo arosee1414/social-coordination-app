@@ -73,22 +73,27 @@ export function HappeningNowSection({
                             <Text style={styles.infoText}>{hangout.time}</Text>
                         </View>
 
-                        {/* Location (conditional) */}
-                        {hangout.location && (
-                            <View style={[styles.infoRow, styles.locationRow]}>
-                                <Ionicons
-                                    name='location-outline'
-                                    size={16}
-                                    color='rgba(255,255,255,0.9)'
-                                />
-                                <Text
-                                    style={[styles.infoText, { flex: 1 }]}
-                                    numberOfLines={2}
-                                >
-                                    {hangout.location}
-                                </Text>
-                            </View>
-                        )}
+                        {/* Location */}
+                        <View style={[styles.infoRow, styles.locationRow]}>
+                            <Ionicons
+                                name='location-outline'
+                                size={16}
+                                color='rgba(255,255,255,0.9)'
+                            />
+                            <Text
+                                style={[
+                                    styles.infoText,
+                                    { flex: 1 },
+                                    !hangout.location && {
+                                        fontStyle: 'italic',
+                                        color: 'rgba(255,255,255,0.6)',
+                                    },
+                                ]}
+                                numberOfLines={2}
+                            >
+                                {hangout.location || 'No location set'}
+                            </Text>
+                        </View>
 
                         {/* Bottom: Attendees + Join */}
                         <View style={styles.bottomRow}>
