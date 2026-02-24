@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingHorizontal: 24,
+        paddingVertical: 4,
         gap: 12,
     },
     card: {
@@ -174,10 +175,10 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         padding: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowRadius: 3,
+        elevation: 2,
     },
     cardTitle: {
         color: '#fff',
