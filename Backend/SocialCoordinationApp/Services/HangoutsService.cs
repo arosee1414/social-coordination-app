@@ -78,8 +78,7 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Hangout {HangoutId} created by user {UserId}", hangout.Id, userId);
 
-        var creatorName = await GetUserDisplayNameAsync(userId);
-        return MapToResponse(response.Resource, creatorName);
+        return await MapToResponseAsync(response.Resource);
     }
 
     public async Task<HangoutResponse> GetHangoutAsync(string hangoutId, string userId)
@@ -90,8 +89,7 @@ public class HangoutsService : IHangoutsService
         if (hangout.CreatedByUserId != userId && !hangout.Attendees.Any(a => a.UserId == userId))
             throw new UnauthorizedAccessException("You do not have access to this hangout");
 
-        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
-        return MapToResponse(hangout, creatorName);
+        return await MapToResponseAsync(hangout);
     }
 
     public async Task<List<HangoutSummaryResponse>> GetUserHangoutsAsync(string userId)
@@ -182,8 +180,7 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Hangout {HangoutId} updated by user {UserId}", hangoutId, userId);
 
-        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
-        return MapToResponse(response.Resource, creatorName);
+        return await MapToResponseAsync(response.Resource);
     }
 
     public async Task DeleteHangoutAsync(string hangoutId, string userId)
@@ -228,8 +225,7 @@ public class HangoutsService : IHangoutsService
         _logger.LogInformation("User {UserId} RSVP'd {Status} to hangout {HangoutId}",
             userId, request.Status, hangoutId);
 
-        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
-        return MapToResponse(response.Resource, creatorName);
+        return await MapToResponseAsync(response.Resource);
     }
 
     public async Task<HangoutResponse> CancelHangoutAsync(string hangoutId, string userId)
@@ -247,8 +243,7 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Hangout {HangoutId} cancelled by user {UserId}", hangoutId, userId);
 
-        var creatorName = await GetUserDisplayNameAsync(hangout.CreatedByUserId);
-        return MapToResponse(response.Resource, creatorName);
+        return await MapToResponseAsync(response.Resource);
     }
 
     private async Task<HangoutRecord> GetHangoutRecordAsync(string hangoutId)
@@ -280,8 +275,45 @@ public class HangoutsService : IHangoutsService
         }
     }
 
-    private static HangoutResponse MapToResponse(HangoutRecord hangout, string createdByUserName = "")
+    private async Task<Dictionary<string, UserRecord>> BatchLookupUsersAsync(IEnumerable<string> userIds)
     {
+        var uniqueIds = userIds.Distinct().ToList();
+        var result = new Dictionary<string, UserRecord>();
+        if (uniqueIds.Count == 0) return result;
+
+        var queryDefinition = new QueryDefinition(
+            "SELECT * FROM c WHERE ARRAY_CONTAINS(@userIds, c.id)")
+            .WithParameter("@userIds", uniqueIds);
+
+        var users = await _cosmosContext.UsersContainer
+            .QueryItemsCrossPartitionAsync<UserRecord>(queryDefinition);
+
+        foreach (var user in users)
+        {
+            result[user.Id] = user;
+        }
+
+        return result;
+    }
+
+    private static string GetDisplayName(UserRecord user)
+    {
+        var fullName = $"{user.FirstName} {user.LastName}".Trim();
+        return string.IsNullOrEmpty(fullName) ? user.Email : fullName;
+    }
+
+    private async Task<HangoutResponse> MapToResponseAsync(HangoutRecord hangout)
+    {
+        var allUserIds = hangout.Attendees.Select(a => a.UserId)
+            .Append(hangout.CreatedByUserId)
+            .Distinct();
+
+        var userLookup = await BatchLookupUsersAsync(allUserIds);
+
+        var creatorName = userLookup.TryGetValue(hangout.CreatedByUserId, out var creator)
+            ? GetDisplayName(creator)
+            : hangout.CreatedByUserId;
+
         return new HangoutResponse
         {
             Id = hangout.Id,
@@ -292,13 +324,25 @@ public class HangoutsService : IHangoutsService
             StartTime = hangout.StartTime,
             EndTime = hangout.EndTime,
             CreatedByUserId = hangout.CreatedByUserId,
-            CreatedByUserName = createdByUserName,
+            CreatedByUserName = creatorName,
             GroupId = hangout.GroupId,
-            Attendees = hangout.Attendees.Select(a => new HangoutAttendeeResponse
+            Attendees = hangout.Attendees.Select(a =>
             {
-                UserId = a.UserId,
-                RsvpStatus = a.RsvpStatus,
-                RespondedAt = a.RespondedAt
+                var displayName = userLookup.TryGetValue(a.UserId, out var u)
+                    ? GetDisplayName(u)
+                    : a.UserId;
+                var profileImageUrl = userLookup.TryGetValue(a.UserId, out var u2)
+                    ? u2.ProfileImageUrl
+                    : null;
+
+                return new HangoutAttendeeResponse
+                {
+                    UserId = a.UserId,
+                    DisplayName = displayName,
+                    ProfileImageUrl = profileImageUrl,
+                    RsvpStatus = a.RsvpStatus,
+                    RespondedAt = a.RespondedAt
+                };
             }).ToList(),
             Status = hangout.Status,
             CreatedAt = hangout.CreatedAt

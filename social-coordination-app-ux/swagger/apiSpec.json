@@ -999,6 +999,14 @@
             "type": "string",
             "nullable": true
           },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
           "rsvpStatus": {
             "$ref": "#/components/schemas/RSVPStatus"
           },

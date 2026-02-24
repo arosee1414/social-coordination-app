@@ -34,7 +34,7 @@ export interface ReminderBanner {
 
 export interface Attendee {
     name: string;
-    avatar: string;
+    avatar: string | null;
     time?: string;
     fromGroup?: string | null;
 }

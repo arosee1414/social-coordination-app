@@ -1649,6 +1649,8 @@ export interface IGroupSummaryResponse {
 
 export class HangoutAttendeeResponse implements IHangoutAttendeeResponse {
     userId?: string | undefined;
+    displayName?: string | undefined;
+    profileImageUrl?: string | undefined;
     rsvpStatus?: RSVPStatus;
     respondedAt?: Date | undefined;
 
@@ -1664,6 +1666,8 @@ export class HangoutAttendeeResponse implements IHangoutAttendeeResponse {
     init(_data?: any) {
         if (_data) {
             this.userId = _data["userId"];
+            this.displayName = _data["displayName"];
+            this.profileImageUrl = _data["profileImageUrl"];
             this.rsvpStatus = _data["rsvpStatus"];
             this.respondedAt = _data["respondedAt"] ? new Date(_data["respondedAt"].toString()) : <any>undefined;
         }
@@ -1679,6 +1683,8 @@ export class HangoutAttendeeResponse implements IHangoutAttendeeResponse {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
+        data["displayName"] = this.displayName;
+        data["profileImageUrl"] = this.profileImageUrl;
         data["rsvpStatus"] = this.rsvpStatus;
         data["respondedAt"] = this.respondedAt ? this.respondedAt.toISOString() : <any>undefined;
         return data;
@@ -1687,6 +1693,8 @@ export class HangoutAttendeeResponse implements IHangoutAttendeeResponse {
 
 export interface IHangoutAttendeeResponse {
     userId?: string | undefined;
+    displayName?: string | undefined;
+    profileImageUrl?: string | undefined;
     rsvpStatus?: RSVPStatus;
     respondedAt?: Date | undefined;
 }

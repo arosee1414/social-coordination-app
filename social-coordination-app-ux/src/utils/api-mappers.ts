@@ -170,8 +170,8 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
  */
 export function mapAttendeeToDisplayAttendee(attendee: HangoutAttendeeResponse): Attendee {
     return {
-        name: attendee.userId ?? 'Unknown',
-        avatar: '👤',
+        name: attendee.displayName || attendee.userId || 'Unknown',
+        avatar: attendee.profileImageUrl ?? null,
         time: attendee.respondedAt ? formatTime(attendee.respondedAt) : undefined,
         fromGroup: null,
     };

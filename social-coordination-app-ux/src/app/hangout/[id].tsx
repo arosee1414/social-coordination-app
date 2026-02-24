@@ -5,6 +5,7 @@ import {
     ScrollView,
     TouchableOpacity,
     StyleSheet,
+    Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -482,9 +483,18 @@ export default function HangoutDetailScreen() {
                                     }}
                                 >
                                     <View style={shared.avatarLarge}>
-                                        <Text style={{ fontSize: 24 }}>
-                                            {attendee.avatar}
-                                        </Text>
+                                        {attendee.avatar ? (
+                                            <Image
+                                                source={{
+                                                    uri: attendee.avatar,
+                                                }}
+                                                style={s.avatarImage}
+                                            />
+                                        ) : (
+                                            <Text style={{ fontSize: 24 }}>
+                                                👤
+                                            </Text>
+                                        )}
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <Text
@@ -571,4 +581,5 @@ const s = StyleSheet.create({
     attendeeTime: { fontSize: 13, marginTop: 2 },
     groupBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
     groupBadgeText: { fontSize: 12, fontWeight: '600' },
+    avatarImage: { width: 48, height: 48, borderRadius: 24 },
 });
