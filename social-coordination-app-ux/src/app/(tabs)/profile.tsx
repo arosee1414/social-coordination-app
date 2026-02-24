@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -7,9 +7,10 @@ import {
     StyleSheet,
     ActivityIndicator,
     Animated,
+    RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useClerk } from '@clerk/clerk-expo';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -22,7 +23,8 @@ export default function ProfileScreen() {
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { signOut } = useClerk();
-    const { user, loading: userLoading } = useApiUser();
+    const { user, loading: userLoading, refetch } = useApiUser();
+    const [refreshing, setRefreshing] = useState(false);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -39,6 +41,24 @@ export default function ProfileScreen() {
         }
     }, [userLoading]);
 
+    // Refetch when the screen comes back into focus
+    const isFirstFocus = useRef(true);
+    useFocusEffect(
+        useCallback(() => {
+            if (isFirstFocus.current) {
+                isFirstFocus.current = false;
+                return;
+            }
+            refetch();
+        }, [refetch]),
+    );
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    }, [refetch]);
+
     const displayName = user
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Your Name'
         : 'Your Name';
@@ -54,7 +74,19 @@ export default function ProfileScreen() {
             style={shared.screenContainer}
             edges={['top', 'left', 'right']}
         >
-            <ScrollView style={{ flex: 1 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                    />
+                }
+            >
                 {/* Profile Header Card */}
                 <View
                     style={{

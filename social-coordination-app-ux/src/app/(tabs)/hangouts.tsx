@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -7,9 +7,10 @@ import {
     StyleSheet,
     ActivityIndicator,
     Animated,
+    RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -20,7 +21,8 @@ export default function HangoutsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
-    const { hangouts: mockHangouts, loading } = useHangouts();
+    const { hangouts: mockHangouts, loading, refetch } = useHangouts();
+    const [refreshing, setRefreshing] = useState(false);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -36,6 +38,24 @@ export default function HangoutsScreen() {
             });
         }
     }, [loading]);
+
+    // Refetch when the screen comes back into focus
+    const isFirstFocus = useRef(true);
+    useFocusEffect(
+        useCallback(() => {
+            if (isFirstFocus.current) {
+                isFirstFocus.current = false;
+                return;
+            }
+            refetch();
+        }, [refetch]),
+    );
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    }, [refetch]);
 
     return (
         <SafeAreaView
@@ -57,7 +77,19 @@ export default function HangoutsScreen() {
                 </Text>
             </View>
 
-            <ScrollView style={{ flex: 1 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                    />
+                }
+            >
                 {mockHangouts.length > 0 ? (
                     <View
                         style={{

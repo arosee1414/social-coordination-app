@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -6,9 +6,10 @@ import {
     ActivityIndicator,
     Animated,
     StyleSheet,
+    RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import {
@@ -28,7 +29,8 @@ export default function HomeScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
-    const { hangouts, loading, updateRSVP } = useHangouts();
+    const { hangouts, loading, updateRSVP, refetch } = useHangouts();
+    const [refreshing, setRefreshing] = useState(false);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -44,6 +46,24 @@ export default function HomeScreen() {
             });
         }
     }, [loading]);
+
+    // Refetch when the screen comes back into focus
+    const isFirstFocus = useRef(true);
+    useFocusEffect(
+        useCallback(() => {
+            if (isFirstFocus.current) {
+                isFirstFocus.current = false;
+                return;
+            }
+            refetch();
+        }, [refetch]),
+    );
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    }, [refetch]);
 
     const liveHangouts = hangouts.filter((h) => h.status === 'live');
     const upcomingHangouts = hangouts.filter((h) => h.status === 'upcoming');
@@ -110,7 +130,19 @@ export default function HomeScreen() {
             </View>
 
             {/* Content — always rendered to avoid layout shift */}
-            <ScrollView style={{ flex: 1 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                    />
+                }
+            >
                 <HappeningNowSection
                     hangouts={liveHangouts}
                     onJoin={handleJoinLive}

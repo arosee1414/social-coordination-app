@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -7,9 +7,10 @@ import {
     StyleSheet,
     ActivityIndicator,
     Animated,
+    RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -23,7 +24,8 @@ export default function GroupsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
-    const { groups, loading } = useApiGroups();
+    const { groups, loading, refetch } = useApiGroups();
+    const [refreshing, setRefreshing] = useState(false);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -39,6 +41,24 @@ export default function GroupsScreen() {
             });
         }
     }, [loading]);
+
+    // Refetch when the screen comes back into focus
+    const isFirstFocus = useRef(true);
+    useFocusEffect(
+        useCallback(() => {
+            if (isFirstFocus.current) {
+                isFirstFocus.current = false;
+                return;
+            }
+            refetch();
+        }, [refetch]),
+    );
+
+    const onRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await refetch();
+        setRefreshing(false);
+    }, [refetch]);
 
     return (
         <SafeAreaView
@@ -60,7 +80,19 @@ export default function GroupsScreen() {
                 </Text>
             </View>
 
-            <ScrollView style={{ flex: 1 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[colors.primary]}
+                        tintColor={colors.primary}
+                    />
+                }
+            >
                 {groups.length > 0 ? (
                     <View
                         style={{
