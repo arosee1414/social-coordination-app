@@ -21,6 +21,7 @@ export interface Hangout {
     attendeeCount?: number;
     date?: string;
     startTime?: Date;
+    description?: string | null;
 }
 
 export interface RecentActivity {

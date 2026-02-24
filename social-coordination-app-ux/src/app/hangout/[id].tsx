@@ -238,6 +238,43 @@ export default function HangoutDetailScreen() {
                                 </View>
                             </View>
                         )}
+                        {hangout?.description && (
+                            <View
+                                style={[
+                                    s.detailRow,
+                                    {
+                                        borderTopWidth: 1,
+                                        borderTopColor: colors.cardBorder,
+                                        paddingTop: 12,
+                                        marginTop: 12,
+                                    },
+                                ]}
+                            >
+                                <Ionicons
+                                    name='document-text-outline'
+                                    size={20}
+                                    color={colors.primary}
+                                />
+                                <View style={{ flex: 1 }}>
+                                    <Text
+                                        style={[
+                                            s.detailLabel,
+                                            { color: colors.subtitle },
+                                        ]}
+                                    >
+                                        Notes
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            s.detailValue,
+                                            { color: colors.text },
+                                        ]}
+                                    >
+                                        {hangout.description}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
                     </View>
 
                     {/* RSVP Buttons */}

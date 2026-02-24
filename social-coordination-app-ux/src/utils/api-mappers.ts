@@ -181,6 +181,7 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
         attendeeCount: attendees.length,
         date: formatDate(response.startTime),
         startTime: response.startTime ? new Date(response.startTime) : undefined,
+        description: response.description ?? null,
     };
 }
 

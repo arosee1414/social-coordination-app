@@ -3,10 +3,11 @@
 ## Current Work Focus
 
 - Bug fixes and polish on hangout detail screen
-- Most recent feature work: Adding optional duration field to create-hangout flow (see `implementation_plan.md`)
+- Most recent fix: Display hangout notes/description on the detail page
 
 ## Recent Changes
 
+- Fixed missing notes display on hangout detail page: added `description` field to `Hangout` type, mapped it in `api-mappers.ts`, and rendered it as a "Notes" row in the details card on `hangout/[id].tsx` (conditionally shown when description exists)
 - Fixed bug in `hangout/[id].tsx` where the time badge displayed "Starts in Happening now" for live hangouts — now conditionally renders just `timeUntil` for live/past statuses and `"Starts {timeUntil}"` for upcoming
 - Previously: Added **Self-Improving Cline Reflection** rule to `.clinerules`
 - Previously: Added **Cline's Memory Bank** rule to `.clinerules`
