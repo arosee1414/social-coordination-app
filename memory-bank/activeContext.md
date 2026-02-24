@@ -2,11 +2,12 @@
 
 ## Current Work Focus
 
-- Bug fixes and polish on home screen and hangout cards
-- Most recent fix: Text truncation on hangout card titles and locations
+- Edit Hangout feature — creator can edit their own hangouts
+- Most recent: Added useFocusEffect to hangout detail screen to refetch data when returning from edit, removed debug console.log
 
 ## Recent Changes
 
+- **Edit Hangout Feature**: Created `src/app/edit-hangout/[id].tsx` — full edit screen that fetches existing hangout data and pre-populates form fields (title, date, time, duration, location, description). Includes Save Changes (`api.hangoutsPUT`), Manage Invites navigation, and Delete Hangout with confirmation modal (`api.hangoutsDELETE`). Registered route in `_layout.tsx`. Edit action wired to the ellipsis-vertical icon in hangout detail header — only visible when `user.id === hangout.creatorId`. Hangout detail screen uses `useFocusEffect` to refetch data on focus, ensuring updated info displays after editing. No backend changes or API client regeneration needed.
 - Added text truncation with ellipsis to all hangout card views: title limited to 1 line (`numberOfLines={1}`), location limited to 2 lines (`numberOfLines={2}`) with `flex: 1` for proper text wrapping. Applied across `hangouts.tsx`, `UpcomingHangoutsSection.tsx`, and `HappeningNowSection.tsx`.
 - Fixed Happening Now card layout bug: when a live event had no location, the avatar stack and Join button shifted up towards the middle of the card. Added `minHeight: 180` to card and `marginTop: 'auto'` to `bottomRow` in `HappeningNowSection.tsx` to pin the bottom row to the card bottom regardless of content.
 - Fixed missing notes display on hangout detail page: added `description` field to `Hangout` type, mapped it in `api-mappers.ts`, and rendered it as a "Notes" row in the details card on `hangout/[id].tsx` (conditionally shown when description exists)

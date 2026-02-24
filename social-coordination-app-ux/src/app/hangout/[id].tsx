@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -20,6 +20,7 @@ import {
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { useApiHangoutDetail } from '@/src/hooks/useApiHangoutDetail';
 import { useApiUser } from '@/src/hooks/useApiUser';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HangoutDetailScreen() {
     const colors = useThemeColors();
@@ -29,10 +30,21 @@ export default function HangoutDetailScreen() {
     const hangoutId = typeof id === 'string' ? id : (id?.[0] ?? '');
     const { updateRSVP } = useHangouts();
     const { user } = useApiUser();
-    const { hangout, attendeesByStatus, loading, error } = useApiHangoutDetail(
-        hangoutId,
-        user?.id,
+    const { hangout, attendeesByStatus, loading, error, refetch } =
+        useApiHangoutDetail(hangoutId, user?.id);
+    const isCreator = !!(
+        user?.id &&
+        hangout?.creatorId &&
+        user.id === hangout.creatorId
     );
+
+    // Refetch hangout data whenever the screen regains focus (e.g. returning from edit)
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch]),
+    );
+
     const rsvp = hangout?.userStatus ?? null;
     const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
         'going',
@@ -117,13 +129,19 @@ export default function HangoutDetailScreen() {
                             color={colors.text}
                         />
                     </TouchableOpacity>
-                    <TouchableOpacity>
-                        <Ionicons
-                            name='ellipsis-vertical'
-                            size={24}
-                            color={colors.text}
-                        />
-                    </TouchableOpacity>
+                    {isCreator && (
+                        <TouchableOpacity
+                            onPress={() =>
+                                router.push(`/edit-hangout/${hangoutId}` as any)
+                            }
+                        >
+                            <Ionicons
+                                name='ellipsis-vertical'
+                                size={24}
+                                color={colors.text}
+                            />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 

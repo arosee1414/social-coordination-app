@@ -120,6 +120,10 @@ function RootLayoutNav(): React.JSX.Element {
                 options={{ headerShown: false, animation: 'slide_from_right' }}
             />
             <Stack.Screen
+                name='edit-hangout/[id]'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
                 name='find-friends'
                 options={{
                     headerShown: false,

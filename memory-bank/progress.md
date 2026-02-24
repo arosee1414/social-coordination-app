@@ -2,6 +2,8 @@
 
 ## What Works
 
+- **Edit Hangout** — Creator can edit their hangouts (title, date/time, duration, location, notes) via `edit-hangout/[id]` screen; delete hangout with confirmation; conditional edit button on detail page (only for creator)
+
 ### Backend (Phase 1 — Complete)
 
 - .NET 8 Web API project scaffolded and running
