@@ -2,11 +2,13 @@
 
 ## Current Work Focus
 
-- Bug fixes and polish on hangout detail screen
-- Most recent fix: Display hangout notes/description on the detail page
+- Bug fixes and polish on home screen and hangout cards
+- Most recent fix: Text truncation on hangout card titles and locations
 
 ## Recent Changes
 
+- Added text truncation with ellipsis to all hangout card views: title limited to 1 line (`numberOfLines={1}`), location limited to 2 lines (`numberOfLines={2}`) with `flex: 1` for proper text wrapping. Applied across `hangouts.tsx`, `UpcomingHangoutsSection.tsx`, and `HappeningNowSection.tsx`.
+- Fixed Happening Now card layout bug: when a live event had no location, the avatar stack and Join button shifted up towards the middle of the card. Added `minHeight: 180` to card and `marginTop: 'auto'` to `bottomRow` in `HappeningNowSection.tsx` to pin the bottom row to the card bottom regardless of content.
 - Fixed missing notes display on hangout detail page: added `description` field to `Hangout` type, mapped it in `api-mappers.ts`, and rendered it as a "Notes" row in the details card on `hangout/[id].tsx` (conditionally shown when description exists)
 - Fixed bug in `hangout/[id].tsx` where the time badge displayed "Starts in Happening now" for live hangouts — now conditionally renders just `timeUntil` for live/past statuses and `"Starts {timeUntil}"` for upcoming
 - Previously: Added **Self-Improving Cline Reflection** rule to `.clinerules`

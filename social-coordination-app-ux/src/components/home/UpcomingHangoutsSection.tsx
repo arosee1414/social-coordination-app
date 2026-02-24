@@ -91,8 +91,9 @@ export function UpcomingHangoutsSection({
                                     <Text
                                         style={[
                                             styles.infoText,
-                                            { color: colors.subtitle },
+                                            { color: colors.subtitle, flex: 1 },
                                         ]}
+                                        numberOfLines={2}
                                     >
                                         {hangout.location}
                                     </Text>

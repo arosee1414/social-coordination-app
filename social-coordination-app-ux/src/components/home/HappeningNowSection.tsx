@@ -59,7 +59,9 @@ export function HappeningNowSection({
                         </View>
 
                         {/* Title */}
-                        <Text style={styles.cardTitle}>{hangout.title}</Text>
+                        <Text style={styles.cardTitle} numberOfLines={1}>
+                            {hangout.title}
+                        </Text>
 
                         {/* Time */}
                         <View style={styles.infoRow}>
@@ -79,7 +81,10 @@ export function HappeningNowSection({
                                     size={16}
                                     color='rgba(255,255,255,0.9)'
                                 />
-                                <Text style={styles.infoText}>
+                                <Text
+                                    style={[styles.infoText, { flex: 1 }]}
+                                    numberOfLines={2}
+                                >
                                     {hangout.location}
                                 </Text>
                             </View>
@@ -175,6 +180,7 @@ const styles = StyleSheet.create({
     },
     card: {
         width: 280,
+        minHeight: 180,
         borderRadius: 16,
         padding: 16,
         borderWidth: 2,
@@ -208,6 +214,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginTop: 'auto',
     },
     avatarStack: {
         flexDirection: 'row',

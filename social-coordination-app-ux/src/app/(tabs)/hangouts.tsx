@@ -320,6 +320,7 @@ export default function HangoutsScreen() {
                                                             : colors.text,
                                                     },
                                                 ]}
+                                                numberOfLines={1}
                                             >
                                                 {hangout.title}
                                             </Text>
@@ -364,8 +365,10 @@ export default function HangoutsScreen() {
                                                                 color: isLive
                                                                     ? 'rgba(255,255,255,0.9)'
                                                                     : colors.textSecondary,
+                                                                flex: 1,
                                                             },
                                                         ]}
+                                                        numberOfLines={2}
                                                     >
                                                         {hangout.location}
                                                     </Text>
