@@ -155,7 +155,28 @@ export default function CreateHangoutScreen() {
     const canContinue = title && selectedDate && selectedTime;
 
     const handleContinue = () => {
-        router.push('/invite-selection' as any);
+        // Build startTime from selectedDate + selectedTime
+        const start = new Date(selectedDate!);
+        start.setHours(
+            selectedTime!.getHours(),
+            selectedTime!.getMinutes(),
+            0,
+            0,
+        );
+        const endTime = computeEndTime();
+
+        const params: Record<string, string> = {
+            title,
+            startTime: start.toISOString(),
+        };
+        if (description) params.description = description;
+        if (location) params.location = location;
+        if (endTime) params.endTime = endTime.toISOString();
+
+        router.push({
+            pathname: '/invite-selection',
+            params,
+        } as any);
     };
 
     // iOS picker modal helper
