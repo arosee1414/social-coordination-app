@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,13 +8,14 @@ import {
     Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { groupBgColors } from '@/src/data/mock-data';
 import { useApiGroupDetail } from '@/src/hooks/useApiGroupDetail';
+import { useApiUser } from '@/src/hooks/useApiUser';
 
 export default function GroupDetailScreen() {
     const colorScheme = useColorScheme();
@@ -24,7 +25,18 @@ export default function GroupDetailScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
     const groupId = typeof id === 'string' ? id : (id?.[0] ?? '');
-    const { group, members, loading, error } = useApiGroupDetail(groupId);
+    const { group, members, loading, error, createdByUserId, refetch } =
+        useApiGroupDetail(groupId);
+    const { user } = useApiUser();
+    const isCreator =
+        user?.id && createdByUserId && user.id === createdByUserId;
+
+    // Refetch group data when returning from edit screens
+    useFocusEffect(
+        useCallback(() => {
+            refetch();
+        }, [refetch]),
+    );
     const bgTheme = group ? groupBgColors[group.id] : undefined;
     const bg = bgTheme
         ? isDark
@@ -69,20 +81,19 @@ export default function GroupDetailScreen() {
                     Group Details
                 </Text>
                 <View style={s.headerActions}>
-                    <TouchableOpacity>
-                        <Ionicons
-                            name='create-outline'
-                            size={24}
-                            color={colors.text}
-                        />
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                        <Ionicons
-                            name='ellipsis-vertical'
-                            size={24}
-                            color={colors.text}
-                        />
-                    </TouchableOpacity>
+                    {isCreator && (
+                        <TouchableOpacity
+                            onPress={() =>
+                                router.push(`/edit-group/${groupId}` as any)
+                            }
+                        >
+                            <Ionicons
+                                name='ellipsis-vertical'
+                                size={24}
+                                color={colors.text}
+                            />
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 

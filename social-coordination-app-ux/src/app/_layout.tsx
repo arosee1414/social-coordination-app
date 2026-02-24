@@ -124,6 +124,14 @@ function RootLayoutNav(): React.JSX.Element {
                 options={{ headerShown: false, animation: 'slide_from_right' }}
             />
             <Stack.Screen
+                name='edit-group/[id]'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+                name='manage-group-members/[id]'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
                 name='find-friends'
                 options={{
                     headerShown: false,

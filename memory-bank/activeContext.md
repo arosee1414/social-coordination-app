@@ -2,11 +2,12 @@
 
 ## Current Work Focus
 
-- Group member display: showing real names, emails, and avatars for group members
-- Most recent: Added DisplayName and ProfileImageUrl to group member API response and updated frontend to render real avatar images
+- Edit Group feature: full edit screen and manage members screen for groups
+- Most recent: Implemented Edit Group screen, Manage Group Members screen, route registration, and wired edit button on group detail page
 
 ## Recent Changes
 
+- **Edit Group Feature**: Created `src/app/edit-group/[id].tsx` — full edit screen that fetches existing group data and pre-populates form fields (name, emoji). Includes Save Changes (`api.groupsPUT`), Manage Members navigation, and Delete Group with confirmation modal (`api.groupsDELETE`). Created `src/app/manage-group-members/[id].tsx` — screen showing current members with remove ability, and search-to-add-members functionality using `useApiUserSearch`. Registered both routes in `_layout.tsx`. Edit action wired to the `create-outline` icon in group detail header — only visible when `user.id === createdByUserId`. Group detail screen uses `useFocusEffect` to refetch data on focus, ensuring updated info displays after editing. No backend changes or API client regeneration needed (all endpoints already existed).
 - **Group member display names & avatars (full-stack)**: Added `DisplayName` and `ProfileImageUrl` fields to `GroupMemberResponse` DTO. Updated `GroupsService.GetGroupByIdAsync` to look up each member's `UserRecord` from Cosmos DB and populate display name (firstName + lastName, falling back to email) and profile image URL. Regenerated TypeScript API client. Updated `mapGroupMemberToDisplayMember` in `api-mappers.ts` to use new fields. Added `userId` field to `GroupMember` type for proper navigation. Updated `group/[id].tsx` to render real avatar images (with Ionicons person fallback when no image). Navigation now uses `member.userId` instead of display name.
 - **Always-visible location & notes on hangout detail**: Removed conditional rendering from location and description sections in `hangout/[id].tsx`. Now always shows "Where" row with "No location set" fallback and "Notes" row with "No notes added" fallback, both in italic lighter style when empty.
 - **Always-visible location on hangout cards**: Removed conditional rendering (`{hangout.location && (...)}`) from all 3 hangout card components so the location icon and text always display. When no location is set, shows italic "No location set" in a lighter color (`colors.textTertiary` for normal cards, `rgba(255,255,255,0.6)` for live cards). Updated in `UpcomingHangoutsSection.tsx`, `HappeningNowSection.tsx`, and `hangouts.tsx`.
