@@ -2,14 +2,15 @@
 
 ## Current Work Focus
 
-- Setting up Cline memory bank and self-improving reflection rules in `.clinerules`
+- Bug fixes and polish on hangout detail screen
 - Most recent feature work: Adding optional duration field to create-hangout flow (see `implementation_plan.md`)
 
 ## Recent Changes
 
-- Added **Self-Improving Cline Reflection** rule to `.clinerules`
-- Added **Cline's Memory Bank** rule to `.clinerules`
-- Created initial memory bank core files
+- Fixed bug in `hangout/[id].tsx` where the time badge displayed "Starts in Happening now" for live hangouts — now conditionally renders just `timeUntil` for live/past statuses and `"Starts {timeUntil}"` for upcoming
+- Previously: Added **Self-Improving Cline Reflection** rule to `.clinerules`
+- Previously: Added **Cline's Memory Bank** rule to `.clinerules`
+- Previously: Created initial memory bank core files
 - Previously: Duration picker feature for create-hangout (8h default, 24h max)
 - Previously: Backend Phase 1 implementation (Users, Groups, Hangouts CRUD with Cosmos DB)
 - Previously: Frontend connected to real backend API with generated TypeScript client

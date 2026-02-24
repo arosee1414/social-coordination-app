@@ -152,7 +152,10 @@ export default function HangoutDetailScreen() {
                     >
                         <Ionicons name='time-outline' size={18} color='#fff' />
                         <Text style={s.countdownText}>
-                            Starts in {hangout?.timeUntil}
+                            {hangout?.status === 'live' ||
+                            hangout?.status === 'past'
+                                ? hangout?.timeUntil
+                                : `Starts ${hangout?.timeUntil}`}
                         </Text>
                     </View>
 
