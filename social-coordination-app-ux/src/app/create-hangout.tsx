@@ -8,10 +8,15 @@ import {
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
+    Modal,
+    Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, {
+    DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 
@@ -23,9 +28,133 @@ export default function CreateHangoutScreen() {
     const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
 
+    // Date & time picker state
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    // Temp values for iOS modal spinner — only committed on "Done"
+    const [tempDate, setTempDate] = useState(new Date());
+    const [tempTime, setTempTime] = useState(new Date());
+
+    const openDatePicker = () => {
+        setShowTimePicker(false);
+        setTempDate(selectedDate || new Date());
+        setShowDatePicker(true);
+    };
+
+    const openTimePicker = () => {
+        setShowDatePicker(false);
+        setTempTime(selectedTime || new Date());
+        setShowTimePicker(true);
+    };
+
+    // Android fires onChange once with 'set' or 'dismissed'
+    const handleDateChangeAndroid = (
+        event: DateTimePickerEvent,
+        date?: Date,
+    ) => {
+        setShowDatePicker(false);
+        if (event.type === 'set' && date) {
+            setSelectedDate(date);
+        }
+    };
+
+    const handleTimeChangeAndroid = (
+        event: DateTimePickerEvent,
+        date?: Date,
+    ) => {
+        setShowTimePicker(false);
+        if (event.type === 'set' && date) {
+            setSelectedTime(date);
+        }
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
+    };
+
+    const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+    };
+
+    // Check if the selected date is today
+    const isSelectedDateToday = (() => {
+        if (!selectedDate) return true; // default to restricting if no date yet
+        const now = new Date();
+        return (
+            selectedDate.getFullYear() === now.getFullYear() &&
+            selectedDate.getMonth() === now.getMonth() &&
+            selectedDate.getDate() === now.getDate()
+        );
+    })();
+
+    const canContinue = title && selectedDate && selectedTime;
+
     const handleContinue = () => {
         router.push('/invite-selection' as any);
     };
+
+    // iOS picker modal helper
+    const renderIOSPickerModal = (
+        visible: boolean,
+        mode: 'date' | 'time',
+        value: Date,
+        onValueChange: (d: Date) => void,
+        onDone: () => void,
+        onCancel: () => void,
+        minDate?: Date,
+    ) => (
+        <Modal visible={visible} transparent animationType='fade'>
+            <Pressable style={s.modalOverlay} onPress={onCancel}>
+                <Pressable
+                    style={[
+                        s.modalContent,
+                        { backgroundColor: colors.background },
+                    ]}
+                    onPress={(e) => e.stopPropagation()}
+                >
+                    <View style={s.modalHeader}>
+                        <TouchableOpacity onPress={onCancel}>
+                            <Text
+                                style={[
+                                    s.modalBtn,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Cancel
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={onDone}>
+                            <Text
+                                style={[s.modalBtn, { color: colors.primary }]}
+                            >
+                                Done
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                    <DateTimePicker
+                        value={value}
+                        mode={mode}
+                        display='spinner'
+                        minimumDate={minDate}
+                        onChange={(_e, d) => {
+                            if (d) onValueChange(d);
+                        }}
+                        textColor={colors.text}
+                    />
+                </Pressable>
+            </Pressable>
+        </Modal>
+    );
 
     return (
         <SafeAreaView style={shared.screenContainer}>
@@ -74,33 +203,112 @@ export default function CreateHangoutScreen() {
                             />
                         </View>
 
-                        {/* Date */}
-                        <View>
-                            <Text style={shared.formLabel}>Date & Time</Text>
-                            <TouchableOpacity
-                                style={[
-                                    s.pickerBtn,
-                                    {
-                                        borderColor: colors.cardBorderHeavy,
-                                        backgroundColor: colors.inputBackground,
-                                    },
-                                ]}
-                            >
-                                <Ionicons
-                                    name='calendar-outline'
-                                    size={20}
-                                    color={colors.subtitle}
-                                />
-                                <Text
+                        {/* Date & Time — two columns */}
+                        <View style={s.dateTimeRow}>
+                            {/* Date */}
+                            <View style={{ flex: 1 }}>
+                                <Text style={shared.formLabel}>Date *</Text>
+                                <TouchableOpacity
                                     style={[
-                                        s.pickerText,
-                                        { color: colors.subtitle },
+                                        s.pickerBtn,
+                                        {
+                                            borderColor: colors.cardBorderHeavy,
+                                            backgroundColor:
+                                                colors.inputBackground,
+                                        },
                                     ]}
+                                    onPress={openDatePicker}
                                 >
-                                    Select date and time
-                                </Text>
-                            </TouchableOpacity>
+                                    <Ionicons
+                                        name='calendar-outline'
+                                        size={20}
+                                        color={
+                                            selectedDate
+                                                ? colors.text
+                                                : colors.subtitle
+                                        }
+                                    />
+                                    <Text
+                                        style={[
+                                            s.pickerText,
+                                            {
+                                                color: selectedDate
+                                                    ? colors.text
+                                                    : colors.subtitle,
+                                            },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {selectedDate
+                                            ? formatDate(selectedDate)
+                                            : 'Select date'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Time */}
+                            <View style={{ flex: 1 }}>
+                                <Text style={shared.formLabel}>Time *</Text>
+                                <TouchableOpacity
+                                    style={[
+                                        s.pickerBtn,
+                                        {
+                                            borderColor: colors.cardBorderHeavy,
+                                            backgroundColor:
+                                                colors.inputBackground,
+                                        },
+                                    ]}
+                                    onPress={openTimePicker}
+                                >
+                                    <Ionicons
+                                        name='time-outline'
+                                        size={20}
+                                        color={
+                                            selectedTime
+                                                ? colors.text
+                                                : colors.subtitle
+                                        }
+                                    />
+                                    <Text
+                                        style={[
+                                            s.pickerText,
+                                            {
+                                                color: selectedTime
+                                                    ? colors.text
+                                                    : colors.subtitle,
+                                            },
+                                        ]}
+                                        numberOfLines={1}
+                                    >
+                                        {selectedTime
+                                            ? formatTime(selectedTime)
+                                            : 'Select time'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
+
+                        {/* Android pickers — rendered inline, auto-dismiss */}
+                        {Platform.OS === 'android' && showDatePicker && (
+                            <DateTimePicker
+                                value={selectedDate || new Date()}
+                                mode='date'
+                                display='default'
+                                minimumDate={new Date()}
+                                onChange={handleDateChangeAndroid}
+                            />
+                        )}
+                        {Platform.OS === 'android' && showTimePicker && (
+                            <DateTimePicker
+                                value={selectedTime || new Date()}
+                                mode='time'
+                                display='default'
+                                minimumDate={
+                                    isSelectedDateToday ? new Date() : undefined
+                                }
+                                onChange={handleTimeChangeAndroid}
+                            />
+                        )}
 
                         {/* Location */}
                         <View>
@@ -178,10 +386,10 @@ export default function CreateHangoutScreen() {
                     <TouchableOpacity
                         style={[
                             shared.primaryBtnLarge,
-                            !title && { opacity: 0.5 },
+                            !canContinue && { opacity: 0.5 },
                         ]}
                         onPress={handleContinue}
-                        disabled={!title}
+                        disabled={!canContinue}
                     >
                         <Text style={shared.primaryBtnLargeText}>
                             Continue to Invite
@@ -189,6 +397,34 @@ export default function CreateHangoutScreen() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            {/* iOS picker modals */}
+            {Platform.OS === 'ios' &&
+                renderIOSPickerModal(
+                    showDatePicker,
+                    'date',
+                    tempDate,
+                    setTempDate,
+                    () => {
+                        setSelectedDate(tempDate);
+                        setShowDatePicker(false);
+                    },
+                    () => setShowDatePicker(false),
+                    new Date(),
+                )}
+            {Platform.OS === 'ios' &&
+                renderIOSPickerModal(
+                    showTimePicker,
+                    'time',
+                    tempTime,
+                    setTempTime,
+                    () => {
+                        setSelectedTime(tempTime);
+                        setShowTimePicker(false);
+                    },
+                    () => setShowTimePicker(false),
+                    isSelectedDateToday ? new Date() : undefined,
+                )}
         </SafeAreaView>
     );
 }
@@ -196,16 +432,20 @@ export default function CreateHangoutScreen() {
 const s = StyleSheet.create({
     backBtn: { padding: 8, marginLeft: -8 },
     headerTitle: { fontSize: 18, fontWeight: '600' },
+    dateTimeRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
     pickerBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 12,
+        gap: 10,
         height: 52,
         borderWidth: 2,
         borderRadius: 12,
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
     },
-    pickerText: { fontSize: 16 },
+    pickerText: { fontSize: 15, flexShrink: 1 },
     infoCardTitle: {
         fontSize: 15,
         fontWeight: '600',
@@ -214,5 +454,25 @@ const s = StyleSheet.create({
     infoCardSubtitle: {
         fontSize: 14,
         lineHeight: 20,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    modalContent: {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        paddingBottom: 30,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+    },
+    modalBtn: {
+        fontSize: 17,
+        fontWeight: '600',
     },
 });
