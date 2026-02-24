@@ -435,13 +435,17 @@ export default function InviteSelectionScreen() {
                 <TouchableOpacity
                     style={[
                         shared.primaryBtnLarge,
-                        (totalSelected === 0 || submitting) && { opacity: 0.5 },
+                        submitting && { opacity: 0.5 },
                     ]}
-                    disabled={totalSelected === 0 || submitting}
+                    disabled={submitting}
                     onPress={handleSendInvites}
                 >
                     <Text style={shared.primaryBtnLargeText}>
-                        {submitting ? 'Creating...' : 'Send Invites'}
+                        {submitting
+                            ? 'Creating...'
+                            : totalSelected > 0
+                              ? 'Send Invites'
+                              : 'Skip & Create Hangout'}
                     </Text>
                 </TouchableOpacity>
             </View>

@@ -11,6 +11,7 @@ import {
     Modal,
     Pressable,
     Keyboard,
+    Alert,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +22,9 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
+import { useApiClient } from '@/src/hooks/useApiClient';
+import { useHangouts } from '@/src/contexts/HangoutsContext';
+import { CreateHangoutRequest } from '@/src/clients/generatedClient';
 
 /** Duration options: null = "No set duration", numbers = hours */
 const DURATION_OPTIONS: { value: number | null; label: string }[] = [
@@ -45,7 +49,10 @@ export default function CreateHangoutScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
+    const api = useApiClient();
+    const { refetch: refetchHangouts } = useHangouts();
     const [title, setTitle] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
 
@@ -157,6 +164,38 @@ export default function CreateHangoutScreen() {
     })();
 
     const canContinue = title && selectedDate && selectedTime;
+
+    const handleCreateHangout = async () => {
+        if (!canContinue) return;
+        try {
+            setSubmitting(true);
+
+            const start = new Date(selectedDate!);
+            start.setHours(
+                selectedTime!.getHours(),
+                selectedTime!.getMinutes(),
+                0,
+                0,
+            );
+            const endTime = computeEndTime();
+
+            const req = new CreateHangoutRequest();
+            req.title = title;
+            req.startTime = start;
+            if (description) req.description = description;
+            if (location) req.location = location;
+            if (endTime) req.endTime = endTime;
+
+            await api.hangoutsPOST(req);
+            await refetchHangouts();
+
+            router.replace('/(tabs)' as any);
+        } catch (err: any) {
+            Alert.alert('Error', err?.message ?? 'Failed to create hangout');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const handleContinue = () => {
         // Build startTime from selectedDate + selectedTime
@@ -483,7 +522,7 @@ export default function CreateHangoutScreen() {
                             />
                         </View>
 
-                        {/* Next: Invite friends info card */}
+                        {/* Invite friends info card */}
                         <View style={shared.infoCard}>
                             <Ionicons
                                 name='people-outline'
@@ -498,7 +537,7 @@ export default function CreateHangoutScreen() {
                                         { color: colors.text },
                                     ]}
                                 >
-                                    Next: Invite friends
+                                    Invites are optional
                                 </Text>
                                 <Text
                                     style={[
@@ -506,8 +545,8 @@ export default function CreateHangoutScreen() {
                                         { color: colors.textSecondary },
                                     ]}
                                 >
-                                    You&apos;ll be able to invite individual
-                                    friends or entire groups on the next screen
+                                    You can invite friends now or add them later
+                                    after creating the hangout
                                 </Text>
                             </View>
                         </View>
@@ -519,13 +558,35 @@ export default function CreateHangoutScreen() {
                     <TouchableOpacity
                         style={[
                             shared.primaryBtnLarge,
+                            (!canContinue || submitting) && { opacity: 0.5 },
+                        ]}
+                        onPress={handleCreateHangout}
+                        disabled={!canContinue || submitting}
+                    >
+                        <Text style={shared.primaryBtnLargeText}>
+                            {submitting ? 'Creating...' : 'Create Hangout'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            s.secondaryLinkBtn,
                             !canContinue && { opacity: 0.5 },
                         ]}
                         onPress={handleContinue}
                         disabled={!canContinue}
                     >
-                        <Text style={shared.primaryBtnLargeText}>
-                            Continue to Invite
+                        <Ionicons
+                            name='people-outline'
+                            size={18}
+                            color={colors.primary}
+                        />
+                        <Text
+                            style={[
+                                s.secondaryLinkText,
+                                { color: colors.primary },
+                            ]}
+                        >
+                            Invite Friends First
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -681,5 +742,17 @@ const s = StyleSheet.create({
     durationHelperText: {
         fontSize: 13,
         marginTop: 6,
+    },
+    secondaryLinkBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 12,
+        marginTop: 4,
+    },
+    secondaryLinkText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
