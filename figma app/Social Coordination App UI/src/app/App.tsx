@@ -7,6 +7,8 @@ import { HangoutsListScreen } from './components/HangoutsListScreen';
 import { CreateHangoutScreen } from './components/CreateHangoutScreen';
 import { InviteSelectionScreen } from './components/InviteSelectionScreen';
 import { HangoutDetailScreen } from './components/HangoutDetailScreen';
+import { EditHangoutScreen } from './components/EditHangoutScreen';
+import { ManageInvitesScreen } from './components/ManageInvitesScreen';
 import { GroupsListScreen } from './components/GroupsListScreen';
 import { CreateGroupScreen } from './components/CreateGroupScreen';
 import { AddMembersScreen } from './components/AddMembersScreen';
@@ -42,6 +44,8 @@ export default function App() {
               <Route path="/create-hangout" element={<CreateHangoutScreen />} />
               <Route path="/create-hangout/invite" element={<InviteSelectionScreen />} />
               <Route path="/hangout/:id" element={<HangoutDetailScreen />} />
+              <Route path="/hangout/:id/edit" element={<EditHangoutScreen />} />
+              <Route path="/hangout/:id/manage-invites" element={<ManageInvitesScreen />} />
               
               {/* Group flows */}
               <Route path="/create-group" element={<CreateGroupScreen />} />

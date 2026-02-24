@@ -103,7 +103,7 @@ export function HangoutsListScreen() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   
   // Filter states
-  const [filterRole, setFilterRole] = useState<'all' | 'hosting' | 'invited' | 'going'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'hosting' | 'invited'>('all');
   const [filterRSVP, setFilterRSVP] = useState<'all' | 'pending' | 'accepted' | 'declined'>('all');
   const [filterGroup, setFilterGroup] = useState<string>('all');
   const [filterDate, setFilterDate] = useState<'all' | 'month' | '3months'>('all');
@@ -371,7 +371,7 @@ export function HangoutsListScreen() {
                 <div className="mb-6">
                   <h3 className="text-sm font-semibold text-gray-700 mb-3">Role</h3>
                   <div className="flex flex-wrap gap-2">
-                    {(['all', 'hosting', 'invited', 'going'] as const).map((role) => (
+                    {(['all', 'hosting', 'invited'] as const).map((role) => (
                       <button
                         key={role}
                         onClick={() => setFilterRole(role)}

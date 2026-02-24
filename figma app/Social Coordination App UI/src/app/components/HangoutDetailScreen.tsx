@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router';
-import { ArrowLeft, Clock, MapPin, Share2, MoreVertical, MessageCircle, Users as UsersIcon } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Share2, MoreVertical, MessageCircle, Users as UsersIcon, Edit2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useHangouts, RSVPStatus } from '../contexts/HangoutsContext';
 import { Link } from 'react-router';
@@ -40,7 +40,11 @@ export function HangoutDetailScreen() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [userRSVP, setUserRSVP] = useState<RSVPStatus>('going');
+  const [showMenu, setShowMenu] = useState(false);
   const { hangouts, updateHangoutRSVP } = useHangouts();
+  
+  // Mock: assume current user is the creator
+  const isCreator = true;
 
   const handleRSVP = (status: RSVPStatus) => {
     setUserRSVP(status);
@@ -70,9 +74,41 @@ export function HangoutDetailScreen() {
           <button className="p-2 active:bg-gray-100 rounded-full transition-colors">
             <Share2 className="w-5 h-5" />
           </button>
-          <button className="p-2 active:bg-gray-100 rounded-full transition-colors">
-            <MoreVertical className="w-5 h-5" />
-          </button>
+          {isCreator && (
+            <div className="relative">
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 active:bg-gray-100 rounded-full transition-colors"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showMenu && (
+                <>
+                  {/* Backdrop */}
+                  <div 
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowMenu(false)}
+                  ></div>
+                  
+                  {/* Menu */}
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-40">
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        navigate(`/hangout/${id}/edit`);
+                      }}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <Edit2 className="w-5 h-5 text-[#007AFF]" />
+                      <span className="font-medium">Edit Hangout</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -98,6 +134,17 @@ export function HangoutDetailScreen() {
               </div>
             </div>
           </div>
+
+          {/* Note */}
+          {/* Mock note - in real app, fetch from hangout data */}
+          {true && (
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <h3 className="text-sm font-semibold text-gray-600 mb-2">Note from host</h3>
+              <p className="text-gray-700">
+                Let's catch up over drinks! I'll grab a table on the rooftop. Looking forward to seeing everyone! 🍹
+              </p>
+            </div>
+          )}
 
           {/* Countdown Timer */}
           <div className="bg-gradient-to-br from-[#007AFF] to-[#3B82F6] rounded-2xl p-5 text-white shadow-lg">
