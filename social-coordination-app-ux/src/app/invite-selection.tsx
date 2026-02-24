@@ -326,11 +326,6 @@ export default function InviteSelectionScreen() {
                                         }
                                         activeOpacity={0.7}
                                     >
-                                        <Ionicons
-                                            name='add-circle-outline'
-                                            size={20}
-                                            color={colors.textSecondary}
-                                        />
                                         <Text style={shared.secondaryBtnText}>
                                             Create Group
                                         </Text>
