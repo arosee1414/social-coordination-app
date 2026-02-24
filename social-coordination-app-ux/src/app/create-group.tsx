@@ -6,6 +6,8 @@ import {
     TouchableOpacity,
     TextInput,
     StyleSheet,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -58,93 +60,98 @@ export default function CreateGroupScreen() {
             </View>
 
             {/* Content */}
-            <ScrollView
+            <KeyboardAvoidingView
                 style={{ flex: 1 }}
-                contentContainerStyle={{
-                    paddingHorizontal: 24,
-                    paddingVertical: 24,
-                }}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <View style={{ gap: 24 }}>
-                    {/* Info */}
-                    <View style={shared.infoCard}>
-                        <Text
-                            style={[
-                                s.infoText,
-                                { color: colors.textSecondary },
-                            ]}
-                        >
-                            Groups are saved friend lists that make inviting
-                            people to hangouts faster. They&apos;re not
-                            recurring events.
-                        </Text>
-                    </View>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{
+                        paddingHorizontal: 24,
+                        paddingVertical: 24,
+                    }}
+                    keyboardShouldPersistTaps='handled'
+                >
+                    <View style={{ gap: 24 }}>
+                        {/* Info */}
+                        <View style={shared.infoCard}>
+                            <Text
+                                style={[
+                                    s.infoText,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Groups are saved friend lists that make inviting
+                                people to hangouts faster.
+                            </Text>
+                        </View>
 
-                    {/* Icon Selection */}
-                    <View>
-                        <Text style={shared.formLabel}>Choose an Icon</Text>
-                        <View style={s.emojiGrid}>
-                            {emojiOptions.map((emoji) => (
-                                <TouchableOpacity
-                                    key={emoji}
-                                    style={[
-                                        s.emojiBtn,
-                                        {
-                                            borderColor:
-                                                selectedEmoji === emoji
-                                                    ? colors.primary
-                                                    : colors.cardBorderHeavy,
-                                            backgroundColor:
-                                                selectedEmoji === emoji
-                                                    ? colors.indigoTint5
-                                                    : 'transparent',
-                                        },
-                                        selectedEmoji === emoji && {
-                                            transform: [{ scale: 1.1 }],
-                                        },
-                                    ]}
-                                    onPress={() => setSelectedEmoji(emoji)}
-                                >
-                                    <Text style={{ fontSize: 24 }}>
-                                        {emoji}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                        {/* Icon Selection */}
+                        <View>
+                            <Text style={shared.formLabel}>Choose an Icon</Text>
+                            <View style={s.emojiGrid}>
+                                {emojiOptions.map((emoji) => (
+                                    <TouchableOpacity
+                                        key={emoji}
+                                        style={[
+                                            s.emojiBtn,
+                                            {
+                                                borderColor:
+                                                    selectedEmoji === emoji
+                                                        ? colors.primary
+                                                        : colors.cardBorderHeavy,
+                                                backgroundColor:
+                                                    selectedEmoji === emoji
+                                                        ? colors.indigoTint5
+                                                        : 'transparent',
+                                            },
+                                            selectedEmoji === emoji && {
+                                                transform: [{ scale: 1.1 }],
+                                            },
+                                        ]}
+                                        onPress={() => setSelectedEmoji(emoji)}
+                                    >
+                                        <Text style={{ fontSize: 24 }}>
+                                            {emoji}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+
+                        {/* Group Name */}
+                        <View>
+                            <Text style={shared.formLabel}>Group Name *</Text>
+                            <TextInput
+                                style={[
+                                    shared.formInput,
+                                    { color: colors.inputText },
+                                ]}
+                                placeholder='e.g., Close Friends, Basketball Crew'
+                                placeholderTextColor={colors.placeholder}
+                                value={name}
+                                onChangeText={setName}
+                            />
                         </View>
                     </View>
+                </ScrollView>
 
-                    {/* Group Name */}
-                    <View>
-                        <Text style={shared.formLabel}>Group Name *</Text>
-                        <TextInput
-                            style={[
-                                shared.formInput,
-                                { color: colors.inputText },
-                            ]}
-                            placeholder='e.g., Close Friends, Basketball Crew'
-                            placeholderTextColor={colors.placeholder}
-                            value={name}
-                            onChangeText={setName}
-                        />
-                    </View>
+                {/* Bottom CTA */}
+                <View style={shared.bottomCTA}>
+                    <TouchableOpacity
+                        style={[
+                            shared.primaryBtnLarge,
+                            (!name || submitting) && { opacity: 0.5 },
+                        ]}
+                        onPress={handleCreate}
+                        disabled={!name || submitting}
+                    >
+                        <Text style={shared.primaryBtnLargeText}>
+                            {submitting ? 'Creating...' : 'Create Group'}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
-            </ScrollView>
-
-            {/* Bottom CTA */}
-            <View style={shared.bottomCTA}>
-                <TouchableOpacity
-                    style={[
-                        shared.primaryBtnLarge,
-                        (!name || submitting) && { opacity: 0.5 },
-                    ]}
-                    onPress={handleCreate}
-                    disabled={!name || submitting}
-                >
-                    <Text style={shared.primaryBtnLargeText}>
-                        {submitting ? 'Creating...' : 'Create Group'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }

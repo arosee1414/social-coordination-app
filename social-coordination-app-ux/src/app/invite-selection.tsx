@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -10,7 +10,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -19,6 +19,8 @@ import { useApiClient } from '@/src/hooks/useApiClient';
 import { useApiGroups } from '@/src/hooks/useApiGroups';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { CreateHangoutRequest } from '@/src/clients/generatedClient';
+
+type ActiveTab = 'friends' | 'groups';
 
 export default function InviteSelectionScreen() {
     const colors = useThemeColors();
@@ -34,7 +36,19 @@ export default function InviteSelectionScreen() {
         endTime?: string;
     }>();
 
-    const { groups, loading: groupsLoading } = useApiGroups();
+    const {
+        groups,
+        loading: groupsLoading,
+        refetch: refetchGroups,
+    } = useApiGroups();
+
+    // Re-fetch groups whenever this screen gains focus (e.g. after creating a group)
+    useFocusEffect(
+        useCallback(() => {
+            refetchGroups();
+        }, [refetchGroups]),
+    );
+    const [activeTab, setActiveTab] = useState<ActiveTab>('friends');
     const [selectedGroups, setSelectedGroups] = useState<Set<string>>(
         new Set(),
     );
@@ -60,6 +74,10 @@ export default function InviteSelectionScreen() {
 
     const filteredFriends = mockFriends.filter((f) =>
         f.name.toLowerCase().includes(search.toLowerCase()),
+    );
+
+    const filteredGroups = groups.filter((g) =>
+        g.name.toLowerCase().includes(search.toLowerCase()),
     );
 
     const handleSendInvites = async () => {
@@ -113,11 +131,61 @@ export default function InviteSelectionScreen() {
                 <View style={{ width: 40 }} />
             </View>
 
-            {/* Search */}
+            {/* Tab Switcher */}
             <View
                 style={{
                     paddingHorizontal: 24,
                     paddingTop: 16,
+                    paddingBottom: 4,
+                }}
+            >
+                <View style={shared.segmentedControl}>
+                    <TouchableOpacity
+                        style={
+                            activeTab === 'friends'
+                                ? shared.segmentedTabActive
+                                : shared.segmentedTab
+                        }
+                        onPress={() => setActiveTab('friends')}
+                        activeOpacity={0.7}
+                    >
+                        <Text
+                            style={
+                                activeTab === 'friends'
+                                    ? shared.segmentedTabTextActive
+                                    : shared.segmentedTabText
+                            }
+                        >
+                            Friends
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={
+                            activeTab === 'groups'
+                                ? shared.segmentedTabActive
+                                : shared.segmentedTab
+                        }
+                        onPress={() => setActiveTab('groups')}
+                        activeOpacity={0.7}
+                    >
+                        <Text
+                            style={
+                                activeTab === 'groups'
+                                    ? shared.segmentedTabTextActive
+                                    : shared.segmentedTabText
+                            }
+                        >
+                            Groups
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* Search */}
+            <View
+                style={{
+                    paddingHorizontal: 24,
+                    paddingTop: 12,
                     paddingBottom: 12,
                 }}
             >
@@ -135,7 +203,11 @@ export default function InviteSelectionScreen() {
                     />
                     <TextInput
                         style={shared.searchInput}
-                        placeholder='Search friends...'
+                        placeholder={
+                            activeTab === 'friends'
+                                ? 'Search friends...'
+                                : 'Search groups...'
+                        }
                         placeholderTextColor={colors.placeholder}
                         value={search}
                         onChangeText={setSearch}
@@ -144,69 +216,36 @@ export default function InviteSelectionScreen() {
             </View>
 
             <ScrollView style={{ flex: 1 }}>
-                {/* Groups Section */}
-                <View style={{ paddingHorizontal: 24, paddingBottom: 16 }}>
-                    <Text
-                        style={[
-                            shared.sectionLabel,
-                            { textTransform: 'uppercase' },
-                        ]}
-                    >
-                        GROUPS
-                    </Text>
-                    {groupsLoading ? (
-                        <ActivityIndicator
-                            color={colors.primary}
-                            style={{ marginVertical: 16 }}
-                        />
-                    ) : groups.length === 0 ? (
-                        <Text
-                            style={{
-                                color: colors.textSecondary,
-                                fontSize: 14,
-                                paddingVertical: 8,
-                            }}
-                        >
-                            No groups yet
-                        </Text>
-                    ) : (
+                {/* Friends Tab Content */}
+                {activeTab === 'friends' && (
+                    <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
                         <View style={{ gap: 8 }}>
-                            {groups.map((group) => {
-                                const selected = selectedGroups.has(group.id);
+                            {filteredFriends.map((friend) => {
+                                const selected = selectedFriends.has(friend.id);
                                 return (
                                     <TouchableOpacity
-                                        key={group.id}
+                                        key={friend.id}
                                         style={
                                             selected
                                                 ? shared.selectableItemSelected
                                                 : shared.selectableItem
                                         }
-                                        onPress={() => toggleGroup(group.id)}
+                                        onPress={() => toggleFriend(friend.id)}
                                         activeOpacity={0.7}
                                     >
-                                        <Text style={{ fontSize: 28 }}>
-                                            {group.icon}
-                                        </Text>
-                                        <View style={{ flex: 1 }}>
-                                            <Text
-                                                style={[
-                                                    s.itemName,
-                                                    { color: colors.text },
-                                                ]}
-                                            >
-                                                {group.name}
-                                            </Text>
-                                            <Text
-                                                style={[
-                                                    s.itemSub,
-                                                    {
-                                                        color: colors.textSecondary,
-                                                    },
-                                                ]}
-                                            >
-                                                {group.memberCount} members
+                                        <View style={shared.avatarLarge}>
+                                            <Text style={{ fontSize: 24 }}>
+                                                {friend.avatar}
                                             </Text>
                                         </View>
+                                        <Text
+                                            style={[
+                                                s.itemName,
+                                                { color: colors.text, flex: 1 },
+                                            ]}
+                                        >
+                                            {friend.name}
+                                        </Text>
                                         {selected && (
                                             <View style={shared.checkCircle}>
                                                 <Ionicons
@@ -220,60 +259,154 @@ export default function InviteSelectionScreen() {
                                 );
                             })}
                         </View>
-                    )}
-                </View>
+                    </View>
+                )}
 
-                {/* Friends Section */}
-                <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
-                    <Text
-                        style={[
-                            shared.sectionLabel,
-                            { textTransform: 'uppercase' },
-                        ]}
-                    >
-                        FRIENDS
-                    </Text>
-                    <View style={{ gap: 8 }}>
-                        {filteredFriends.map((friend) => {
-                            const selected = selectedFriends.has(friend.id);
-                            return (
-                                <TouchableOpacity
-                                    key={friend.id}
-                                    style={
-                                        selected
-                                            ? shared.selectableItemSelected
-                                            : shared.selectableItem
-                                    }
-                                    onPress={() => toggleFriend(friend.id)}
-                                    activeOpacity={0.7}
+                {/* Groups Tab Content */}
+                {activeTab === 'groups' && (
+                    <View style={{ paddingHorizontal: 24, paddingBottom: 24 }}>
+                        {groupsLoading ? (
+                            <ActivityIndicator
+                                color={colors.primary}
+                                style={{ marginVertical: 16 }}
+                            />
+                        ) : filteredGroups.length === 0 ? (
+                            groups.length === 0 ? (
+                                <View
+                                    style={{
+                                        alignItems: 'center',
+                                        paddingVertical: 64,
+                                        paddingHorizontal: 24,
+                                    }}
                                 >
-                                    <View style={shared.avatarLarge}>
-                                        <Text style={{ fontSize: 24 }}>
-                                            {friend.avatar}
-                                        </Text>
+                                    <View
+                                        style={{
+                                            width: 96,
+                                            height: 96,
+                                            borderRadius: 48,
+                                            backgroundColor:
+                                                colors.surfaceTertiary,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginBottom: 24,
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name='people-outline'
+                                            size={48}
+                                            color={colors.textTertiary}
+                                        />
                                     </View>
                                     <Text
-                                        style={[
-                                            s.itemName,
-                                            { color: colors.text, flex: 1 },
-                                        ]}
+                                        style={{
+                                            fontSize: 20,
+                                            fontWeight: 'bold',
+                                            color: colors.text,
+                                            marginBottom: 8,
+                                        }}
                                     >
-                                        {friend.name}
+                                        No Groups Yet
                                     </Text>
-                                    {selected && (
-                                        <View style={shared.checkCircle}>
-                                            <Ionicons
-                                                name='checkmark'
-                                                size={16}
-                                                color='#fff'
-                                            />
-                                        </View>
-                                    )}
-                                </TouchableOpacity>
-                            );
-                        })}
+                                    <Text
+                                        style={{
+                                            fontSize: 16,
+                                            color: colors.subtitle,
+                                            textAlign: 'center',
+                                            marginBottom: 32,
+                                            maxWidth: 280,
+                                        }}
+                                    >
+                                        Create a group to save friend lists and
+                                        invite them faster to hangouts
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={shared.secondaryBtn}
+                                        onPress={() =>
+                                            router.push('/create-group' as any)
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons
+                                            name='add-circle-outline'
+                                            size={20}
+                                            color={colors.textSecondary}
+                                        />
+                                        <Text style={shared.secondaryBtnText}>
+                                            Create Group
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <Text
+                                    style={{
+                                        color: colors.textSecondary,
+                                        fontSize: 14,
+                                        paddingVertical: 8,
+                                    }}
+                                >
+                                    No groups match your search
+                                </Text>
+                            )
+                        ) : (
+                            <View style={{ gap: 8 }}>
+                                {filteredGroups.map((group) => {
+                                    const selected = selectedGroups.has(
+                                        group.id,
+                                    );
+                                    return (
+                                        <TouchableOpacity
+                                            key={group.id}
+                                            style={
+                                                selected
+                                                    ? shared.selectableItemSelected
+                                                    : shared.selectableItem
+                                            }
+                                            onPress={() =>
+                                                toggleGroup(group.id)
+                                            }
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={{ fontSize: 28 }}>
+                                                {group.icon}
+                                            </Text>
+                                            <View style={{ flex: 1 }}>
+                                                <Text
+                                                    style={[
+                                                        s.itemName,
+                                                        { color: colors.text },
+                                                    ]}
+                                                >
+                                                    {group.name}
+                                                </Text>
+                                                <Text
+                                                    style={[
+                                                        s.itemSub,
+                                                        {
+                                                            color: colors.textSecondary,
+                                                        },
+                                                    ]}
+                                                >
+                                                    {group.memberCount} members
+                                                </Text>
+                                            </View>
+                                            {selected && (
+                                                <View
+                                                    style={shared.checkCircle}
+                                                >
+                                                    <Ionicons
+                                                        name='checkmark'
+                                                        size={16}
+                                                        color='#fff'
+                                                    />
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        )}
                     </View>
-                </View>
+                )}
             </ScrollView>
 
             {/* Bottom CTA */}
@@ -289,6 +422,14 @@ export default function InviteSelectionScreen() {
                             {totalSelected}
                         </Text>{' '}
                         selected
+                        {selectedFriends.size > 0 &&
+                            selectedGroups.size > 0 && (
+                                <Text style={{ color: colors.subtitle }}>
+                                    {' '}
+                                    ({selectedFriends.size} friends,{' '}
+                                    {selectedGroups.size} groups)
+                                </Text>
+                            )}
                     </Text>
                 )}
                 <TouchableOpacity
