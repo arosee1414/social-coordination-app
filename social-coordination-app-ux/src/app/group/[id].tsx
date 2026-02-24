@@ -189,7 +189,11 @@ export default function GroupDetailScreen() {
                             MEMBERS ({members.length})
                         </Text>
                         <TouchableOpacity
-                            onPress={() => router.push('/add-members')}
+                            onPress={() =>
+                                router.push(
+                                    `/manage-group-members/${groupId}` as any,
+                                )
+                            }
                         >
                             <Text
                                 style={[s.addLink, { color: colors.primary }]}
