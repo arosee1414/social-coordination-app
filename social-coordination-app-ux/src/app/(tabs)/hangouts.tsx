@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     View,
     Text,
@@ -17,12 +23,24 @@ import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { PulsingDot } from '@/src/components/PulsingDot';
 
+type HangoutTab = 'upcoming' | 'past';
+
 export default function HangoutsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { hangouts: mockHangouts, loading, refetch } = useHangouts();
     const [refreshing, setRefreshing] = useState(false);
+    const [activeTab, setActiveTab] = useState<HangoutTab>('upcoming');
+
+    const filteredHangouts = useMemo(() => {
+        if (activeTab === 'upcoming') {
+            return mockHangouts.filter(
+                (h) => h.status === 'live' || h.status === 'upcoming',
+            );
+        }
+        return mockHangouts.filter((h) => h.status === 'past');
+    }, [mockHangouts, activeTab]);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -65,6 +83,51 @@ export default function HangoutsScreen() {
                 </Text>
             </View>
 
+            {/* Tab Bar */}
+            <View
+                style={[
+                    shared.segmentedControl,
+                    { marginHorizontal: 24, marginTop: 12, marginBottom: 4 },
+                ]}
+            >
+                <TouchableOpacity
+                    style={
+                        activeTab === 'upcoming'
+                            ? shared.segmentedTabActive
+                            : shared.segmentedTab
+                    }
+                    onPress={() => setActiveTab('upcoming')}
+                >
+                    <Text
+                        style={
+                            activeTab === 'upcoming'
+                                ? shared.segmentedTabTextActive
+                                : shared.segmentedTabText
+                        }
+                    >
+                        Upcoming
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={
+                        activeTab === 'past'
+                            ? shared.segmentedTabActive
+                            : shared.segmentedTab
+                    }
+                    onPress={() => setActiveTab('past')}
+                >
+                    <Text
+                        style={
+                            activeTab === 'past'
+                                ? shared.segmentedTabTextActive
+                                : shared.segmentedTabText
+                        }
+                    >
+                        Past
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
             <ScrollView
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}
@@ -78,7 +141,7 @@ export default function HangoutsScreen() {
                     />
                 }
             >
-                {mockHangouts.length > 0 ? (
+                {filteredHangouts.length > 0 ? (
                     <View
                         style={{
                             paddingHorizontal: 24,
@@ -86,7 +149,7 @@ export default function HangoutsScreen() {
                             gap: 12,
                         }}
                     >
-                        {mockHangouts.map((hangout) => {
+                        {filteredHangouts.map((hangout) => {
                             const isLive = hangout.status === 'live';
 
                             return (
@@ -324,26 +387,35 @@ export default function HangoutsScreen() {
                             ]}
                         >
                             <Ionicons
-                                name='calendar-outline'
+                                name={
+                                    activeTab === 'upcoming'
+                                        ? 'calendar-outline'
+                                        : 'time-outline'
+                                }
                                 size={48}
                                 color={colors.textTertiary}
                             />
                         </View>
                         <Text style={[s.emptyTitle, { color: colors.text }]}>
-                            No Hangouts Yet
+                            {activeTab === 'upcoming'
+                                ? 'No Upcoming Hangouts'
+                                : 'No Past Hangouts'}
                         </Text>
                         <Text style={[s.emptyText, { color: colors.subtitle }]}>
-                            Create your first hangout and invite friends or
-                            groups
+                            {activeTab === 'upcoming'
+                                ? 'Create a hangout and invite friends or groups'
+                                : "You haven't been to any hangouts yet."}
                         </Text>
-                        <TouchableOpacity
-                            style={shared.primaryBtnLarge}
-                            onPress={() => router.push('/create-hangout')}
-                        >
-                            <Text style={shared.primaryBtnLargeText}>
-                                Create Hangout
-                            </Text>
-                        </TouchableOpacity>
+                        {activeTab === 'upcoming' && (
+                            <TouchableOpacity
+                                style={shared.primaryBtnLarge}
+                                onPress={() => router.push('/create-hangout')}
+                            >
+                                <Text style={shared.primaryBtnLargeText}>
+                                    Create Hangout
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 ) : null}
             </ScrollView>

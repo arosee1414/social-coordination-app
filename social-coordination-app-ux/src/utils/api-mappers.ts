@@ -110,17 +110,29 @@ function isLive(startTime: Date | undefined, endTime: Date | undefined | null, s
 }
 
 /**
+ * Determine if a hangout has ended (start+end window has passed)
+ */
+function isPast(startTime: Date | undefined, endTime: Date | undefined | null): boolean {
+    if (!startTime) return false;
+    const now = new Date();
+    const start = new Date(startTime);
+    const end = endTime ? new Date(endTime) : new Date(start.getTime() + 8 * 60 * 60 * 1000);
+    return now > end;
+}
+
+/**
  * Map HangoutSummaryResponse to frontend Hangout type
  */
 export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Hangout {
     const live = isLive(response.startTime, response.endTime, response.status);
-    const hangoutStatus: HangoutStatus = live ? 'live' : mapHangoutStatus(response.status);
+    const past = !live && isPast(response.startTime, response.endTime);
+    const hangoutStatus: HangoutStatus = live ? 'live' : past ? 'past' : mapHangoutStatus(response.status);
 
     return {
         id: response.id ?? '',
         title: response.title ?? '',
         time: formatTime(response.startTime),
-        timeUntil: live ? 'Happening now' : formatTimeUntil(response.startTime),
+        timeUntil: live ? 'Happening now' : past ? formatDate(response.startTime) : formatTimeUntil(response.startTime),
         location: response.location ?? null,
         creator: '', // Not available in summary response
         going: response.attendeeCount ?? 0,
@@ -140,7 +152,8 @@ export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Ha
  */
 export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout {
     const live = isLive(response.startTime, response.endTime, response.status);
-    const hangoutStatus: HangoutStatus = live ? 'live' : mapHangoutStatus(response.status);
+    const past = !live && isPast(response.startTime, response.endTime);
+    const hangoutStatus: HangoutStatus = live ? 'live' : past ? 'past' : mapHangoutStatus(response.status);
     const attendees = response.attendees ?? [];
     const goingCount = attendees.filter(a => a.rsvpStatus === ApiRSVPStatus.Going).length;
     const maybeCount = attendees.filter(a => a.rsvpStatus === ApiRSVPStatus.Maybe).length;
@@ -149,7 +162,7 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
         id: response.id ?? '',
         title: response.title ?? '',
         time: formatTime(response.startTime),
-        timeUntil: live ? 'Happening now' : formatTimeUntil(response.startTime),
+        timeUntil: live ? 'Happening now' : past ? formatDate(response.startTime) : formatTimeUntil(response.startTime),
         location: response.location ?? null,
         creator: response.createdByUserName || response.createdByUserId || '',
         going: goingCount,
