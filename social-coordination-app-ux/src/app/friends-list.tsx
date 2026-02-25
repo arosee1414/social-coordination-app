@@ -207,7 +207,11 @@ export default function FriendsListScreen() {
     );
 
     const renderIncomingRequestItem = ({ item }: { item: FriendRequest }) => (
-        <View style={[styles.listItem, { backgroundColor: colors.card }]}>
+        <TouchableOpacity
+            style={[styles.listItem, { backgroundColor: colors.card }]}
+            onPress={() => router.push(`/friend/${item.userId}`)}
+            activeOpacity={0.7}
+        >
             <View style={styles.avatarContainer}>
                 {item.avatarUrl ? (
                     <Image
@@ -282,11 +286,15 @@ export default function FriendsListScreen() {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     const renderOutgoingRequestItem = ({ item }: { item: FriendRequest }) => (
-        <View style={[styles.listItem, { backgroundColor: colors.card }]}>
+        <TouchableOpacity
+            style={[styles.listItem, { backgroundColor: colors.card }]}
+            onPress={() => router.push(`/friend/${item.userId}`)}
+            activeOpacity={0.7}
+        >
             <View style={styles.avatarContainer}>
                 {item.avatarUrl ? (
                     <Image
@@ -343,7 +351,7 @@ export default function FriendsListScreen() {
                     Pending
                 </Text>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 
     const renderFriendsTab = () => {
@@ -725,7 +733,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: 8,
-        paddingHorizontal: 12,
+        paddingHorizontal: 2,
         borderRadius: 12,
         marginBottom: 4,
     },
@@ -747,6 +755,7 @@ const styles = StyleSheet.create({
     },
     itemContent: {
         flex: 1,
+        marginRight: 12,
     },
     itemName: {
         fontSize: 16,

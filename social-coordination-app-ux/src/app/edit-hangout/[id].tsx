@@ -26,7 +26,10 @@ import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { useApiUser } from '@/src/hooks/useApiUser';
-import { UpdateHangoutRequest } from '@/src/clients/generatedClient';
+import {
+    UpdateHangoutRequest,
+    HangoutStatus,
+} from '@/src/clients/generatedClient';
 
 /** Duration options: null = "No set duration", numbers = hours */
 const DURATION_OPTIONS: { value: number | null; label: string }[] = [
@@ -63,6 +66,12 @@ export default function EditHangoutScreen() {
     const [deleting, setDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    // Hangout status tracking
+    const [hangoutStatus, setHangoutStatus] = useState<HangoutStatus | null>(
+        null,
+    );
+    const [hangoutEndTime, setHangoutEndTime] = useState<Date | null>(null);
+
     // Form fields
     const [title, setTitle] = useState('');
     const [location, setLocation] = useState('');
@@ -98,6 +107,11 @@ export default function EditHangoutScreen() {
                 );
                 router.back();
                 return;
+            }
+
+            setHangoutStatus(result.status ?? null);
+            if (result.endTime) {
+                setHangoutEndTime(new Date(result.endTime));
             }
 
             setTitle(result.title ?? '');
@@ -227,6 +241,11 @@ export default function EditHangoutScreen() {
         );
         return new Date(start.getTime() + selectedDuration * 60 * 60 * 1000);
     };
+
+    const isHangoutEnded =
+        hangoutStatus === HangoutStatus.Cancelled ||
+        hangoutStatus === HangoutStatus.Completed ||
+        (hangoutEndTime !== null && hangoutEndTime < new Date());
 
     const canSave = title && selectedDate && selectedTime;
 
@@ -618,30 +637,45 @@ export default function EditHangoutScreen() {
                         </View>
 
                         {/* Manage Invites Button */}
-                        <TouchableOpacity
-                            style={[
-                                s.manageInvitesBtn,
-                                {
-                                    backgroundColor: colors.indigoTint5,
-                                    borderColor: colors.indigoTint,
-                                },
-                            ]}
-                            onPress={handleManageInvites}
-                        >
-                            <Ionicons
-                                name='people-outline'
-                                size={20}
-                                color={colors.primary}
-                            />
-                            <Text
+                        <View>
+                            <TouchableOpacity
                                 style={[
-                                    s.manageInvitesBtnText,
-                                    { color: colors.primary },
+                                    s.manageInvitesBtn,
+                                    {
+                                        backgroundColor: colors.indigoTint5,
+                                        borderColor: colors.indigoTint,
+                                    },
+                                    isHangoutEnded && { opacity: 0.5 },
                                 ]}
+                                onPress={handleManageInvites}
+                                disabled={isHangoutEnded}
                             >
-                                Manage Invites
-                            </Text>
-                        </TouchableOpacity>
+                                <Ionicons
+                                    name='people-outline'
+                                    size={20}
+                                    color={colors.primary}
+                                />
+                                <Text
+                                    style={[
+                                        s.manageInvitesBtnText,
+                                        { color: colors.primary },
+                                    ]}
+                                >
+                                    Manage Invites
+                                </Text>
+                            </TouchableOpacity>
+                            {isHangoutEnded && (
+                                <Text
+                                    style={[
+                                        s.manageInvitesHint,
+                                        { color: colors.textTertiary },
+                                    ]}
+                                >
+                                    Invites can&apos;t be managed after a
+                                    hangout has ended
+                                </Text>
+                            )}
+                        </View>
 
                         {/* Delete Hangout */}
                         <View
@@ -900,6 +934,11 @@ const s = StyleSheet.create({
     manageInvitesBtnText: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    manageInvitesHint: {
+        fontSize: 12,
+        textAlign: 'center',
+        marginTop: 8,
     },
     deleteSection: {
         paddingTop: 24,

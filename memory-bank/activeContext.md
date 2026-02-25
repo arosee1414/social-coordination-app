@@ -2,15 +2,11 @@
 
 ## Current Work Focus
 
-Light mode UI polish — improving visibility/contrast of borders and outlines.
+Edit hangout page guard — preventing invite management after hangout ends.
 
 ## What Was Just Accomplished
 
-- **Fixed light mode card border visibility:**
-    - `cardBorder` in light mode was `#F3F4F6` (nearly invisible on white `#fff` backgrounds) — changed to `#E5E7EB`
-    - `cardBorderHeavy` shifted from `#E5E7EB` to `#D1D5DB` to maintain the two-tier distinction
-    - This globally fixes border visibility for settings cards on the profile page (Manage Friends, Notifications, etc.) and ~48 other usages across the app
-    - Dark mode values unchanged (already had adequate contrast)
+- **Disabled "Manage Invites" on ended hangouts:** In `edit-hangout/[id].tsx`, added `hangoutStatus` and `hangoutEndTime` state variables populated from the API response. Derived an `isHangoutEnded` boolean that is `true` when `status` is `Cancelled` or `Completed`, or when `endTime` is in the past. The "Manage Invites" button is now disabled (opacity 0.5 + `disabled` prop) with a helper text explaining why when the hangout has ended.
 
 ## Key Decisions Made
 
