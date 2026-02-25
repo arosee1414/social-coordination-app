@@ -2,14 +2,11 @@
 
 ## Current Work Focus
 
-Invite/search restriction feature is **complete** — all invite and member-selection screens now only allow friends (accepted friendships) and groups the user is a member of.
+Bug fixes and polish — fixing navigation issues after destructive actions (e.g., group deletion).
 
 ## What Was Just Accomplished
 
-- **Restricted invite-selection.tsx (hangout invite)**: Replaced `useApiUserSearch` (general user search) and `api.suggested()` (suggested users) with `useApiFriends` hook. Friends tab now shows only accepted friends, filtered client-side by search query. Added empty state with "Find Friends" CTA when user has no friends.
-- **Restricted add-members.tsx (group creation)**: Replaced `mockFriends` (mock data) with `useApiFriends` hook. Now uses real friend data with proper avatar images and client-side search filtering. Added empty state with "Find Friends" CTA.
-- **Restricted manage-group-members/[id].tsx (manage group members)**: Replaced `useApiUserSearch` (general user search) with `useApiFriends` hook. Friends are filtered to exclude existing group members, then filtered by search query client-side. No more debounced API search — instant client-side filtering.
-- **Groups tab already correct**: `useApiGroups` hook returns only groups the user is a member of — no changes needed.
+- **Fixed group deletion navigation bug**: After deleting a group from `edit-group/[id].tsx`, the app was routing to the Home tab instead of the Groups tab. Root cause: `router.replace('/(tabs)/groups')` from a stack screen doesn't reliably activate the correct tab — the tab navigator defaults to its initial route (Home). Fix: Added `router.dismissAll()` before `router.replace('/(tabs)/groups')` to first pop all stacked screens back to the tab navigator, then navigate to the Groups tab.
 
 ## Key Decisions Made
 

@@ -106,6 +106,7 @@ export default function EditGroupScreen() {
             setDeleting(true);
             setShowDeleteConfirm(false);
             await api.groupsDELETE(groupId);
+            router.dismissAll();
             router.replace('/(tabs)/groups' as any);
         } catch (err: any) {
             Alert.alert('Error', err?.message ?? 'Failed to delete group');
