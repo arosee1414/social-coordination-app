@@ -15,13 +15,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useApiFriends } from '@/src/hooks/useApiFriends';
+import { pendingGroupMembers } from '@/src/utils/pendingGroupMembers';
 
 export default function AddMembersScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
+
+    // Initialize from shared state (written by create-group before navigating here)
     const [selectedMembers, setSelectedMembers] = useState<Set<string>>(
-        new Set(),
+        () => new Set(pendingGroupMembers.ids),
     );
     const [search, setSearch] = useState('');
 
@@ -36,6 +39,12 @@ export default function AddMembersScreen() {
     const filtered = friends.filter((f) =>
         f.name.toLowerCase().includes(search.toLowerCase()),
     );
+
+    const handleDone = () => {
+        // Write selections to shared state, then pop back to create-group
+        pendingGroupMembers.ids = Array.from(selectedMembers);
+        router.back();
+    };
 
     return (
         <SafeAreaView style={shared.screenContainer}>
@@ -250,14 +259,10 @@ export default function AddMembersScreen() {
                     </Text>
                 )}
                 <TouchableOpacity
-                    style={[
-                        shared.primaryBtnLarge,
-                        selectedMembers.size === 0 && { opacity: 0.5 },
-                    ]}
-                    disabled={selectedMembers.size === 0}
-                    onPress={() => router.push('/group-created')}
+                    style={shared.primaryBtnLarge}
+                    onPress={handleDone}
                 >
-                    <Text style={shared.primaryBtnLargeText}>Create Group</Text>
+                    <Text style={shared.primaryBtnLargeText}>Done</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

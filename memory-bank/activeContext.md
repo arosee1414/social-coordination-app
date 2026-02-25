@@ -2,11 +2,12 @@
 
 ## Current Work Focus
 
-Bug fixes and polish — fixing navigation issues after destructive actions (e.g., group deletion).
+Group creation enhancement — adding member selection during group creation.
 
 ## What Was Just Accomplished
 
-- **Fixed group deletion navigation bug**: After deleting a group from `edit-group/[id].tsx`, the app was routing to the Home tab instead of the Groups tab. Root cause: `router.replace('/(tabs)/groups')` from a stack screen doesn't reliably activate the correct tab — the tab navigator defaults to its initial route (Home). Fix: Added `router.dismissAll()` before `router.replace('/(tabs)/groups')` to first pop all stacked screens back to the tab navigator, then navigate to the Groups tab.
+- **Add members during group creation**: Added an "Add Members" / "Manage Members" button to `create-group.tsx` (matching the same button pattern from `edit-group/[id].tsx`). Uses a shared state module (`pendingGroupMembers.ts`) + `useFocusEffect` + `router.back()` pattern to pass selected member IDs between screens without stack buildup. The `CreateGroupRequest` now includes `memberUserIds` when members are selected. The backend already supported `MemberUserIds` on `CreateGroupRequest` — this was a frontend-only change.
+- **Shared state for cross-screen data**: Created `src/utils/pendingGroupMembers.ts` — a simple mutable object that `create-group` writes to before pushing `add-members`, and `add-members` writes to before calling `router.back()`. `create-group` re-reads via `useFocusEffect`. This avoids `router.navigate`/`router.replace` which caused duplicate screen entries in the stack.
 
 ## Key Decisions Made
 

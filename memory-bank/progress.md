@@ -4,7 +4,7 @@
 
 - **Authentication**: Clerk-based auth with Google OAuth, sign-in/sign-up flows
 - **User Management**: User creation, profile retrieval, profile updates via Cosmos DB
-- **Groups**: Full CRUD — create, list, detail, edit, member management
+- **Groups**: Full CRUD — create (with optional members), list, detail, edit, member management
 - **Hangouts**: Full CRUD — create, list, detail, edit, RSVP, attendee management
 - **Friends System (NEW)**: Full backend + frontend implementation
     - Backend: Cosmos Friendships container, FriendshipRecord model, FriendsService, FriendsController (8 endpoints)

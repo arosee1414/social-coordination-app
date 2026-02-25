@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,25 +8,43 @@ import {
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
+    Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { emojiOptions } from '@/src/data/mock-data';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import { CreateGroupRequest } from '@/src/clients/generatedClient';
-import { Alert } from 'react-native';
+import { pendingGroupMembers } from '@/src/utils/pendingGroupMembers';
 
 export default function CreateGroupScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const api = useApiClient();
+
     const [name, setName] = useState('');
     const [selectedEmoji, setSelectedEmoji] = useState('💜');
     const [submitting, setSubmitting] = useState(false);
+    const [memberIds, setMemberIds] = useState<string[]>([]);
+
+    // Re-read shared state every time this screen gains focus
+    // (e.g. returning from add-members via router.back())
+    useFocusEffect(
+        useCallback(() => {
+            setMemberIds([...pendingGroupMembers.ids]);
+        }, []),
+    );
+
+    // Clear shared state when leaving the create flow entirely
+    const handleBack = () => {
+        pendingGroupMembers.ids = [];
+        router.back();
+    };
 
     const handleCreate = async () => {
         try {
@@ -34,7 +52,11 @@ export default function CreateGroupScreen() {
             const req = new CreateGroupRequest();
             req.name = name;
             req.emoji = selectedEmoji;
+            if (memberIds.length > 0) {
+                req.memberUserIds = memberIds;
+            }
             await api.groupsPOST(req);
+            pendingGroupMembers.ids = [];
             router.back();
         } catch (err: any) {
             Alert.alert('Error', err?.message ?? 'Failed to create group');
@@ -43,14 +65,17 @@ export default function CreateGroupScreen() {
         }
     };
 
+    const handleManageMembers = () => {
+        // Write current selections to shared state before navigating
+        pendingGroupMembers.ids = [...memberIds];
+        router.push('/add-members' as any);
+    };
+
     return (
         <SafeAreaView style={shared.screenContainer}>
             {/* Header */}
             <View style={shared.stackHeader}>
-                <TouchableOpacity
-                    onPress={() => router.back()}
-                    style={s.backBtn}
-                >
+                <TouchableOpacity onPress={handleBack} style={s.backBtn}>
                     <Ionicons name='arrow-back' size={24} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={[s.headerTitle, { color: colors.text }]}>
@@ -133,6 +158,34 @@ export default function CreateGroupScreen() {
                                 onChangeText={setName}
                             />
                         </View>
+
+                        {/* Manage Members Button */}
+                        <TouchableOpacity
+                            style={[
+                                s.manageMembersBtn,
+                                {
+                                    backgroundColor: colors.indigoTint5,
+                                    borderColor: colors.indigoTint,
+                                },
+                            ]}
+                            onPress={handleManageMembers}
+                        >
+                            <Ionicons
+                                name='people-outline'
+                                size={20}
+                                color={colors.primary}
+                            />
+                            <Text
+                                style={[
+                                    s.manageMembersBtnText,
+                                    { color: colors.primary },
+                                ]}
+                            >
+                                {memberIds.length > 0
+                                    ? `Manage Members (${memberIds.length})`
+                                    : 'Add Members'}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
 
@@ -168,5 +221,18 @@ const s = StyleSheet.create({
         borderWidth: 2,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    manageMembersBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        height: 56,
+        borderWidth: 2,
+        borderRadius: 12,
+    },
+    manageMembersBtnText: {
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
