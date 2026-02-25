@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useApiClient } from '@/src/hooks/useApiClient';
+import { useApiUser } from '@/src/hooks/useApiUser';
 import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
 import { AddGroupMemberRequest } from '@/src/clients/generatedClient';
 import type { GroupMemberResponse } from '@/src/clients/generatedClient';
@@ -27,6 +28,7 @@ export default function ManageGroupMembersScreen() {
     const { id } = useLocalSearchParams();
     const groupId = typeof id === 'string' ? id : (id?.[0] ?? '');
     const api = useApiClient();
+    const { user } = useApiUser();
 
     const [loading, setLoading] = useState(true);
     const [members, setMembers] = useState<GroupMemberResponse[]>([]);
@@ -42,10 +44,24 @@ export default function ManageGroupMembersScreen() {
 
     // Fetch group members
     const fetchGroup = useCallback(async () => {
-        if (!groupId) return;
+        if (!groupId || !user?.id) return;
         try {
             setLoading(true);
             const result = await api.groupsGET(groupId);
+
+            // Check if the current user is an admin
+            const isAdmin = result.members?.some(
+                (m: any) => m.userId === user.id && m.role === 'Admin',
+            );
+            if (!isAdmin) {
+                Alert.alert(
+                    'Unauthorized',
+                    'Only group admins can manage members.',
+                );
+                router.back();
+                return;
+            }
+
             setMembers(result.members ?? []);
         } catch (err: any) {
             Alert.alert('Error', err?.message ?? 'Failed to load group');
@@ -53,11 +69,13 @@ export default function ManageGroupMembersScreen() {
         } finally {
             setLoading(false);
         }
-    }, [api, groupId]);
+    }, [api, groupId, user?.id]);
 
     useEffect(() => {
-        fetchGroup();
-    }, [fetchGroup]);
+        if (user?.id) {
+            fetchGroup();
+        }
+    }, [fetchGroup, user?.id]);
 
     // Search handler with debounce
     useEffect(() => {

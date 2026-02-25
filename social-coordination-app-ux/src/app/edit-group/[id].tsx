@@ -49,11 +49,15 @@ export default function EditGroupScreen() {
             setInitialLoading(true);
             const result = await api.groupsGET(groupId);
 
-            // Check if the current user is the creator
-            if (user?.id && result.createdByUserId !== user.id) {
+            // Check if the current user is the creator or an admin
+            const isCreator = user?.id && result.createdByUserId === user.id;
+            const isAdmin = result.members?.some(
+                (m: any) => m.userId === user?.id && m.role === 'Admin',
+            );
+            if (!isCreator && !isAdmin) {
                 Alert.alert(
                     'Unauthorized',
-                    'You can only edit groups you created.',
+                    'Only group creators and admins can edit this group.',
                 );
                 router.back();
                 return;

@@ -28,8 +28,10 @@ export default function GroupDetailScreen() {
     const { group, members, loading, error, createdByUserId, refetch } =
         useApiGroupDetail(groupId);
     const { user } = useApiUser();
-    const isCreator =
-        user?.id && createdByUserId && user.id === createdByUserId;
+    const currentUserMember = members.find((m) => m.userId === user?.id);
+    const isCreatorOrAdmin =
+        (user?.id && createdByUserId && user.id === createdByUserId) ||
+        currentUserMember?.role === 'Admin';
 
     // Refetch group data when returning from edit screens
     useFocusEffect(
@@ -81,7 +83,7 @@ export default function GroupDetailScreen() {
                     Group Details
                 </Text>
                 <View style={s.headerActions}>
-                    {isCreator && (
+                    {isCreatorOrAdmin && (
                         <TouchableOpacity
                             onPress={() =>
                                 router.push(`/edit-group/${groupId}` as any)
@@ -188,19 +190,24 @@ export default function GroupDetailScreen() {
                         >
                             MEMBERS ({members.length})
                         </Text>
-                        <TouchableOpacity
-                            onPress={() =>
-                                router.push(
-                                    `/manage-group-members/${groupId}` as any,
-                                )
-                            }
-                        >
-                            <Text
-                                style={[s.addLink, { color: colors.primary }]}
+                        {isCreatorOrAdmin && (
+                            <TouchableOpacity
+                                onPress={() =>
+                                    router.push(
+                                        `/manage-group-members/${groupId}` as any,
+                                    )
+                                }
                             >
-                                + Add
-                            </Text>
-                        </TouchableOpacity>
+                                <Text
+                                    style={[
+                                        s.addLink,
+                                        { color: colors.primary },
+                                    ]}
+                                >
+                                    + Add
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                     <View style={{ gap: 8 }}>
                         {members.map((member, index) => (

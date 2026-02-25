@@ -143,9 +143,10 @@ public class GroupsService : IGroupsService
     {
         var group = await GetGroupRecordAsync(groupId);
 
-        // Only members can add new members
-        if (!group.Members.Any(m => m.UserId == userId))
-            throw new UnauthorizedAccessException("You are not a member of this group");
+        // Only admins can add new members
+        var requestingMember = group.Members.FirstOrDefault(m => m.UserId == userId);
+        if (requestingMember == null || requestingMember.Role != GroupMemberRole.Admin)
+            throw new UnauthorizedAccessException("Only group admins can add members");
 
         // Check if already a member
         if (group.Members.Any(m => m.UserId == request.UserId))

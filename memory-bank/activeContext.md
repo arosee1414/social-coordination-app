@@ -2,11 +2,15 @@
 
 ## Current Work Focus
 
-- Merged Pending and Maybe RSVP statuses into one unified "Maybe" concept
-- Consistent wording across all RSVP-related UI (tabs, buttons, filters, badges)
+- Group permission enforcement — only creators/admins can edit groups or manage members
 
 ## Recent Changes
 
+- **Group Admin/Creator permission enforcement (full-stack)**:
+    - **Backend**: `GroupsService.AddMemberAsync` now requires Admin role (was: any member could add). `UpdateGroupAsync` and `RemoveMemberAsync` already had proper Admin checks. `DeleteGroupAsync` remains creator-only.
+    - **Frontend `group/[id].tsx`**: Changed `isCreator` to `isCreatorOrAdmin` — checks if user is the creator OR has Admin role in the members list. Edit button (ellipsis icon) and "+ Add" members link are now gated behind `isCreatorOrAdmin`.
+    - **Frontend `edit-group/[id].tsx`**: Updated authorization check from creator-only to creator-or-admin (checks member role from API response).
+    - **Frontend `manage-group-members/[id].tsx`**: Added authorization check — fetches group data, verifies user has Admin role, redirects with alert if not.
 - **Merged Pending + Maybe into unified "Maybe" status**: Users with no response (Pending) and users who explicitly chose "Maybe" now both appear in the same "Maybe" bucket throughout the app. This means invited users who haven't responded yet show up in the "Maybe" tab on the hangout detail page instead of being invisible.
     - `api-mappers.ts`: `mapRsvpStatus` now maps both `ApiRSVPStatus.Pending` and `ApiRSVPStatus.Maybe` → `'maybe'`. `mapAttendeesToRsvpGroups` puts both Pending and Maybe attendees into the `maybe` array.
     - `hangout/[id].tsx`: Renamed "Not Going" tab label to "Can't Go" for consistency with the RSVP button text.
