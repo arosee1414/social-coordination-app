@@ -2,25 +2,14 @@
 
 ## Current Work Focus
 
-Privacy enforcement for friend profiles — restricting common groups/hangouts data to accepted friends only.
+Navigation improvements — connecting orphaned screens to the app's navigation flow.
 
 ## What Was Just Accomplished
 
-- **Backend friendship enforcement on common data endpoints:**
-    - `GET /api/users/{userId}/common-groups` now returns `403 Forbidden` if the requesting user is not an accepted friend of the target user
-    - `GET /api/users/{userId}/common-hangouts` now returns `403 Forbidden` if not accepted friends
-    - Injected `IFriendsService` into `UsersController` to perform friendship status checks
-    - Self-viewing (own user ID) is always allowed
-
-- **Frontend conditional data fetching (`friend/[id].tsx`):**
-    - Common groups and common hangouts `useEffect` calls now depend on `friendshipStatus.status` — only fire when status is `'accepted'`
-    - When not friends, arrays are reset to empty and loading set to false (no API calls made)
-    - **Immediate fetch on accept**: When a user taps "Confirm" to accept a friend request, the status transitions to `'accepted'`, which triggers the `useEffect` dependency change and automatically fetches common groups/hangouts
-    - Stats row shows `—` for Groups and Hangouts columns when not friends; shows real counts when friends
-
-- **"Not friends" notice on profile page:**
-    - When viewing a non-friend's profile (and status is loaded), a centered notice appears below the action button with a lock icon and message: "Add [name] as a friend to see their activity and invite them to hangouts."
-    - Disappears when friendship is accepted (replaced by Groups in Common / Hangouts Together sections)
+- **Friends list navigation from profile page:**
+    - The "Friends" stat on the profile page (`(tabs)/profile.tsx`) is now tappable and navigates to `/friends-list`
+    - Previously the `friends-list.tsx` screen was orphaned — no screen in the app routed to it
+    - Wrapped the "Friends" stat item in a `TouchableOpacity` with `router.push('/friends-list')` while keeping other stats as plain views
 
 ## Key Decisions Made
 

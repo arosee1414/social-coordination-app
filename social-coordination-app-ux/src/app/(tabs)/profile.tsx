@@ -147,16 +147,34 @@ export default function ProfileScreen() {
                         </View>
                         {/* Stats */}
                         <View style={s.statsRow}>
-                            {profileStats.map((stat, index) => (
-                                <View key={index} style={s.statItem}>
-                                    <Text style={s.statValue}>
-                                        {stat.value}
-                                    </Text>
-                                    <Text style={s.statLabel}>
-                                        {stat.label}
-                                    </Text>
-                                </View>
-                            ))}
+                            {profileStats.map((stat, index) => {
+                                const content = (
+                                    <View key={index} style={s.statItem}>
+                                        <Text style={s.statValue}>
+                                            {stat.value}
+                                        </Text>
+                                        <Text style={s.statLabel}>
+                                            {stat.label}
+                                        </Text>
+                                    </View>
+                                );
+                                if (stat.label === 'Friends') {
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() =>
+                                                router.push(
+                                                    '/friends-list' as any,
+                                                )
+                                            }
+                                            activeOpacity={0.7}
+                                        >
+                                            {content}
+                                        </TouchableOpacity>
+                                    );
+                                }
+                                return content;
+                            })}
                         </View>
                     </View>
                 </View>
