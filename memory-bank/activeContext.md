@@ -2,10 +2,11 @@
 
 ## Current Work Focus
 
-- Group permission enforcement — only creators/admins can edit groups or manage members
+- General UI refinements and feature improvements
 
 ## Recent Changes
 
+- **FAB "Invite Group" → "Create Group"**: Replaced the "Invite Group" action in the home screen FAB bottom sheet with "Create Group". Updated `FABBottomSheet.tsx` (prop renamed `onInviteGroup` → `onCreateGroup`, label/subtitle changed) and `(tabs)/index.tsx` (handler now navigates to `/create-group` instead of `/(tabs)/groups`).
 - **Group Admin/Creator permission enforcement (full-stack)**:
     - **Backend**: `GroupsService.AddMemberAsync` now requires Admin role (was: any member could add). `UpdateGroupAsync` and `RemoveMemberAsync` already had proper Admin checks. `DeleteGroupAsync` remains creator-only.
     - **Frontend `group/[id].tsx`**: Changed `isCreator` to `isCreatorOrAdmin` — checks if user is the creator OR has Admin role in the members list. Edit button (ellipsis icon) and "+ Add" members link are now gated behind `isCreatorOrAdmin`.

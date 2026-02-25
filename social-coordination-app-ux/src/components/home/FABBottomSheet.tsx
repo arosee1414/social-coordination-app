@@ -22,12 +22,12 @@ const SHEET_HIDDEN_Y = 300;
 
 interface FABBottomSheetProps {
     onCreateHangout: () => void;
-    onInviteGroup: () => void;
+    onCreateGroup: () => void;
 }
 
 export function FABBottomSheet({
     onCreateHangout,
-    onInviteGroup,
+    onCreateGroup,
 }: FABBottomSheetProps) {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
@@ -90,10 +90,10 @@ export function FABBottomSheet({
         setTimeout(onCreateHangout, 150);
     }, [close, onCreateHangout]);
 
-    const handleInviteGroup = useCallback(() => {
+    const handleCreateGroup = useCallback(() => {
         close();
-        setTimeout(onInviteGroup, 150);
-    }, [close, onInviteGroup]);
+        setTimeout(onCreateGroup, 150);
+    }, [close, onCreateGroup]);
 
     const overlayAnimatedStyle = useAnimatedStyle(() => ({
         opacity: overlayOpacity.value,
@@ -184,11 +184,11 @@ export function FABBottomSheet({
                                 </View>
                             </TouchableOpacity>
 
-                            {/* Invite Group */}
+                            {/* Create Group */}
                             <TouchableOpacity
                                 style={shared.bottomSheetActionRow}
                                 activeOpacity={0.7}
-                                onPress={handleInviteGroup}
+                                onPress={handleCreateGroup}
                             >
                                 <View style={shared.bottomSheetActionIcon}>
                                     <Ionicons
@@ -204,7 +204,7 @@ export function FABBottomSheet({
                                             { color: colors.text },
                                         ]}
                                     >
-                                        Invite Group
+                                        Create Group
                                     </Text>
                                     <Text
                                         style={[
@@ -212,7 +212,7 @@ export function FABBottomSheet({
                                             { color: colors.subtitle },
                                         ]}
                                     >
-                                        Quick invite from saved groups
+                                        Start a new group with friends
                                     </Text>
                                 </View>
                             </TouchableOpacity>

@@ -102,8 +102,8 @@ export default function HomeScreen() {
         router.push('/create-hangout');
     };
 
-    const handleInviteGroup = () => {
-        router.push('/(tabs)/groups' as any);
+    const handleCreateGroup = () => {
+        router.push('/create-group');
     };
 
     return (
@@ -225,7 +225,7 @@ export default function HomeScreen() {
             {/* FAB + Bottom Sheet */}
             <FABBottomSheet
                 onCreateHangout={handleCreateHangout}
-                onInviteGroup={handleInviteGroup}
+                onCreateGroup={handleCreateGroup}
             />
         </SafeAreaView>
     );
