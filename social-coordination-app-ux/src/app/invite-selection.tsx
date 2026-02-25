@@ -85,6 +85,7 @@ export default function InviteSelectionScreen() {
     );
     const [loadingExisting, setLoadingExisting] = useState(false);
     const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+    const [creatorUserId, setCreatorUserId] = useState<string | null>(null);
 
     // Fetch existing hangout data when in add mode
     useEffect(() => {
@@ -108,6 +109,7 @@ export default function InviteSelectionScreen() {
                 const groupIds = new Set(
                     (hangout.invitedGroupIds ?? []).filter(Boolean),
                 );
+                setCreatorUserId(hangout.createdByUserId ?? null);
                 setExistingGroupIds(groupIds);
             } catch (err: any) {
                 Alert.alert(
@@ -494,42 +496,56 @@ export default function InviteSelectionScreen() {
                                                         {attendee.displayName}
                                                     </Text>
                                                 </View>
-                                                <TouchableOpacity
-                                                    onPress={() =>
-                                                        handleRemoveAttendee(
-                                                            attendee,
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        removingUserId ===
-                                                        attendee.userId
-                                                    }
-                                                    style={{
-                                                        padding: 8,
-                                                        marginRight: -4,
-                                                    }}
-                                                    activeOpacity={0.6}
-                                                >
-                                                    {removingUserId ===
-                                                    attendee.userId ? (
-                                                        <ActivityIndicator
-                                                            size='small'
-                                                            color={
-                                                                colors.error ??
-                                                                '#FF3B30'
-                                                            }
-                                                        />
-                                                    ) : (
-                                                        <Ionicons
-                                                            name='close-circle'
-                                                            size={24}
-                                                            color={
-                                                                colors.error ??
-                                                                '#FF3B30'
-                                                            }
-                                                        />
-                                                    )}
-                                                </TouchableOpacity>
+                                                {attendee.userId ===
+                                                creatorUserId ? (
+                                                    <Text
+                                                        style={{
+                                                            fontSize: 12,
+                                                            fontWeight: '600',
+                                                            color: colors.textTertiary,
+                                                            marginRight: 4,
+                                                        }}
+                                                    >
+                                                        Creator
+                                                    </Text>
+                                                ) : (
+                                                    <TouchableOpacity
+                                                        onPress={() =>
+                                                            handleRemoveAttendee(
+                                                                attendee,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            removingUserId ===
+                                                            attendee.userId
+                                                        }
+                                                        style={{
+                                                            padding: 8,
+                                                            marginRight: -4,
+                                                        }}
+                                                        activeOpacity={0.6}
+                                                    >
+                                                        {removingUserId ===
+                                                        attendee.userId ? (
+                                                            <ActivityIndicator
+                                                                size='small'
+                                                                color={
+                                                                    colors.error ??
+                                                                    '#FF3B30'
+                                                                }
+                                                            />
+                                                        ) : (
+                                                            <Ionicons
+                                                                name='close-circle'
+                                                                size={24}
+                                                                color={
+                                                                    colors.error ??
+                                                                    '#FF3B30'
+                                                                }
+                                                            />
+                                                        )}
+                                                    </TouchableOpacity>
+                                                )}
                                             </View>
                                         ))}
                                     </View>
@@ -592,6 +608,7 @@ export default function InviteSelectionScreen() {
                                                 isExisting && { opacity: 0.5 },
                                             ]}
                                             onPress={() => toggleFriend(user)}
+                                            disabled={isExisting}
                                             activeOpacity={isExisting ? 1 : 0.7}
                                         >
                                             {user.profileImageUrl ? (
