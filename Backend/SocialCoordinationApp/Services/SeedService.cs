@@ -50,7 +50,7 @@ public class SeedService : ISeedService
             "Seed complete: {Users} users, {Groups} groups, {Hangouts} hangouts, {Friendships} friendships created",
             usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated);
 
-        return new SeedResult(usersCreated, groupsCreated, hangoutsCreated);
+        return new SeedResult(usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated);
     }
 
     private async Task<int> SeedUsersAsync()
@@ -272,25 +272,11 @@ public class SeedService : ISeedService
                 UpdatedAt = timestamp
             };
 
-            try
-            {
-                await _cosmosContext.FriendshipsContainer.CreateItemAsync(doc1, new PartitionKey(userId));
-                created++;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-            {
-                _logger.LogWarning("Friendship {Id} already exists, skipping", doc1.Id);
-            }
+            await _cosmosContext.FriendshipsContainer.UpsertItemAsync(doc1, new PartitionKey(userId));
+            created++;
 
-            try
-            {
-                await _cosmosContext.FriendshipsContainer.CreateItemAsync(doc2, new PartitionKey(friendId));
-                created++;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-            {
-                _logger.LogWarning("Friendship {Id} already exists, skipping", doc2.Id);
-            }
+            await _cosmosContext.FriendshipsContainer.UpsertItemAsync(doc2, new PartitionKey(friendId));
+            created++;
         }
 
         foreach (var (senderId, receiverId, timestamp) in pendingPairs)
@@ -316,25 +302,11 @@ public class SeedService : ISeedService
                 UpdatedAt = timestamp
             };
 
-            try
-            {
-                await _cosmosContext.FriendshipsContainer.CreateItemAsync(outgoing, new PartitionKey(senderId));
-                created++;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-            {
-                _logger.LogWarning("Friendship {Id} already exists, skipping", outgoing.Id);
-            }
+            await _cosmosContext.FriendshipsContainer.UpsertItemAsync(outgoing, new PartitionKey(senderId));
+            created++;
 
-            try
-            {
-                await _cosmosContext.FriendshipsContainer.CreateItemAsync(incoming, new PartitionKey(receiverId));
-                created++;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-            {
-                _logger.LogWarning("Friendship {Id} already exists, skipping", incoming.Id);
-            }
+            await _cosmosContext.FriendshipsContainer.UpsertItemAsync(incoming, new PartitionKey(receiverId));
+            created++;
         }
 
         _logger.LogInformation("Created {Count} friendship documents", created);

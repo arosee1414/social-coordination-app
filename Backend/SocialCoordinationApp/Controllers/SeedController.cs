@@ -33,7 +33,8 @@ public class SeedController : ControllerBase
             message = "Seed completed successfully",
             result.UsersCreated,
             result.GroupsCreated,
-            result.HangoutsCreated
+            result.HangoutsCreated,
+            result.FriendshipsCreated
         });
     }
 }

@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using SocialCoordinationApp.Models.Enums;
 
 namespace SocialCoordinationApp.Models.Domain;
@@ -15,9 +16,11 @@ public class FriendshipRecord
     public string FriendId { get; set; } = string.Empty;
 
     [JsonProperty("status")]
+    [JsonConverter(typeof(StringEnumConverter))]
     public FriendshipStatus Status { get; set; }
 
     [JsonProperty("direction")]
+    [JsonConverter(typeof(StringEnumConverter))]
     public FriendshipDirection? Direction { get; set; }
 
     [JsonProperty("createdAt")]

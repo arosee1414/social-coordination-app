@@ -26,6 +26,7 @@ import { settingsSections } from '@/src/data/mock-data';
 import { useApiUser } from '@/src/hooks/useApiUser';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { useApiGroups } from '@/src/hooks/useApiGroups';
+import { useApiFriendCount } from '@/src/hooks/useApiFriends';
 
 export default function ProfileScreen() {
     const colors = useThemeColors();
@@ -35,6 +36,8 @@ export default function ProfileScreen() {
     const { user, loading: userLoading, refetch } = useApiUser();
     const { hangouts, refetch: refetchHangouts } = useHangouts();
     const { groups, refetch: refetchGroups } = useApiGroups();
+    const { count: friendsCount, refetch: refetchFriendCount } =
+        useApiFriendCount(user?.id);
     const [refreshing, setRefreshing] = useState(false);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
@@ -54,9 +57,14 @@ export default function ProfileScreen() {
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await Promise.all([refetch(), refetchHangouts(), refetchGroups()]);
+        await Promise.all([
+            refetch(),
+            refetchHangouts(),
+            refetchGroups(),
+            refetchFriendCount(),
+        ]);
         setRefreshing(false);
-    }, [refetch, refetchHangouts, refetchGroups]);
+    }, [refetch, refetchHangouts, refetchGroups, refetchFriendCount]);
 
     const displayName = user
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Your Name'
@@ -75,7 +83,7 @@ export default function ProfileScreen() {
     const profileStats = [
         { label: 'Plans Created', value: String(plansCreated) },
         { label: 'Groups', value: String(groupsCount) },
-        { label: 'Friends', value: '0' },
+        { label: 'Friends', value: String(friendsCount) },
     ];
 
     const handleSignOut = async () => {
