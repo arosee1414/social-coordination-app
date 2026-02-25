@@ -56,7 +56,16 @@ export default function HomeScreen() {
     }, [refetch]);
 
     const liveHangouts = hangouts.filter((h) => h.status === 'live');
-    const upcomingHangouts = hangouts.filter((h) => h.status === 'upcoming');
+    const upcomingHangouts = hangouts
+        .filter((h) => h.status === 'upcoming')
+        .sort((a, b) => {
+            const aTime = a.startTime ? new Date(a.startTime).getTime() : null;
+            const bTime = b.startTime ? new Date(b.startTime).getTime() : null;
+            if (aTime === null && bTime === null) return 0;
+            if (aTime === null) return 1;
+            if (bTime === null) return -1;
+            return aTime - bTime;
+        });
 
     const handleJoinLive = (hangoutId: string) => {
         router.push(`/hangout/${hangoutId}` as any);

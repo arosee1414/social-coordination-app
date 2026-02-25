@@ -151,12 +151,26 @@ export default function HangoutsScreen() {
         }
 
         // Then apply user filters
-        return applyFilters(
+        const filtered = applyFilters(
             tabFiltered,
             filters,
             activeTab,
             userId ?? undefined,
         );
+
+        // Sort by startTime
+        // Upcoming: soonest first (ascending), Past: most recent first (descending)
+        filtered.sort((a, b) => {
+            const aTime = a.startTime ? new Date(a.startTime).getTime() : null;
+            const bTime = b.startTime ? new Date(b.startTime).getTime() : null;
+            // Push nulls to the bottom
+            if (aTime === null && bTime === null) return 0;
+            if (aTime === null) return 1;
+            if (bTime === null) return -1;
+            return activeTab === 'upcoming' ? aTime - bTime : bTime - aTime;
+        });
+
+        return filtered;
     }, [mockHangouts, activeTab, filters, userId]);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;

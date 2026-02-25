@@ -2,16 +2,13 @@
 
 ## Current Work Focus
 
-Dark mode UI refinement for friends screens.
+Hangout sort ordering improvements.
 
 ## What Was Just Accomplished
 
-- **Removed card/surface backgrounds and outlines from person list rows in dark mode**:
-    - `friends-list.tsx` & `find-friends.tsx`: Removed `backgroundColor: colors.card` from list item rows
-    - `shared-styles.ts` `listItem`: Removed `backgroundColor: colors.surfaceTertiary` (used by RSVP attendee list and group member list)
-    - `shared-styles.ts` `selectableItem`: Removed `borderWidth`/`borderColor` (outline on unselected items); bumped padding to 14 to compensate for missing 2px border
-    - `shared-styles.ts` `selectableItemSelected`: Removed `backgroundColor: colors.indigoTint5`; kept blue border so selected state is still visually distinct
-    - Affects all selectable lists (invite-selection, add-members, create-group, manage-group-members)
+- **Added chronological sorting to hangouts lists**:
+    - `hangouts.tsx` (Hangouts tab): Upcoming hangouts sort ascending by `startTime` (soonest first), Past hangouts sort descending (most recent first). Nulls pushed to bottom.
+    - `index.tsx` (Home screen): Upcoming hangouts section also sorted ascending by `startTime` for consistency.
 
 ## Key Decisions Made
 
