@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -16,6 +16,7 @@ import { findFriendIdByName } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { useApiHangoutDetail } from '@/src/hooks/useApiHangoutDetail';
 import { useApiUser } from '@/src/hooks/useApiUser';
+import type { RSVPStatus } from '@/src/types';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function HangoutDetailScreen() {
@@ -47,7 +48,27 @@ export default function HangoutDetailScreen() {
         }, [refetch]),
     );
 
-    const rsvp = hangout?.userStatus ?? null;
+    // Local optimistic RSVP override for instant UI feedback
+    const [rsvpOverride, setRsvpOverride] = useState<RSVPStatus | null>(null);
+    const rsvp = rsvpOverride ?? hangout?.userStatus ?? null;
+
+    // Clear override when the hook returns fresh data (so it doesn't go stale)
+    useEffect(() => {
+        if (hangout?.userStatus) {
+            setRsvpOverride(null);
+        }
+    }, [hangout?.userStatus]);
+
+    const handleRSVP = useCallback(
+        async (status: RSVPStatus) => {
+            if (!hangout) return;
+            setRsvpOverride(status); // instant visual update
+            await updateRSVP(hangout.id, status); // fire API + update list
+            refetch(); // refresh detail data from server
+        },
+        [hangout, updateRSVP, refetch],
+    );
+
     const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
         'going',
     );
@@ -323,9 +344,7 @@ export default function HangoutDetailScreen() {
                                       }
                                     : { borderColor: colors.cardBorderHeavy },
                             ]}
-                            onPress={() =>
-                                hangout && updateRSVP(hangout.id, 'going')
-                            }
+                            onPress={() => handleRSVP('going')}
                         >
                             <Text
                                 style={[
@@ -351,9 +370,7 @@ export default function HangoutDetailScreen() {
                                       }
                                     : { borderColor: colors.cardBorderHeavy },
                             ]}
-                            onPress={() =>
-                                hangout && updateRSVP(hangout.id, 'maybe')
-                            }
+                            onPress={() => handleRSVP('maybe')}
                         >
                             <Text
                                 style={[
@@ -380,9 +397,7 @@ export default function HangoutDetailScreen() {
                                       }
                                     : { borderColor: colors.cardBorderHeavy },
                             ]}
-                            onPress={() =>
-                                hangout && updateRSVP(hangout.id, 'not-going')
-                            }
+                            onPress={() => handleRSVP('not-going')}
                         >
                             <Text
                                 style={[

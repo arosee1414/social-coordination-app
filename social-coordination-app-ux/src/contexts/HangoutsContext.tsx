@@ -19,7 +19,7 @@ interface HangoutsContextValue {
     hangouts: Hangout[];
     loading: boolean;
     error: string | null;
-    updateRSVP: (hangoutId: string, status: RSVPStatus) => void;
+    updateRSVP: (hangoutId: string, status: RSVPStatus) => Promise<void>;
     refetch: () => Promise<void>;
 }
 

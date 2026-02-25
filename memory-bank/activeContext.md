@@ -6,6 +6,7 @@
 
 ## Recent Changes
 
+- **Fixed RSVP selection not updating on hangout detail page**: The hangout detail page read `userStatus` from `useApiHangoutDetail` but `updateRSVP` (from `HangoutsContext`) only optimistically updated the hangouts _list_ state — never the separate detail hook state. Fixed by adding a local `rsvpOverride` state in `hangout/[id].tsx` for instant visual feedback, then awaiting `updateRSVP` and calling `refetch()` on the detail hook to sync server data. Also changed `updateRSVP` return type from `void` to `Promise<void>` in `HangoutsContext`.
 - **Remove invitees from invite-selection screen**: Added ability to remove existing attendees from a hangout directly in the "Add People" (invite-selection) screen.
     - When in add mode (`hangoutId` param present), the Friends tab now shows an "Already Invited" section at the top listing all current attendees with their avatar/name and a red close-circle remove button.
     - Tapping remove shows a confirmation `Alert.alert` dialog. On confirm, calls `api.attendeesDELETE(hangoutId, userId)`, optimistically removes from local state, and refetches hangouts context.
