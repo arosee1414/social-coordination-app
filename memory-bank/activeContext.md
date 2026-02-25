@@ -2,14 +2,15 @@
 
 ## Current Work Focus
 
-Navigation improvements — connecting orphaned screens to the app's navigation flow.
+Light mode UI polish — improving visibility/contrast of borders and outlines.
 
 ## What Was Just Accomplished
 
-- **Friends list navigation from profile page:**
-    - The "Friends" stat on the profile page (`(tabs)/profile.tsx`) is now tappable and navigates to `/friends-list`
-    - Previously the `friends-list.tsx` screen was orphaned — no screen in the app routed to it
-    - Wrapped the "Friends" stat item in a `TouchableOpacity` with `router.push('/friends-list')` while keeping other stats as plain views
+- **Fixed light mode card border visibility:**
+    - `cardBorder` in light mode was `#F3F4F6` (nearly invisible on white `#fff` backgrounds) — changed to `#E5E7EB`
+    - `cardBorderHeavy` shifted from `#E5E7EB` to `#D1D5DB` to maintain the two-tier distinction
+    - This globally fixes border visibility for settings cards on the profile page (Manage Friends, Notifications, etc.) and ~48 other usages across the app
+    - Dark mode values unchanged (already had adequate contrast)
 
 ## Key Decisions Made
 

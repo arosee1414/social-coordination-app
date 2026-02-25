@@ -66,8 +66,8 @@ export const Colors = {
 
         // Surfaces
         card: '#fff',
-        cardBorder: '#F3F4F6',
-        cardBorderHeavy: '#E5E7EB',
+        cardBorder: '#E5E7EB',
+        cardBorderHeavy: '#D1D5DB',
         surfaceSecondary: '#F9FAFB',
         surfaceTertiary: '#F3F4F6',
 
