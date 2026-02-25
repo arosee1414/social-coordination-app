@@ -6,21 +6,21 @@ Whenever you modify **any** backend DTO, Response model, Request model, Controll
 
 ### Steps:
 
-1. **Start the backend server:**
+1. **Start the backend server (in its own terminal):**
 
     ```
     cd Backend\SocialCoordinationApp; dotnet run
     ```
 
-    Wait for the "Now listening on: http://0.0.0.0:5219" message.
+    Wait for the "Now listening on: http://0.0.0.0:5219" message. This is a **long-running/blocking process** — do NOT wait for it to exit. Proceed to step 2 immediately in a **new terminal** while this stays running.
 
-2. **Download the updated swagger spec:**
+2. **Download the updated swagger spec (in a new terminal):**
 
     ```
     curl -o social-coordination-app-ux\swagger\apiSpec.json http://localhost:5219/swagger/v1/swagger.json
     ```
 
-3. **Regenerate the TypeScript client:**
+3. **Regenerate the TypeScript client (in a new terminal):**
 
     ```
     cd social-coordination-app-ux; nswag openapi2tsclient /input:"swagger\apiSpec.json" /output:"src\clients\generatedClient.ts" /className:SocialCoordinationApiClient /template:Axios /generateClientInterfaces:true
@@ -32,6 +32,7 @@ Whenever you modify **any** backend DTO, Response model, Request model, Controll
 
 ### Important Notes:
 
+- `dotnet run` is a **blocking/long-running command**. Steps 2–4 must be executed in separate `execute_command` calls while the server from step 1 remains running in the background. Do NOT try to chain all steps in a single command.
 - The shell is **PowerShell** — use `;` to chain commands, NOT `&&`.
 - PowerShell's `curl` is an alias for `Invoke-WebRequest`; the `-o` flag works for output.
 - `pwsh` is NOT available; just run PowerShell scripts/commands directly.

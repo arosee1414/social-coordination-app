@@ -70,6 +70,7 @@
 - Backend defaults hangout duration to 8 hours when no EndTime is provided
 - Frontend `isLive` function uses 8-hour fallback (matching backend default)
 - Shell environment is PowerShell — use `;` for command chaining, not `&&`
+- `dotnet run` is a blocking/long-running command — when regenerating the API client, steps 2–4 (curl swagger, nswag generate, verify) must run in separate terminals while the backend server stays running in the background
 
 ## Important Patterns and Preferences
 
