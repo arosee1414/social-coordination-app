@@ -218,6 +218,14 @@ export default function ProfileScreen() {
                                             },
                                         ]}
                                         activeOpacity={0.7}
+                                        onPress={
+                                            item.label === 'Manage Friends'
+                                                ? () =>
+                                                      router.push(
+                                                          '/friends-list' as any,
+                                                      )
+                                                : undefined
+                                        }
                                     >
                                         <View
                                             style={[

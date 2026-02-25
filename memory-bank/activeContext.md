@@ -2,20 +2,14 @@
 
 ## Current Work Focus
 
-Added 20 seed users and fixed self-result bug in find friends search. Ready for next task.
+Wired "Manage Friends" button on profile tab to friends list. Ready for next task.
 
 ## What Was Just Accomplished
 
-- **Added 20 new seed users to `SeedService.cs`:**
-    - Added 20 new user ID constants (`user_seed_*`) and corresponding `UserRecord` entries
-    - Users: Emily Chen, Marcus Williams, Sofia Rodriguez, Ryan Patel, Ava Thompson, Noah Kim, Mia Jackson, Ethan Rivera, Chloe Nguyen, Liam O'Brien, Harper Davis, Caleb Martinez, Zoe Anderson, Dylan Scott, Lily Perez, Owen Murphy, Ella Wright, Aiden Brooks, Nora Sullivan, Tyler Hughes
-    - Total seed users: 27 (7 original + 20 new) plus Alex who already exists
-
-- **Fixed self-result bug in find friends search:**
-    - Bug: Current user appeared in their own search results with an "Add" button
-    - Fix: Added `currentUserId` parameter to `SearchUsersAsync` and added `c.id != @currentUserId` filter to the Cosmos DB query
-    - Files changed: `IUsersService.cs`, `UsersService.cs`, `UsersController.cs`
-    - No API contract change — endpoint signature unchanged, no client regeneration needed
+- **Wired "Manage Friends" settings button on profile tab:**
+    - The "Manage Friends" item in the Account settings section of the profile tab previously had no `onPress` handler
+    - Added `onPress` that navigates to `/friends-list`, matching the same behavior as tapping the Friends count stat in the profile header card
+    - File changed: `social-coordination-app-ux/src/app/(tabs)/profile.tsx`
 
 ## Key Decisions Made
 
