@@ -19,7 +19,7 @@ import Animated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useApiFriends } from '../hooks/useApiFriends';
 import { useApiFriendRequests } from '../hooks/useApiFriendRequests';
@@ -111,7 +111,16 @@ export default function FriendsListScreen() {
         loading: requestsLoading,
         acceptRequest,
         rejectRequest,
+        refetch: refetchRequests,
     } = useApiFriendRequests();
+
+    // Refetch data when screen comes into focus (e.g. returning from friend profile)
+    useFocusEffect(
+        useCallback(() => {
+            refetchFriends();
+            refetchRequests();
+        }, [refetchFriends, refetchRequests]),
+    );
 
     const incomingRequests = requests.filter((r) => r.direction === 'Incoming');
     const outgoingRequests = requests.filter((r) => r.direction === 'Outgoing');
@@ -338,17 +347,22 @@ export default function FriendsListScreen() {
             </View>
             <View
                 style={[
-                    styles.pendingBadge,
+                    styles.requestedButton,
                     { backgroundColor: colors.surfaceTertiary },
                 ]}
             >
+                <Ionicons
+                    name='hourglass-outline'
+                    size={14}
+                    color={colors.textSecondary}
+                />
                 <Text
                     style={[
-                        styles.pendingBadgeText,
+                        styles.requestedButtonText,
                         { color: colors.textSecondary },
                     ]}
                 >
-                    Pending
+                    Requested
                 </Text>
             </View>
         </TouchableOpacity>
@@ -792,13 +806,16 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
     },
-    pendingBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
+    requestedButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
+        gap: 4,
     },
-    pendingBadgeText: {
-        fontSize: 12,
+    requestedButtonText: {
+        fontSize: 13,
         fontWeight: '600',
     },
     sectionHeader: {

@@ -105,6 +105,26 @@ public class FriendsController : BaseApiController
     }
 
     /// <summary>
+    /// Cancel a pending outgoing friend request
+    /// </summary>
+    [HttpPost("cancel/{friendId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CancelFriendRequest(string friendId)
+    {
+        var userId = GetUserId();
+        try
+        {
+            await _friendsService.CancelFriendRequestAsync(userId, friendId);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Reject a pending incoming friend request
     /// </summary>
     [HttpPost("reject/{friendId}")]

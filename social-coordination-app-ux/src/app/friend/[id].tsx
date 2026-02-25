@@ -49,7 +49,9 @@ export default function FriendProfileScreen() {
     const [commonHangouts, setCommonHangouts] = useState<Hangout[]>([]);
     const [commonHangoutsLoading, setCommonHangoutsLoading] = useState(true);
 
-    const [showRemoveSheet, setShowRemoveSheet] = useState(false);
+    const [sheetType, setSheetType] = useState<'remove' | 'cancel' | null>(
+        null,
+    );
     const [isSheetRendered, setIsSheetRendered] = useState(false);
 
     const SHEET_HIDDEN_Y = 300;
@@ -57,12 +59,15 @@ export default function FriendProfileScreen() {
     const sheetTranslateY = useSharedValue(SHEET_HIDDEN_Y);
     const overlayOpacity = useSharedValue(0);
 
-    const openSheet = useCallback(() => {
-        setShowRemoveSheet(true);
-        setIsSheetRendered(true);
-        overlayOpacity.value = withTiming(1, { duration: 200 });
-        sheetTranslateY.value = withTiming(0, { duration: 250 });
-    }, [overlayOpacity, sheetTranslateY]);
+    const openSheet = useCallback(
+        (type: 'remove' | 'cancel') => {
+            setSheetType(type);
+            setIsSheetRendered(true);
+            overlayOpacity.value = withTiming(1, { duration: 200 });
+            sheetTranslateY.value = withTiming(0, { duration: 250 });
+        },
+        [overlayOpacity, sheetTranslateY],
+    );
 
     const closeSheet = useCallback(() => {
         overlayOpacity.value = withTiming(0, { duration: 200 });
@@ -71,7 +76,7 @@ export default function FriendProfileScreen() {
             { duration: 250 },
             () => {
                 runOnJS(setIsSheetRendered)(false);
-                runOnJS(setShowRemoveSheet)(false);
+                runOnJS(setSheetType)(null);
             },
         );
     }, [overlayOpacity, sheetTranslateY]);
@@ -94,7 +99,7 @@ export default function FriendProfileScreen() {
                     { duration: 200 },
                     () => {
                         runOnJS(setIsSheetRendered)(false);
-                        runOnJS(setShowRemoveSheet)(false);
+                        runOnJS(setSheetType)(null);
                     },
                 );
             } else {
@@ -116,6 +121,7 @@ export default function FriendProfileScreen() {
         loading: statusLoading,
         sendRequest,
         acceptRequest,
+        cancelRequest,
         rejectRequest,
         removeFriend,
     } = useApiFriendshipStatus(id);
@@ -238,6 +244,18 @@ export default function FriendProfileScreen() {
         }
     };
 
+    const handleCancelRequest = async () => {
+        closeSheet();
+        try {
+            await cancelRequest();
+        } catch {
+            Alert.alert(
+                'Error',
+                'Failed to cancel friend request. Please try again.',
+            );
+        }
+    };
+
     const handleRemoveFriend = async () => {
         closeSheet();
         try {
@@ -275,7 +293,7 @@ export default function FriendProfileScreen() {
                                 backgroundColor: colors.surfaceTertiary,
                             },
                         ]}
-                        onPress={openSheet}
+                        onPress={() => openSheet('remove')}
                         activeOpacity={0.7}
                     >
                         <Ionicons name='people' size={16} color={colors.text} />
@@ -347,8 +365,14 @@ export default function FriendProfileScreen() {
                             styles.actionButton,
                             { backgroundColor: colors.surfaceTertiary },
                         ]}
+                        onPress={() => openSheet('cancel')}
                         activeOpacity={0.7}
                     >
+                        <Ionicons
+                            name='hourglass-outline'
+                            size={16}
+                            color={colors.textSecondary}
+                        />
                         <Text
                             style={[
                                 styles.actionButtonText,
@@ -357,6 +381,12 @@ export default function FriendProfileScreen() {
                         >
                             Requested
                         </Text>
+                        <Ionicons
+                            name='chevron-down'
+                            size={14}
+                            color={colors.textSecondary}
+                            style={{ marginLeft: -2 }}
+                        />
                     </TouchableOpacity>
                 );
 
@@ -388,7 +418,7 @@ export default function FriendProfileScreen() {
         }
     };
 
-    const renderRemoveBottomSheet = () => {
+    const renderBottomSheet = () => {
         if (!isSheetRendered) return null;
         return (
             <View style={StyleSheet.absoluteFill} pointerEvents='box-none'>
@@ -418,35 +448,68 @@ export default function FriendProfileScreen() {
                                 { backgroundColor: colors.bottomSheetHandle },
                             ]}
                         />
-                        <TouchableOpacity
-                            style={styles.bottomSheetActionRow}
-                            onPress={handleRemoveFriend}
-                            activeOpacity={0.6}
-                        >
-                            <View
-                                style={[
-                                    styles.bottomSheetActionIcon,
-                                    {
-                                        backgroundColor:
-                                            'rgba(255, 59, 48, 0.1)',
-                                    },
-                                ]}
+                        {sheetType === 'remove' && (
+                            <TouchableOpacity
+                                style={styles.bottomSheetActionRow}
+                                onPress={handleRemoveFriend}
+                                activeOpacity={0.6}
                             >
-                                <Ionicons
-                                    name='person-remove-outline'
-                                    size={22}
-                                    color={colors.error}
-                                />
-                            </View>
-                            <Text
-                                style={[
-                                    styles.bottomSheetActionText,
-                                    { color: colors.error },
-                                ]}
+                                <View
+                                    style={[
+                                        styles.bottomSheetActionIcon,
+                                        {
+                                            backgroundColor:
+                                                'rgba(255, 59, 48, 0.1)',
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name='person-remove-outline'
+                                        size={22}
+                                        color={colors.error}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        styles.bottomSheetActionText,
+                                        { color: colors.error },
+                                    ]}
+                                >
+                                    Remove Friend
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                        {sheetType === 'cancel' && (
+                            <TouchableOpacity
+                                style={styles.bottomSheetActionRow}
+                                onPress={handleCancelRequest}
+                                activeOpacity={0.6}
                             >
-                                Remove Friend
-                            </Text>
-                        </TouchableOpacity>
+                                <View
+                                    style={[
+                                        styles.bottomSheetActionIcon,
+                                        {
+                                            backgroundColor:
+                                                'rgba(255, 59, 48, 0.1)',
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name='close-circle-outline'
+                                        size={22}
+                                        color={colors.error}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        styles.bottomSheetActionText,
+                                        { color: colors.error },
+                                    ]}
+                                >
+                                    Cancel Friend Request
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                             style={[
                                 styles.cancelBtn,
@@ -936,8 +999,8 @@ export default function FriendProfileScreen() {
                 )}
             </ScrollView>
 
-            {/* Remove Friend Bottom Sheet */}
-            {renderRemoveBottomSheet()}
+            {/* Bottom Sheet */}
+            {renderBottomSheet()}
         </SafeAreaView>
     );
 }

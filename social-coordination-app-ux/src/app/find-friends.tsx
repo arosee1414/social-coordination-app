@@ -136,6 +136,28 @@ export default function FindFriendsScreen() {
         }
     };
 
+    const handleCancelRequest = async (userId: string) => {
+        if (!apiClient) return;
+        setActionLoading((prev) => ({ ...prev, [userId]: true }));
+        try {
+            await apiClient.cancel(userId);
+            setUsersWithStatus((prev) =>
+                prev.map((u) =>
+                    u.user.id === userId
+                        ? { ...u, friendshipStatus: { status: 'none' } }
+                        : u,
+                ),
+            );
+        } catch {
+            Alert.alert(
+                'Error',
+                'Failed to cancel friend request. Please try again.',
+            );
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [userId]: false }));
+        }
+    };
+
     const renderActionButton = (item: UserWithStatus) => {
         const userId = item.user.id!;
         if (actionLoading[userId]) {
@@ -191,21 +213,27 @@ export default function FindFriendsScreen() {
                 );
             }
             return (
-                <View
+                <TouchableOpacity
                     style={[
                         styles.actionBadge,
                         { backgroundColor: colors.surfaceTertiary },
                     ]}
+                    onPress={() => handleCancelRequest(userId)}
                 >
+                    <Ionicons
+                        name='close-circle-outline'
+                        size={14}
+                        color={colors.textSecondary}
+                    />
                     <Text
                         style={[
                             styles.actionBadgeText,
                             { color: colors.textSecondary },
                         ]}
                     >
-                        Sent
+                        Cancel
                     </Text>
-                </View>
+                </TouchableOpacity>
             );
         }
 
@@ -394,6 +422,7 @@ export default function FindFriendsScreen() {
                     renderItem={renderUserItem}
                     contentContainerStyle={styles.listContent}
                     showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps='handled'
                 />
             )}
         </SafeAreaView>

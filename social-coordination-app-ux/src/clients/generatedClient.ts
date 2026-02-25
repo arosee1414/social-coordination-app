@@ -38,6 +38,10 @@ export interface ISocialCoordinationApiClient {
     /**
      * @return No Content
      */
+    cancel(friendId: string): Promise<void>;
+    /**
+     * @return No Content
+     */
     reject(friendId: string): Promise<void>;
     /**
      * @return No Content
@@ -104,7 +108,7 @@ export interface ISocialCoordinationApiClient {
     /**
      * @return Success
      */
-    cancel(id: string): Promise<HangoutResponse>;
+    cancel2(id: string): Promise<HangoutResponse>;
     /**
      * @param body (optional) 
      * @return Success
@@ -494,6 +498,63 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
     }
 
     protected processAccept(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    cancel(friendId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Friends/cancel/{friendId}";
+        if (friendId === undefined || friendId === null)
+            throw new Error("The parameter 'friendId' must be defined.");
+        url_ = url_.replace("{friendId}", encodeURIComponent("" + friendId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCancel(_response);
+        });
+    }
+
+    protected processCancel(response: AxiosResponse): Promise<void> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1367,7 +1428,7 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
     /**
      * @return Success
      */
-    cancel(id: string, cancelToken?: CancelToken): Promise<HangoutResponse> {
+    cancel2(id: string, cancelToken?: CancelToken): Promise<HangoutResponse> {
         let url_ = this.baseUrl + "/api/hangouts/{id}/cancel";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined.");
@@ -1390,11 +1451,11 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processCancel(_response);
+            return this.processCancel2(_response);
         });
     }
 
-    protected processCancel(response: AxiosResponse): Promise<HangoutResponse> {
+    protected processCancel2(response: AxiosResponse): Promise<HangoutResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {

@@ -216,6 +216,35 @@ public class FriendsService : IFriendsService
         }
     }
 
+    public async Task CancelFriendRequestAsync(string userId, string friendId)
+    {
+        // userId is the one cancelling — they should have an Outgoing Pending request
+        var outgoingId = $"{userId}_{friendId}";
+        var incomingId = $"{friendId}_{userId}";
+
+        try
+        {
+            var outgoingResponse = await _cosmosContext.FriendshipsContainer
+                .ReadItemAsync<FriendshipRecord>(outgoingId, new PartitionKey(userId));
+            var outgoingRecord = outgoingResponse.Resource;
+
+            if (outgoingRecord.Status != FriendshipStatus.Pending || outgoingRecord.Direction != FriendshipDirection.Outgoing)
+                throw new InvalidOperationException("No pending outgoing friend request found.");
+
+            // Delete both documents
+            await _cosmosContext.FriendshipsContainer
+                .DeleteItemAsync<FriendshipRecord>(outgoingId, new PartitionKey(userId));
+            await _cosmosContext.FriendshipsContainer
+                .DeleteItemAsync<FriendshipRecord>(incomingId, new PartitionKey(friendId));
+
+            _logger.LogInformation("Friend request cancelled: {UserId} cancelled request to {FriendId}", userId, friendId);
+        }
+        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            throw new InvalidOperationException("No pending friend request found.");
+        }
+    }
+
     public async Task RejectFriendRequestAsync(string userId, string friendId)
     {
         var incomingId = $"{userId}_{friendId}";

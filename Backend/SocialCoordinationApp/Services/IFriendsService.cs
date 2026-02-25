@@ -10,6 +10,7 @@ public interface IFriendsService
     Task<FriendshipStatusResponse?> GetFriendshipStatusAsync(string userId, string friendId);
     Task SendFriendRequestAsync(string userId, string friendId);
     Task AcceptFriendRequestAsync(string userId, string friendId);
+    Task CancelFriendRequestAsync(string userId, string friendId);
     Task RejectFriendRequestAsync(string userId, string friendId);
     Task RemoveFriendAsync(string userId, string friendId);
 }

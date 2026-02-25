@@ -60,6 +60,17 @@ export function useApiFriendshipStatus(friendId: string | undefined) {
     }
   }, [apiClient, friendId]);
 
+  const cancelRequest = useCallback(async () => {
+    if (!apiClient || !friendId) return;
+    try {
+      await apiClient.cancel(friendId);
+      setStatus({ status: "none" });
+    } catch (err) {
+      console.error("Error cancelling friend request:", err);
+      throw err;
+    }
+  }, [apiClient, friendId]);
+
   const rejectRequest = useCallback(async () => {
     if (!apiClient || !friendId) return;
     try {
@@ -88,6 +99,7 @@ export function useApiFriendshipStatus(friendId: string | undefined) {
     refetch: fetchStatus,
     sendRequest,
     acceptRequest,
+    cancelRequest,
     rejectRequest,
     removeFriend,
   };

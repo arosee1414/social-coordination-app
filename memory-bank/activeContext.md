@@ -2,25 +2,16 @@
 
 ## Current Work Focus
 
-Hangout stats accuracy fix completed. Ready for next task.
+Friends list UX polish completed. Ready for next task.
 
 ## What Was Just Accomplished
 
-- **Fixed hangout Going/Maybe stats inaccuracy:** `Pending` RSVP attendees were incorrectly counted as "Maybe" on both backend summary and frontend mapper.
-
-### Backend Changes
-
-- Added `MaybeCount` property to `HangoutSummaryResponse` DTO
-- Updated `HangoutsService.GetUserHangoutsAsync()` and `GetCommonHangoutsAsync()` to compute `MaybeCount` from attendees with `RSVPStatus.Maybe` (not Pending)
-- Regenerated frontend TypeScript API client
-
-### Frontend Changes
-
-- `api-mappers.ts` — `mapRsvpStatus()`: separated `Pending` from `Maybe` (Pending now returns `'pending'`, not `'maybe'`)
-- `api-mappers.ts` — `mapHangoutSummaryToHangout()`: uses `response.goingCount` (was `attendeeCount`) and `response.maybeCount` (was hardcoded 0)
-- `api-mappers.ts` — `mapAttendeesToRsvpGroups()`: Pending attendees go to `pending[]` array, not `maybe[]`
-- `hangouts.tsx` — RSVP "pending" filter now includes `userStatus === 'pending'`
-- `hangout/[id].tsx` — Kept 3 tabs (Going/Maybe/Can't Go), no Invited tab per user preference
+- **friends-list.tsx UX improvements:**
+    - Made outgoing "Requested" badge non-interactive (changed from `TouchableOpacity` to `View`, removed `handleCancelRequest` and `cancelRequest` from hook destructuring) — cancel is only done from find-friends or friend profile screens
+    - Added `useFocusEffect` to refetch friends and requests when the screen regains focus (e.g. returning from friend profile after accepting/canceling)
+    - Added `refetch: refetchRequests` from `useApiFriendRequests` hook
+- **find-friends.tsx keyboard fix:**
+    - Added `keyboardShouldPersistTaps="handled"` to FlatList so taps on buttons and profile rows pass through even when the keyboard is open
 
 ## Key Decisions Made
 
@@ -39,12 +30,12 @@ Hangout stats accuracy fix completed. Ready for next task.
 
 ## Remaining Work
 
-- **Testing**: End-to-end testing of stats accuracy with various RSVP combinations
+- **Testing**: End-to-end testing of cancel friend request on find-friends and friend profile screens
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 
 ## Important Patterns & Preferences
 
 - **Cosmos enum serialization**: Always add `[JsonConverter(typeof(StringEnumConverter))]` to enum properties in domain models
-- Generated client method naming: `friendsAll()`, `friendsPOST(friendId)`, `friendsDELETE(friendId)`, `requestsAll()`, `requestsPOST(friendId)`, `accept(friendId)`, `reject(friendId)`, `status(friendId)`, `count(userId)`, `commonGroups(userId)`, `commonHangouts(userId)`
+- Generated client method naming: `friendsAll()`, `friendsPOST(friendId)`, `friendsDELETE(friendId)`, `requestsAll()`, `requestsPOST(friendId)`, `accept(friendId)`, `cancel(friendId)`, `reject(friendId)`, `status(friendId)`, `count(userId)`, `commonGroups(userId)`, `commonHangouts(userId)`
 - Theme colors: Use `colors.card` (not `cardBackground`), `colors.indigo50` (not `primaryLight`), `colors.surfaceTertiary` (not `backgroundSecondary`), `colors.error` (not `danger`), `colors.cardBorder` (not `border`)
 - PowerShell shell: Use `;` to chain commands, NOT `&&`; `2>$null` for stderr redirect (not `2>nul`)

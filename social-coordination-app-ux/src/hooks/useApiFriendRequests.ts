@@ -43,6 +43,21 @@ export function useApiFriendRequests() {
     [apiClient]
   );
 
+  const cancelRequest = useCallback(
+    async (friendId: string) => {
+      if (!apiClient) return;
+      try {
+        await apiClient.cancel(friendId);
+        // Remove from requests list after cancelling
+        setRequests((prev) => prev.filter((r) => r.userId !== friendId));
+      } catch (err) {
+        console.error("Error cancelling friend request:", err);
+        throw err;
+      }
+    },
+    [apiClient]
+  );
+
   const rejectRequest = useCallback(
     async (friendId: string) => {
       if (!apiClient) return;
@@ -64,6 +79,7 @@ export function useApiFriendRequests() {
     error,
     refetch: fetchRequests,
     acceptRequest,
+    cancelRequest,
     rejectRequest,
   };
 }
