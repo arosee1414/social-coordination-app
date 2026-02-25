@@ -131,7 +131,7 @@ export function HappeningNowSection({
                                             )}
                                         </View>
                                     ))}
-                                {(hangout.attendeeCount ?? 0) > 4 && (
+                                {(hangout.goingCount ?? 0) > 4 && (
                                     <View
                                         style={[
                                             styles.avatar,
@@ -144,7 +144,7 @@ export function HappeningNowSection({
                                         ]}
                                     >
                                         <Text style={styles.avatarOverflowText}>
-                                            +{(hangout.attendeeCount ?? 0) - 4}
+                                            +{(hangout.goingCount ?? 0) - 4}
                                         </Text>
                                     </View>
                                 )}

@@ -141,11 +141,10 @@ export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Ha
         going: response.attendeeCount ?? 0,
         maybe: 0, // Not available in summary
         userStatus: mapRsvpStatus(response.currentUserRsvpStatus),
-        attendeesPreview: (response.attendeeAvatarUrls ?? []).filter(
-            (url: string | null | undefined) => !!url,
-        ),
+        attendeesPreview: response.attendeeAvatarUrls ?? [],
         status: hangoutStatus,
         attendeeCount: response.attendeeCount,
+        goingCount: response.goingCount,
         date: formatDate(response.startTime),
         startTime: response.startTime ? new Date(response.startTime) : undefined,
     };

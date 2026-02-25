@@ -1849,6 +1849,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
     startTime?: Date;
     endTime?: Date | undefined;
     attendeeCount?: number;
+    goingCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
     createdByUserId?: string | undefined;
@@ -1873,6 +1874,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
             this.startTime = _data["startTime"] ? new Date(_data["startTime"].toString()) : <any>undefined;
             this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : <any>undefined;
             this.attendeeCount = _data["attendeeCount"];
+            this.goingCount = _data["goingCount"];
             this.status = _data["status"];
             this.currentUserRsvpStatus = _data["currentUserRsvpStatus"];
             this.createdByUserId = _data["createdByUserId"];
@@ -1901,6 +1903,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
         data["startTime"] = this.startTime ? this.startTime.toISOString() : <any>undefined;
         data["endTime"] = this.endTime ? this.endTime.toISOString() : <any>undefined;
         data["attendeeCount"] = this.attendeeCount;
+        data["goingCount"] = this.goingCount;
         data["status"] = this.status;
         data["currentUserRsvpStatus"] = this.currentUserRsvpStatus;
         data["createdByUserId"] = this.createdByUserId;
@@ -1922,6 +1925,7 @@ export interface IHangoutSummaryResponse {
     startTime?: Date;
     endTime?: Date | undefined;
     attendeeCount?: number;
+    goingCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
     createdByUserId?: string | undefined;

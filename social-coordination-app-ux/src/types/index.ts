@@ -15,10 +15,11 @@ export interface Hangout {
     going: number;
     maybe: number;
     userStatus: RSVPStatus;
-    attendeesPreview: string[];
+    attendeesPreview: (string | null)[];
     // Home screen redesign fields
     status: HangoutStatus;
     attendeeCount?: number;
+    goingCount?: number;
     date?: string;
     startTime?: Date;
     description?: string | null;

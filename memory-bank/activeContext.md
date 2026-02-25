@@ -6,6 +6,9 @@
 
 ## Recent Changes
 
+- **Avatar stacks for Going attendees on hangout cards (full-stack)**: Hangout cards now show avatar piles only for attendees who RSVP'd "Going" (previously showed any attendees). The overflow "+N" count also reflects the Going count.
+    - **Backend**: Added `GoingCount` field to `HangoutSummaryResponse`. Updated `HangoutsService.GetUserHangoutsAsync` to filter `AttendeeAvatarUrls` to only Going attendees and populate `GoingCount`. Also filtered the avatar ID lookup query to only Going attendees.
+    - **Frontend**: Updated `Hangout` type to include `goingCount` and allow nullable avatar URLs `(string | null)[]`. Updated `api-mappers.ts` to map `goingCount` and stop filtering out null URLs. Updated `UpcomingHangoutsSection.tsx` and `HappeningNowSection.tsx` to use `goingCount` for the overflow "+N" calculation instead of `attendeeCount`. Regenerated TypeScript API client.
 - **FAB "Invite Group" → "Create Group"**: Replaced the "Invite Group" action in the home screen FAB bottom sheet with "Create Group". Updated `FABBottomSheet.tsx` (prop renamed `onInviteGroup` → `onCreateGroup`, label/subtitle changed) and `(tabs)/index.tsx` (handler now navigates to `/create-group` instead of `/(tabs)/groups`).
 - **Group Admin/Creator permission enforcement (full-stack)**:
     - **Backend**: `GroupsService.AddMemberAsync` now requires Admin role (was: any member could add). `UpdateGroupAsync` and `RemoveMemberAsync` already had proper Admin checks. `DeleteGroupAsync` remains creator-only.

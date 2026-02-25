@@ -1148,6 +1148,10 @@
             "type": "integer",
             "format": "int32"
           },
+          "goingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
           "status": {
             "$ref": "#/components/schemas/HangoutStatus"
           },

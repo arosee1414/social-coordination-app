@@ -139,7 +139,7 @@ export function UpcomingHangoutsSection({
                                             )}
                                         </View>
                                     ))}
-                                {(hangout.attendeeCount ?? 0) > 3 && (
+                                {(hangout.goingCount ?? 0) > 3 && (
                                     <View
                                         style={[
                                             styles.avatar,
@@ -157,7 +157,7 @@ export function UpcomingHangoutsSection({
                                                 { color: colors.textSecondary },
                                             ]}
                                         >
-                                            +{(hangout.attendeeCount ?? 0) - 3}
+                                            +{(hangout.goingCount ?? 0) - 3}
                                         </Text>
                                     </View>
                                 )}

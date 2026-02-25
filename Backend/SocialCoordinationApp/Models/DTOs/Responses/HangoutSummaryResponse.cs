@@ -11,6 +11,7 @@ public class HangoutSummaryResponse
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; }
     public int AttendeeCount { get; set; }
+    public int GoingCount { get; set; }
     public HangoutStatus Status { get; set; }
     public RSVPStatus? CurrentUserRsvpStatus { get; set; }
     public string CreatedByUserId { get; set; } = string.Empty;

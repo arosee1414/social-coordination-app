@@ -137,9 +137,12 @@ public class HangoutsService : IHangoutsService
         var hangouts = await _cosmosContext.HangoutsContainer
             .QueryItemsCrossPartitionAsync<HangoutRecord>(queryDefinition);
 
-        // Collect all unique attendee user IDs (up to 5 per hangout for preview)
+        // Collect all unique Going attendee user IDs (up to 5 per hangout for avatar preview)
         var allAttendeeIds = hangouts
-            .SelectMany(h => h.Attendees.Take(5).Select(a => a.UserId))
+            .SelectMany(h => h.Attendees
+                .Where(a => a.RsvpStatus == RSVPStatus.Going)
+                .Take(5)
+                .Select(a => a.UserId))
             .Distinct()
             .ToList();
 
@@ -160,24 +163,29 @@ public class HangoutsService : IHangoutsService
             }
         }
 
-        return hangouts.Select(h => new HangoutSummaryResponse
+        return hangouts.Select(h =>
         {
-            Id = h.Id,
-            Title = h.Title,
-            Emoji = h.Emoji,
-            Location = h.Location,
-            StartTime = h.StartTime,
-            EndTime = h.EndTime,
-            AttendeeCount = h.Attendees.Count,
-            Status = h.Status,
-            CurrentUserRsvpStatus = h.Attendees
-                .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus,
-            CreatedByUserId = h.CreatedByUserId,
-            GroupId = h.GroupId,
-            AttendeeAvatarUrls = h.Attendees
-                .Take(5)
-                .Select(a => avatarMap.GetValueOrDefault(a.UserId))
-                .ToList()
+            var goingAttendees = h.Attendees.Where(a => a.RsvpStatus == RSVPStatus.Going).ToList();
+            return new HangoutSummaryResponse
+            {
+                Id = h.Id,
+                Title = h.Title,
+                Emoji = h.Emoji,
+                Location = h.Location,
+                StartTime = h.StartTime,
+                EndTime = h.EndTime,
+                AttendeeCount = h.Attendees.Count,
+                GoingCount = goingAttendees.Count,
+                Status = h.Status,
+                CurrentUserRsvpStatus = h.Attendees
+                    .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus,
+                CreatedByUserId = h.CreatedByUserId,
+                GroupId = h.GroupId,
+                AttendeeAvatarUrls = goingAttendees
+                    .Take(5)
+                    .Select(a => avatarMap.GetValueOrDefault(a.UserId))
+                    .ToList()
+            };
         }).ToList();
     }
 
