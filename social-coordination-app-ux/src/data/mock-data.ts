@@ -127,30 +127,35 @@ export const mockReminderBanner: ReminderBanner = {
 export const mockAttendees: AttendeesByStatus = {
     going: [
         {
+            userId: 'mock-sarah',
             name: 'Sarah Chen',
             avatar: '👩🏻',
             time: 'RSVP 2h ago',
             fromGroup: 'Close Friends',
         },
         {
+            userId: 'mock-mike',
             name: 'Mike Johnson',
             avatar: '👨🏽',
             time: 'RSVP 1h ago',
             fromGroup: 'Close Friends',
         },
         {
+            userId: 'mock-emma',
             name: 'Emma Wilson',
             avatar: '👩🏼',
             time: 'RSVP 45m ago',
             fromGroup: 'Close Friends',
         },
         {
+            userId: 'mock-david',
             name: 'David Kim',
             avatar: '👨🏻',
             time: 'RSVP 30m ago',
             fromGroup: null,
         },
         {
+            userId: 'mock-lisa',
             name: 'Lisa Martinez',
             avatar: '👩🏽',
             time: 'RSVP 15m ago',
@@ -159,12 +164,14 @@ export const mockAttendees: AttendeesByStatus = {
     ],
     maybe: [
         {
+            userId: 'mock-alex',
             name: 'Alex Turner',
             avatar: '👨🏼',
             time: 'RSVP 1h ago',
             fromGroup: 'Close Friends',
         },
         {
+            userId: 'mock-nina',
             name: 'Nina Patel',
             avatar: '👩🏾',
             time: 'RSVP 20m ago',
@@ -173,6 +180,7 @@ export const mockAttendees: AttendeesByStatus = {
     ],
     notGoing: [
         {
+            userId: 'mock-tom',
             name: 'Tom Anderson',
             avatar: '👨🏻',
             time: 'RSVP 3h ago',

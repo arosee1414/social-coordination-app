@@ -38,6 +38,7 @@ export interface ReminderBanner {
 }
 
 export interface Attendee {
+    userId: string;
     name: string;
     avatar: string | null;
     time?: string;

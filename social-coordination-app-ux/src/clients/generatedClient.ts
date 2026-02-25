@@ -74,6 +74,15 @@ export interface ISocialCoordinationApiClient {
      */
     cancel(id: string): Promise<HangoutResponse>;
     /**
+     * @param body (optional) 
+     * @return Success
+     */
+    attendeesPOST(id: string, body: AddHangoutAttendeesRequest | undefined): Promise<HangoutResponse>;
+    /**
+     * @return Success
+     */
+    attendeesDELETE(id: string, attendeeUserId: string): Promise<HangoutResponse>;
+    /**
      * @return Success
      */
     health(): Promise<void>;
@@ -903,6 +912,122 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
     }
 
     /**
+     * @param body (optional) 
+     * @return Success
+     */
+    attendeesPOST(id: string, body: AddHangoutAttendeesRequest | undefined, cancelToken?: CancelToken): Promise<HangoutResponse> {
+        let url_ = this.baseUrl + "/api/hangouts/{id}/attendees";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processAttendeesPOST(_response);
+        });
+    }
+
+    protected processAttendeesPOST(response: AxiosResponse): Promise<HangoutResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = HangoutResponse.fromJS(resultData200);
+            return Promise.resolve<HangoutResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<HangoutResponse>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    attendeesDELETE(id: string, attendeeUserId: string, cancelToken?: CancelToken): Promise<HangoutResponse> {
+        let url_ = this.baseUrl + "/api/hangouts/{id}/attendees/{attendeeUserId}";
+        if (id === undefined || id === null)
+            throw new Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        if (attendeeUserId === undefined || attendeeUserId === null)
+            throw new Error("The parameter 'attendeeUserId' must be defined.");
+        url_ = url_.replace("{attendeeUserId}", encodeURIComponent("" + attendeeUserId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "DELETE",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processAttendeesDELETE(_response);
+        });
+    }
+
+    protected processAttendeesDELETE(response: AxiosResponse): Promise<HangoutResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = HangoutResponse.fromJS(resultData200);
+            return Promise.resolve<HangoutResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<HangoutResponse>(null as any);
+    }
+
+    /**
      * @return Success
      */
     health( cancelToken?: CancelToken): Promise<void> {
@@ -1304,6 +1429,62 @@ export class AddGroupMemberRequest implements IAddGroupMemberRequest {
 
 export interface IAddGroupMemberRequest {
     userId?: string | undefined;
+}
+
+export class AddHangoutAttendeesRequest implements IAddHangoutAttendeesRequest {
+    invitedGroupIds?: string[] | undefined;
+    inviteeUserIds?: string[] | undefined;
+
+    constructor(data?: IAddHangoutAttendeesRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["invitedGroupIds"])) {
+                this.invitedGroupIds = [] as any;
+                for (let item of _data["invitedGroupIds"])
+                    this.invitedGroupIds!.push(item);
+            }
+            if (Array.isArray(_data["inviteeUserIds"])) {
+                this.inviteeUserIds = [] as any;
+                for (let item of _data["inviteeUserIds"])
+                    this.inviteeUserIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AddHangoutAttendeesRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new AddHangoutAttendeesRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.invitedGroupIds)) {
+            data["invitedGroupIds"] = [];
+            for (let item of this.invitedGroupIds)
+                data["invitedGroupIds"].push(item);
+        }
+        if (Array.isArray(this.inviteeUserIds)) {
+            data["inviteeUserIds"] = [];
+            for (let item of this.inviteeUserIds)
+                data["inviteeUserIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAddHangoutAttendeesRequest {
+    invitedGroupIds?: string[] | undefined;
+    inviteeUserIds?: string[] | undefined;
 }
 
 export class CreateGroupRequest implements ICreateGroupRequest {

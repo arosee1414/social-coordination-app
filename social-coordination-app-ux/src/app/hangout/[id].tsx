@@ -450,6 +450,39 @@ export default function HangoutDetailScreen() {
                         </View>
                     )}
 
+                    {/* Invite People Button (creator only) */}
+                    {isCreator && hangout?.status !== 'past' && (
+                        <TouchableOpacity
+                            style={[
+                                s.inviteBtn,
+                                {
+                                    borderColor: colors.primary,
+                                    backgroundColor: colors.indigoTint,
+                                },
+                            ]}
+                            onPress={() =>
+                                router.push(
+                                    `/invite-selection?hangoutId=${hangoutId}` as any,
+                                )
+                            }
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons
+                                name='person-add-outline'
+                                size={20}
+                                color={colors.primary}
+                            />
+                            <Text
+                                style={[
+                                    s.inviteBtnText,
+                                    { color: colors.primary },
+                                ]}
+                            >
+                                Invite More People
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
                     {/* Attendees Tabs */}
                     <View style={{ marginTop: 24 }}>
                         <Text
@@ -622,4 +655,15 @@ const s = StyleSheet.create({
     groupBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
     groupBadgeText: { fontSize: 12, fontWeight: '600' },
     avatarImage: { width: 48, height: 48, borderRadius: 24 },
+    inviteBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 14,
+        borderRadius: 12,
+        borderWidth: 1.5,
+        marginTop: 24,
+    },
+    inviteBtnText: { fontSize: 16, fontWeight: '600' },
 });

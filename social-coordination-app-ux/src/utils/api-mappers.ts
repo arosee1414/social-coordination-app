@@ -190,6 +190,7 @@ export function mapHangoutResponseToHangout(response: HangoutResponse): Hangout 
  */
 export function mapAttendeeToDisplayAttendee(attendee: HangoutAttendeeResponse): Attendee {
     return {
+        userId: attendee.userId ?? '',
         name: attendee.displayName || attendee.userId || 'Unknown',
         avatar: attendee.profileImageUrl ?? null,
         time: attendee.respondedAt ? formatTime(attendee.respondedAt) : undefined,

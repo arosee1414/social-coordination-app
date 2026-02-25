@@ -77,4 +77,22 @@ public class HangoutsController : BaseApiController
         var result = await _hangoutsService.CancelHangoutAsync(id, userId);
         return Ok(result);
     }
+
+    [HttpPost("{id}/attendees")]
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<HangoutResponse>> AddAttendees(string id, [FromBody] AddHangoutAttendeesRequest request)
+    {
+        var userId = GetUserId();
+        var result = await _hangoutsService.AddAttendeesAsync(id, userId, request);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}/attendees/{attendeeUserId}")]
+    [ProducesResponseType(typeof(HangoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<HangoutResponse>> RemoveAttendee(string id, string attendeeUserId)
+    {
+        var userId = GetUserId();
+        var result = await _hangoutsService.RemoveAttendeeAsync(id, userId, attendeeUserId);
+        return Ok(result);
+    }
 }

@@ -12,4 +12,6 @@ public interface IHangoutsService
     Task DeleteHangoutAsync(string hangoutId, string userId);
     Task<HangoutResponse> UpdateRSVPAsync(string hangoutId, string userId, UpdateRSVPRequest request);
     Task<HangoutResponse> CancelHangoutAsync(string hangoutId, string userId);
+    Task<HangoutResponse> AddAttendeesAsync(string hangoutId, string userId, AddHangoutAttendeesRequest request);
+    Task<HangoutResponse> RemoveAttendeeAsync(string hangoutId, string callerUserId, string attendeeUserId);
 }

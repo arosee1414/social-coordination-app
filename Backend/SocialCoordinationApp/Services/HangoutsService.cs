@@ -273,6 +273,109 @@ public class HangoutsService : IHangoutsService
         return await MapToResponseAsync(response.Resource);
     }
 
+    public async Task<HangoutResponse> AddAttendeesAsync(string hangoutId, string userId, AddHangoutAttendeesRequest request)
+    {
+        var hangout = await GetHangoutRecordAsync(hangoutId);
+
+        if (hangout.CreatedByUserId != userId)
+            throw new UnauthorizedAccessException("Only the hangout creator can add attendees");
+
+        // Track already-added user IDs to avoid duplicates
+        var existingUserIds = new HashSet<string>(hangout.Attendees.Select(a => a.UserId));
+        var newAttendeesAdded = 0;
+
+        // Add individual invitees if provided
+        if (request.InviteeUserIds != null)
+        {
+            foreach (var inviteeId in request.InviteeUserIds.Where(id => !existingUserIds.Contains(id)))
+            {
+                hangout.Attendees.Add(new HangoutAttendee
+                {
+                    UserId = inviteeId,
+                    RsvpStatus = RSVPStatus.Pending,
+                    RespondedAt = null
+                });
+                existingUserIds.Add(inviteeId);
+                newAttendeesAdded++;
+            }
+        }
+
+        // Expand group members into attendees
+        var newGroupIds = new List<string>();
+        if (request.InvitedGroupIds != null && request.InvitedGroupIds.Count > 0)
+        {
+            var groupRecords = await BatchLookupGroupsAsync(request.InvitedGroupIds);
+            foreach (var groupId in request.InvitedGroupIds)
+            {
+                if (groupRecords.TryGetValue(groupId, out var group))
+                {
+                    // Add this group ID to the hangout's InvitedGroupIds if not already present
+                    if (!hangout.InvitedGroupIds.Contains(groupId))
+                    {
+                        newGroupIds.Add(groupId);
+                    }
+
+                    foreach (var member in group.Members)
+                    {
+                        if (!existingUserIds.Contains(member.UserId))
+                        {
+                            hangout.Attendees.Add(new HangoutAttendee
+                            {
+                                UserId = member.UserId,
+                                RsvpStatus = RSVPStatus.Pending,
+                                RespondedAt = null
+                            });
+                            existingUserIds.Add(member.UserId);
+                            newAttendeesAdded++;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update InvitedGroupIds
+        if (newGroupIds.Count > 0)
+        {
+            hangout.InvitedGroupIds.AddRange(newGroupIds);
+        }
+
+        hangout.UpdatedAt = DateTime.UtcNow;
+
+        var response = await _cosmosContext.HangoutsContainer
+            .ReplaceItemAsync(hangout, hangoutId, new PartitionKey(hangout.CreatedByUserId));
+
+        _logger.LogInformation("Added {Count} attendees to hangout {HangoutId} by user {UserId}",
+            newAttendeesAdded, hangoutId, userId);
+
+        return await MapToResponseAsync(response.Resource);
+    }
+
+    public async Task<HangoutResponse> RemoveAttendeeAsync(string hangoutId, string callerUserId, string attendeeUserId)
+    {
+        var hangout = await GetHangoutRecordAsync(hangoutId);
+
+        if (hangout.CreatedByUserId != callerUserId)
+            throw new UnauthorizedAccessException("Only the hangout creator can remove attendees");
+
+        if (attendeeUserId == hangout.CreatedByUserId)
+            throw new ArgumentException("Cannot remove the hangout creator from their own hangout");
+
+        var attendee = hangout.Attendees.FirstOrDefault(a => a.UserId == attendeeUserId);
+        if (attendee == null)
+            throw new KeyNotFoundException($"User {attendeeUserId} is not an attendee of this hangout");
+
+        hangout.Attendees.Remove(attendee);
+        hangout.UpdatedAt = DateTime.UtcNow;
+
+        var response = await _cosmosContext.HangoutsContainer
+            .ReplaceItemAsync(hangout, hangoutId, new PartitionKey(hangout.CreatedByUserId));
+
+        _logger.LogInformation("Removed attendee {AttendeeUserId} from hangout {HangoutId} by user {UserId}",
+            attendeeUserId, hangoutId, callerUserId);
+
+        return await MapToResponseAsync(response.Resource);
+    }
+
     public async Task<HangoutResponse> CancelHangoutAsync(string hangoutId, string userId)
     {
         var hangout = await GetHangoutRecordAsync(hangoutId);
