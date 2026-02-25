@@ -17,13 +17,13 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import { useApiGroups } from '@/src/hooks/useApiGroups';
-import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
+import { useApiFriends } from '@/src/hooks/useApiFriends';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import {
     CreateHangoutRequest,
     AddHangoutAttendeesRequest,
 } from '@/src/clients/generatedClient';
-import type { UserResponse } from '@/src/clients/generatedClient';
+import type { Friend } from '@/src/types';
 
 interface ExistingAttendee {
     userId: string;
@@ -58,11 +58,19 @@ export default function InviteSelectionScreen() {
         refetch: refetchGroups,
     } = useApiGroups();
 
-    // Re-fetch groups whenever this screen gains focus (e.g. after creating a group)
+    // Use real friends list instead of general user search
+    const {
+        friends,
+        loading: friendsLoading,
+        refetch: refetchFriends,
+    } = useApiFriends();
+
+    // Re-fetch groups and friends whenever this screen gains focus
     useFocusEffect(
         useCallback(() => {
             refetchGroups();
-        }, [refetchGroups]),
+            refetchFriends();
+        }, [refetchGroups, refetchFriends]),
     );
     const [activeTab, setActiveTab] = useState<ActiveTab>(
         params.groupId ? 'groups' : 'friends',
@@ -126,48 +134,6 @@ export default function InviteSelectionScreen() {
         fetchExisting();
     }, [isAddMode, params.hangoutId]);
 
-    // Real user search for friends tab
-    const {
-        results: userSearchResults,
-        loading: userSearchLoading,
-        searchUsers,
-    } = useApiUserSearch();
-
-    // Suggested users (people from your groups)
-    const [suggestedUsers, setSuggestedUsers] = useState<UserResponse[]>([]);
-    const [suggestedLoading, setSuggestedLoading] = useState(false);
-
-    // Fetch suggested users on mount
-    useEffect(() => {
-        const fetchSuggested = async () => {
-            try {
-                setSuggestedLoading(true);
-                const result = await api.suggested();
-                setSuggestedUsers(result ?? []);
-            } catch (err: any) {
-                console.warn('Failed to fetch suggested users:', err);
-            } finally {
-                setSuggestedLoading(false);
-            }
-        };
-        fetchSuggested();
-    }, []);
-
-    // Keep a map of selected users so we can display them even when search changes
-    const [selectedUserMap, setSelectedUserMap] = useState<
-        Map<string, UserResponse>
-    >(new Map());
-
-    // Debounced user search when on friends tab
-    useEffect(() => {
-        if (activeTab !== 'friends') return;
-        if (search.length < 2) return; // Don't search with short queries; show suggested instead
-        const timer = setTimeout(() => {
-            searchUsers(search);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [search, activeTab, searchUsers]);
-
     const toggleGroup = (id: string) => {
         // Don't allow toggling already-invited groups
         if (existingGroupIds.has(id)) return;
@@ -176,46 +142,26 @@ export default function InviteSelectionScreen() {
         setSelectedGroups(next);
     };
 
-    const toggleFriend = (user: UserResponse) => {
-        const id = user.id!;
+    const toggleFriend = (friend: Friend) => {
+        const id = friend.userId;
         // Don't allow toggling already-invited users
         if (existingAttendeeIds.has(id)) return;
         const next = new Set(selectedFriends);
-        const nextMap = new Map(selectedUserMap);
         if (next.has(id)) {
             next.delete(id);
-            nextMap.delete(id);
         } else {
             next.add(id);
-            nextMap.set(id, user);
         }
         setSelectedFriends(next);
-        setSelectedUserMap(nextMap);
     };
 
     const totalSelected = selectedGroups.size + selectedFriends.size;
 
-    // Determine if we're in search mode or showing suggestions
-    const isSearching = search.length >= 2;
-
-    // Merge search results (or suggested users) with already-selected users
-    const displayedUsers: UserResponse[] = (() => {
-        const map = new Map<string, UserResponse>();
-        // Add selected users first (so they always show)
-        selectedUserMap.forEach((u, id) => map.set(id, u));
-        if (isSearching) {
-            // Add search results
-            userSearchResults.forEach((u) => {
-                if (u.id) map.set(u.id, u);
-            });
-        } else {
-            // Add suggested users
-            suggestedUsers.forEach((u) => {
-                if (u.id) map.set(u.id, u);
-            });
-        }
-        return Array.from(map.values());
-    })();
+    // Filter friends by search query (client-side)
+    const displayedFriends: Friend[] = friends.filter((f) => {
+        if (!search.trim()) return true;
+        return f.name.toLowerCase().includes(search.toLowerCase());
+    });
 
     const handleRemoveAttendee = (attendee: ExistingAttendee) => {
         Alert.alert(
@@ -587,31 +533,76 @@ export default function InviteSelectionScreen() {
                                     </View>
                                 </View>
                             )}
-                            {(isSearching
-                                ? userSearchLoading
-                                : suggestedLoading) && (
+                            {friendsLoading && (
                                 <ActivityIndicator
                                     color={colors.primary}
                                     style={{ marginVertical: 16 }}
                                 />
                             )}
-                            {!userSearchLoading &&
-                                isSearching &&
-                                displayedUsers.length === 0 && (
-                                    <Text
+                            {!friendsLoading && friends.length === 0 && (
+                                <View
+                                    style={{
+                                        alignItems: 'center',
+                                        paddingVertical: 64,
+                                        paddingHorizontal: 24,
+                                    }}
+                                >
+                                    <View
                                         style={{
-                                            color: colors.textSecondary,
-                                            fontSize: 14,
-                                            paddingVertical: 16,
-                                            textAlign: 'center',
+                                            width: 96,
+                                            height: 96,
+                                            borderRadius: 48,
+                                            backgroundColor:
+                                                colors.surfaceTertiary,
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginBottom: 24,
                                         }}
                                     >
-                                        No users found
+                                        <Ionicons
+                                            name='people-outline'
+                                            size={48}
+                                            color={colors.textTertiary}
+                                        />
+                                    </View>
+                                    <Text
+                                        style={{
+                                            fontSize: 20,
+                                            fontWeight: 'bold',
+                                            color: colors.text,
+                                            marginBottom: 8,
+                                        }}
+                                    >
+                                        No Friends Yet
                                     </Text>
-                                )}
-                            {!suggestedLoading &&
-                                !isSearching &&
-                                displayedUsers.length === 0 && (
+                                    <Text
+                                        style={{
+                                            fontSize: 16,
+                                            color: colors.subtitle,
+                                            textAlign: 'center',
+                                            marginBottom: 32,
+                                            maxWidth: 280,
+                                        }}
+                                    >
+                                        Add friends first, then you can invite
+                                        them to hangouts
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={shared.secondaryBtn}
+                                        onPress={() =>
+                                            router.push('/find-friends' as any)
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text style={shared.secondaryBtnText}>
+                                            Find Friends
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                            {!friendsLoading &&
+                                friends.length > 0 &&
+                                displayedFriends.length === 0 && (
                                     <Text
                                         style={{
                                             color: colors.textSecondary,
@@ -620,13 +611,11 @@ export default function InviteSelectionScreen() {
                                             textAlign: 'center',
                                         }}
                                     >
-                                        No suggested friends yet. Add people to
-                                        your groups to see them here, or search
-                                        above.
+                                        No friends match your search
                                     </Text>
                                 )}
                             {/* Section header */}
-                            {!isSearching && displayedUsers.length > 0 && (
+                            {!friendsLoading && displayedFriends.length > 0 && (
                                 <Text
                                     style={{
                                         fontSize: 13,
@@ -637,38 +626,34 @@ export default function InviteSelectionScreen() {
                                         marginBottom: 8,
                                     }}
                                 >
-                                    Suggested
+                                    Your Friends
                                 </Text>
                             )}
                             <View style={{ gap: 8 }}>
-                                {displayedUsers.map((user) => {
+                                {displayedFriends.map((friend) => {
                                     const isExisting = existingAttendeeIds.has(
-                                        user.id!,
+                                        friend.userId,
                                     );
                                     const selected =
-                                        selectedFriends.has(user.id!) ||
+                                        selectedFriends.has(friend.userId) ||
                                         isExisting;
-                                    const displayName =
-                                        `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
-                                        user.email ||
-                                        'Unknown';
                                     return (
                                         <TouchableOpacity
-                                            key={user.id}
+                                            key={friend.userId}
                                             style={[
                                                 selected
                                                     ? shared.selectableItemSelected
                                                     : shared.selectableItem,
                                                 isExisting && { opacity: 0.5 },
                                             ]}
-                                            onPress={() => toggleFriend(user)}
+                                            onPress={() => toggleFriend(friend)}
                                             disabled={isExisting}
                                             activeOpacity={isExisting ? 1 : 0.7}
                                         >
-                                            {user.profileImageUrl ? (
+                                            {friend.avatar ? (
                                                 <Image
                                                     source={{
-                                                        uri: user.profileImageUrl,
+                                                        uri: friend.avatar,
                                                     }}
                                                     style={{
                                                         width: 44,
@@ -704,7 +689,7 @@ export default function InviteSelectionScreen() {
                                                         },
                                                     ]}
                                                 >
-                                                    {displayName}
+                                                    {friend.name}
                                                 </Text>
                                                 {isExisting && (
                                                     <Text

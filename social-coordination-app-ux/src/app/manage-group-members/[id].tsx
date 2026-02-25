@@ -17,7 +17,7 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useApiClient } from '@/src/hooks/useApiClient';
 import { useApiUser } from '@/src/hooks/useApiUser';
-import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
+import { useApiFriends } from '@/src/hooks/useApiFriends';
 import { AddGroupMemberRequest } from '@/src/clients/generatedClient';
 import type { GroupMemberResponse } from '@/src/clients/generatedClient';
 
@@ -36,11 +36,7 @@ export default function ManageGroupMembersScreen() {
     const [addingId, setAddingId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const {
-        results: searchResults,
-        loading: searchLoading,
-        searchUsers,
-    } = useApiUserSearch();
+    const { friends, loading: friendsLoading } = useApiFriends();
 
     // Fetch group members
     const fetchGroup = useCallback(async () => {
@@ -77,21 +73,13 @@ export default function ManageGroupMembersScreen() {
         }
     }, [fetchGroup, user?.id]);
 
-    // Search handler with debounce
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (searchQuery.trim().length >= 2) {
-                searchUsers(searchQuery.trim());
-            }
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [searchQuery, searchUsers]);
-
-    // Filter out users already in the group
+    // Filter friends: exclude existing group members, then apply search query
     const memberUserIds = new Set(members.map((m) => m.userId));
-    const filteredSearchResults = searchResults.filter(
-        (u) => !memberUserIds.has(u.id ?? ''),
-    );
+    const filteredFriends = friends.filter((f) => {
+        if (memberUserIds.has(f.userId)) return false;
+        if (!searchQuery.trim()) return true;
+        return f.name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     const handleRemoveMember = async (memberUserId: string) => {
         try {
@@ -294,88 +282,72 @@ export default function ManageGroupMembersScreen() {
                         )}
                     </View>
 
-                    {/* Search Results */}
-                    {searchQuery.trim().length >= 2 ? (
-                        searchLoading ? (
-                            <View style={s.emptyState}>
-                                <ActivityIndicator
-                                    size='small'
-                                    color={colors.primary}
-                                />
-                            </View>
-                        ) : filteredSearchResults.length > 0 ? (
-                            <View style={{ gap: 8, marginTop: 12 }}>
-                                {filteredSearchResults.map((friend) => (
-                                    <TouchableOpacity
-                                        key={friend.id}
-                                        style={[
-                                            s.addMemberRow,
-                                            {
-                                                borderColor: colors.cardBorder,
-                                            },
-                                        ]}
-                                        onPress={() =>
-                                            handleAddMember(friend.id ?? '')
-                                        }
-                                        disabled={addingId === friend.id}
-                                    >
-                                        <View style={s.memberAvatar}>
-                                            {friend.profileImageUrl ? (
-                                                <Image
-                                                    source={{
-                                                        uri: friend.profileImageUrl,
-                                                    }}
-                                                    style={s.memberAvatarImage}
-                                                />
-                                            ) : (
-                                                <Ionicons
-                                                    name='person'
-                                                    size={22}
-                                                    color='#999'
-                                                />
-                                            )}
-                                        </View>
-                                        <View style={{ flex: 1 }}>
-                                            <Text
-                                                style={[
-                                                    s.memberName,
-                                                    { color: colors.text },
-                                                ]}
-                                            >
-                                                {friend.firstName &&
-                                                friend.lastName
-                                                    ? `${friend.firstName} ${friend.lastName}`
-                                                    : friend.email}
-                                            </Text>
-                                        </View>
-                                        {addingId === friend.id ? (
-                                            <ActivityIndicator
-                                                size='small'
-                                                color={colors.primary}
+                    {/* Friends List */}
+                    {friendsLoading ? (
+                        <View style={s.emptyState}>
+                            <ActivityIndicator
+                                size='small'
+                                color={colors.primary}
+                            />
+                        </View>
+                    ) : filteredFriends.length > 0 ? (
+                        <View style={{ gap: 8, marginTop: 12 }}>
+                            {filteredFriends.map((friend) => (
+                                <TouchableOpacity
+                                    key={friend.userId}
+                                    style={[
+                                        s.addMemberRow,
+                                        {
+                                            borderColor: colors.cardBorder,
+                                        },
+                                    ]}
+                                    onPress={() =>
+                                        handleAddMember(friend.userId)
+                                    }
+                                    disabled={addingId === friend.userId}
+                                >
+                                    <View style={s.memberAvatar}>
+                                        {friend.avatar ? (
+                                            <Image
+                                                source={{
+                                                    uri: friend.avatar,
+                                                }}
+                                                style={s.memberAvatarImage}
                                             />
                                         ) : (
                                             <Ionicons
-                                                name='person-add'
-                                                size={20}
-                                                color={colors.primary}
+                                                name='person'
+                                                size={22}
+                                                color='#999'
                                             />
                                         )}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        ) : (
-                            <View style={s.emptyState}>
-                                <Text
-                                    style={[
-                                        s.emptyStateText,
-                                        { color: colors.textTertiary },
-                                    ]}
-                                >
-                                    No results found
-                                </Text>
-                            </View>
-                        )
-                    ) : searchQuery.trim().length > 0 ? (
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text
+                                            style={[
+                                                s.memberName,
+                                                { color: colors.text },
+                                            ]}
+                                        >
+                                            {friend.name}
+                                        </Text>
+                                    </View>
+                                    {addingId === friend.userId ? (
+                                        <ActivityIndicator
+                                            size='small'
+                                            color={colors.primary}
+                                        />
+                                    ) : (
+                                        <Ionicons
+                                            name='person-add'
+                                            size={20}
+                                            color={colors.primary}
+                                        />
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    ) : friends.length === 0 ? (
                         <View style={s.emptyState}>
                             <Text
                                 style={[
@@ -383,10 +355,22 @@ export default function ManageGroupMembersScreen() {
                                     { color: colors.textTertiary },
                                 ]}
                             >
-                                Type at least 2 characters to search
+                                No friends yet. Add friends to invite them to
+                                groups.
                             </Text>
                         </View>
-                    ) : null}
+                    ) : (
+                        <View style={s.emptyState}>
+                            <Text
+                                style={[
+                                    s.emptyStateText,
+                                    { color: colors.textTertiary },
+                                ]}
+                            >
+                                No friends match your search
+                            </Text>
+                        </View>
+                    )}
                 </View>
             </ScrollView>
 

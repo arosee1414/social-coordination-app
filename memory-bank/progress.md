@@ -11,6 +11,7 @@
     - Frontend: hooks (useApiFriends, useApiFriendRequests, useApiFriendshipStatus, useApiFriendCount), screens (friends-list, friend profile, find-friends with add friend)
     - API client regenerated with all friend endpoints
 - **User Search**: Search users by name via Cosmos DB cross-partition query
+- **Invite/Search Restriction**: All invite and member-selection screens (hangout invite, group add members, manage group members) now only allow selecting accepted friends and groups the user is a member of — no general user search
 - **Seed Data**: Comprehensive seed data for users, groups, hangouts, and friendships
 - **API Client**: Auto-generated TypeScript client via NSwag from Swagger spec
 - **Theme System**: Light/dark mode with comprehensive color tokens
@@ -29,7 +30,7 @@
 
 ## Current Status
 
-Friends feature is functionally complete with all build errors resolved. The feature follows the dual-document pattern in Cosmos DB for efficient reads. Frontend screens are wired to real API data. Minor integration work remains (profile page friend count display).
+Friends feature is functionally complete with all build errors resolved. The feature follows the dual-document pattern in Cosmos DB for efficient reads. Frontend screens are wired to real API data. Invite/search screens restricted to friends-only. Minor integration work remains (profile page friend count display).
 
 ## Known Issues
 
