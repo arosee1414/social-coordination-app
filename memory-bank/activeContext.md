@@ -6,11 +6,11 @@ Dark mode UI refinement for friends screens.
 
 ## What Was Just Accomplished
 
-- **Removed card background from friend list rows in dark mode** (`friends-list.tsx`, `find-friends.tsx`):
-    - Removed `backgroundColor: colors.card` from list item rows on both screens
-    - In dark mode, `colors.card` (`#1C1C1E`) was visibly different from `colors.background` (`#151718`), creating an unwanted card effect around each person row
-    - In light mode, both colors were `#fff` so this change has no visual impact there
-    - Affected: `renderFriendItem`, `renderIncomingRequestItem`, `renderOutgoingRequestItem` in friends-list; `renderUserItem` in find-friends
+- **Removed card/surface backgrounds from person list rows in dark mode**:
+    - `friends-list.tsx` & `find-friends.tsx`: Removed `backgroundColor: colors.card` from list item rows
+    - `shared-styles.ts`: Removed `backgroundColor: colors.surfaceTertiary` from the shared `listItem` style (used by hangout RSVP attendee list and group member list)
+    - In dark mode, these backgrounds (`#1C1C1E` card, `#2C2C2E` surfaceTertiary) were visibly different from `colors.background` (`#151718`), creating unwanted card effects around person rows
+    - In light mode, no meaningful visual change
 
 ## Key Decisions Made
 

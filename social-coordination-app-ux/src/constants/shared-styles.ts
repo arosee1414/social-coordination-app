@@ -308,7 +308,6 @@ export function createSharedStyles(colors: ThemeColors) {
             gap: 12,
             padding: 12,
             borderRadius: 12,
-            backgroundColor: colors.surfaceTertiary,
         },
         selectableItem: {
             flexDirection: 'row',
