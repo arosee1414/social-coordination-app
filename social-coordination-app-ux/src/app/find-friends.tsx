@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useApiUserSearch } from '../hooks/useApiUserSearch';
 import { useApiClient } from '../hooks/useApiClient';
@@ -42,26 +42,19 @@ export default function FindFriendsScreen() {
         {},
     );
 
-    const handleSearch = useCallback(
-        async (query: string) => {
-            setSearchQuery(query);
-            if (query.trim().length >= 2) {
-                await searchUsers(query.trim());
-            }
-        },
-        [searchUsers],
-    );
+    // Track whether this is the initial mount to avoid double-fetching
+    const isInitialFocus = useRef(true);
 
-    // Fetch friendship status for search results
-    React.useEffect(() => {
-        async function fetchStatuses() {
-            if (!apiClient || results.length === 0) {
+    // Extract status-fetching logic into a reusable callback
+    const fetchStatuses = useCallback(
+        async (users: UserResponse[]) => {
+            if (!apiClient || users.length === 0) {
                 setUsersWithStatus([]);
                 return;
             }
 
             const items: UserWithStatus[] = [];
-            for (const user of results) {
+            for (const user of users) {
                 try {
                     const statusResponse = await apiClient.status(user.id!);
                     items.push({
@@ -82,9 +75,38 @@ export default function FindFriendsScreen() {
                 }
             }
             setUsersWithStatus(items);
-        }
-        fetchStatuses();
-    }, [apiClient, results]);
+        },
+        [apiClient],
+    );
+
+    const handleSearch = useCallback(
+        async (query: string) => {
+            setSearchQuery(query);
+            if (query.trim().length >= 2) {
+                await searchUsers(query.trim());
+            }
+        },
+        [searchUsers],
+    );
+
+    // Fetch friendship status when search results change
+    React.useEffect(() => {
+        isInitialFocus.current = true; // reset so next focus doesn't double-fetch
+        fetchStatuses(results);
+    }, [results, fetchStatuses]);
+
+    // Re-fetch friendship statuses when screen regains focus (e.g. returning from friend profile)
+    useFocusEffect(
+        useCallback(() => {
+            if (isInitialFocus.current) {
+                isInitialFocus.current = false;
+                return;
+            }
+            if (results.length > 0) {
+                fetchStatuses(results);
+            }
+        }, [results, fetchStatuses]),
+    );
 
     const handleSendRequest = async (userId: string) => {
         if (!apiClient) return;

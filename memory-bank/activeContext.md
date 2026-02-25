@@ -2,16 +2,14 @@
 
 ## Current Work Focus
 
-Friends list UX polish completed. Ready for next task.
+Find-friends stale status bug fixed. Ready for next task.
 
 ## What Was Just Accomplished
 
-- **friends-list.tsx UX improvements:**
-    - Made outgoing "Requested" badge non-interactive (changed from `TouchableOpacity` to `View`, removed `handleCancelRequest` and `cancelRequest` from hook destructuring) — cancel is only done from find-friends or friend profile screens
-    - Added `useFocusEffect` to refetch friends and requests when the screen regains focus (e.g. returning from friend profile after accepting/canceling)
-    - Added `refetch: refetchRequests` from `useApiFriendRequests` hook
-- **find-friends.tsx keyboard fix:**
-    - Added `keyboardShouldPersistTaps="handled"` to FlatList so taps on buttons and profile rows pass through even when the keyboard is open
+- **find-friends.tsx stale friendship status fix:**
+    - Bug: After searching for a user, navigating to their profile, sending a friend request, and hitting back — the search results still showed "Add Friend" instead of "Requested/Cancel"
+    - Root cause: `useEffect` for fetching friendship statuses only triggered on `results` change, not on screen re-focus
+    - Fix: Extracted status-fetching logic into a reusable `fetchStatuses` callback, added `useFocusEffect` to re-fetch statuses when the screen regains focus (with guard to skip initial mount and avoid double-fetching)
 
 ## Key Decisions Made
 
