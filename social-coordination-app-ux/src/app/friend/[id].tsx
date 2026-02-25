@@ -157,8 +157,13 @@ export default function FriendProfileScreen() {
         fetchUser();
     }, [apiClient, id]);
 
-    // Fetch common groups
+    // Fetch common groups — only when friendship is accepted
     useEffect(() => {
+        if (friendshipStatus.status !== 'accepted') {
+            setCommonGroups([]);
+            setCommonGroupsLoading(false);
+            return;
+        }
         async function fetchCommonGroups() {
             if (!apiClient || !id) return;
             try {
@@ -173,10 +178,15 @@ export default function FriendProfileScreen() {
             }
         }
         fetchCommonGroups();
-    }, [apiClient, id]);
+    }, [apiClient, id, friendshipStatus.status]);
 
-    // Fetch common hangouts
+    // Fetch common hangouts — only when friendship is accepted
     useEffect(() => {
+        if (friendshipStatus.status !== 'accepted') {
+            setCommonHangouts([]);
+            setCommonHangoutsLoading(false);
+            return;
+        }
         async function fetchCommonHangouts() {
             if (!apiClient || !id) return;
             try {
@@ -193,7 +203,7 @@ export default function FriendProfileScreen() {
             }
         }
         fetchCommonHangouts();
-    }, [apiClient, id]);
+    }, [apiClient, id, friendshipStatus.status]);
 
     const handleSendRequest = async () => {
         try {
@@ -609,9 +619,11 @@ export default function FriendProfileScreen() {
                                     { color: colors.text },
                                 ]}
                             >
-                                {commonGroupsLoading
+                                {!isFriend
                                     ? '—'
-                                    : commonGroups.length}
+                                    : commonGroupsLoading
+                                      ? '—'
+                                      : commonGroups.length}
                             </Text>
                             <Text
                                 style={[
@@ -629,9 +641,11 @@ export default function FriendProfileScreen() {
                                     { color: colors.text },
                                 ]}
                             >
-                                {commonHangoutsLoading
+                                {!isFriend
                                     ? '—'
-                                    : commonHangouts.length}
+                                    : commonHangoutsLoading
+                                      ? '—'
+                                      : commonHangouts.length}
                             </Text>
                             <Text
                                 style={[

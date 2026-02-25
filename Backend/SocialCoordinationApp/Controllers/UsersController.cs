@@ -11,12 +11,14 @@ public class UsersController : BaseApiController
     private readonly IUsersService _usersService;
     private readonly IGroupsService _groupsService;
     private readonly IHangoutsService _hangoutsService;
+    private readonly IFriendsService _friendsService;
 
-    public UsersController(IUsersService usersService, IGroupsService groupsService, IHangoutsService hangoutsService)
+    public UsersController(IUsersService usersService, IGroupsService groupsService, IHangoutsService hangoutsService, IFriendsService friendsService)
     {
         _usersService = usersService;
         _groupsService = groupsService;
         _hangoutsService = hangoutsService;
+        _friendsService = friendsService;
     }
 
     [HttpPost("me")]
@@ -90,18 +92,38 @@ public class UsersController : BaseApiController
 
     [HttpGet("{userId}/common-groups")]
     [ProducesResponseType(typeof(List<GroupSummaryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<List<GroupSummaryResponse>>> GetCommonGroups(string userId)
     {
         var currentUserId = GetUserId();
+
+        // Allow viewing your own common groups, otherwise require accepted friendship
+        if (currentUserId != userId)
+        {
+            var status = await _friendsService.GetFriendshipStatusAsync(currentUserId, userId);
+            if (status == null || !string.Equals(status.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+        }
+
         var result = await _groupsService.GetCommonGroupsAsync(currentUserId, userId);
         return Ok(result);
     }
 
     [HttpGet("{userId}/common-hangouts")]
     [ProducesResponseType(typeof(List<HangoutSummaryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<List<HangoutSummaryResponse>>> GetCommonHangouts(string userId)
     {
         var currentUserId = GetUserId();
+
+        // Allow viewing your own common hangouts, otherwise require accepted friendship
+        if (currentUserId != userId)
+        {
+            var status = await _friendsService.GetFriendshipStatusAsync(currentUserId, userId);
+            if (status == null || !string.Equals(status.Status, "Accepted", StringComparison.OrdinalIgnoreCase))
+                return Forbid();
+        }
+
         var result = await _hangoutsService.GetCommonHangoutsAsync(currentUserId, userId);
         return Ok(result);
     }

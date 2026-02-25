@@ -11,6 +11,7 @@
     - Frontend: hooks (useApiFriends, useApiFriendRequests, useApiFriendshipStatus, useApiFriendCount), screens (friends-list, friend profile, find-friends with add friend)
     - API client regenerated with all friend endpoints
 - **Friend Profile Page**: Rich friend detail page showing stats (friends count, groups in common, hangouts together), Groups in Common section, and Hangouts Together section with tappable cards. Backend endpoints: `GET /api/users/{userId}/common-groups` and `GET /api/users/{userId}/common-hangouts`
+- **Friend Profile Privacy**: Common groups and hangouts data restricted to accepted friends only — backend returns 403 if not friends, frontend only fetches when friendship is accepted. Stats row shows `—` for non-friends. Data loads immediately upon accepting a friend request.
 - **User Search**: Search users by name via Cosmos DB cross-partition query
 - **Invite/Search Restriction**: All invite and member-selection screens (hangout invite, group add members, manage group members) now only allow selecting accepted friends and groups the user is a member of — no general user search
 - **Seed Data**: Comprehensive seed data for users, groups, hangouts, and friendships
@@ -31,7 +32,7 @@
 
 ## Current Status
 
-Friends feature is functionally complete with all build errors resolved. The feature follows the dual-document pattern in Cosmos DB for efficient reads. Frontend screens are wired to real API data. Invite/search screens restricted to friends-only. Friend profile page now shows groups in common and hangouts together.
+Friends feature is functionally complete with all build errors resolved. The feature follows the dual-document pattern in Cosmos DB for efficient reads. Frontend screens are wired to real API data. Invite/search screens restricted to friends-only. Friend profile page now shows groups in common and hangouts together. Privacy enforcement added — common data endpoints require accepted friendship.
 
 ## Known Issues
 

@@ -2,47 +2,38 @@
 
 ## Current Work Focus
 
-Instagram-style redesign of friend action buttons (remove friend, accept/decline requests).
+Privacy enforcement for friend profiles — restricting common groups/hangouts data to accepted friends only.
 
 ## What Was Just Accomplished
 
-- **Instagram-style friend actions redesign** across two screens:
+- **Backend friendship enforcement on common data endpoints:**
+    - `GET /api/users/{userId}/common-groups` now returns `403 Forbidden` if the requesting user is not an accepted friend of the target user
+    - `GET /api/users/{userId}/common-hangouts` now returns `403 Forbidden` if not accepted friends
+    - Injected `IFriendsService` into `UsersController` to perform friendship status checks
+    - Self-viewing (own user ID) is always allowed
 
-    **Friend Profile Page (`friend/[id].tsx`):**
-    - "Friends" status now shows as a single muted button (gray bg) with people icon + chevron-down, tapping opens a bottom sheet
-    - Bottom sheet has "Remove Friend" (red destructive row with icon) and full-width "Cancel" button
-    - Incoming requests now show side-by-side "Confirm" (filled primary blue) + "Delete" (outlined muted) text buttons — Instagram style
-    - Outgoing requests show a single "Requested" muted button
-    - "Add Friend" button remains as filled primary
-    - Button border radius changed from 24 (pill) to 10 (rounded rectangle) to match Instagram's style
-
-    **Friends List Page (`friends-list.tsx`):**
-    - `•••` ellipsis on friend rows now opens a **bottom sheet** (with friend avatar + name header) instead of a direct Alert.alert
-    - Bottom sheet shows "Remove Friend" (red destructive) and full-width "Cancel" button
-    - Incoming request rows now have compact **"Confirm" + "Delete" text-labeled buttons** instead of small icon-only circles
-
-- **Bottom sheet consistency across all screens:**
-    - Both friend bottom sheets now use **Reanimated animated slide-up/down** (matching FABBottomSheet and HangoutFilterSheet)
-    - **Swipe-down-to-dismiss** gesture via `Gesture.Pan()` with 50px threshold (same as FABBottomSheet)
-    - **Cancel button** is now a full-width, 56px tall, rounded-12 button with `surfaceTertiary` bg and `textSecondary` text (matching FABBottomSheet's `cancelBtn` style)
-    - Replaced React Native `Modal` with conditionally-rendered absolute-fill `Animated.View` pattern
+- **Frontend conditional data fetching (`friend/[id].tsx`):**
+    - Common groups and common hangouts `useEffect` calls now depend on `friendshipStatus.status` — only fire when status is `'accepted'`
+    - When not friends, arrays are reset to empty and loading set to false (no API calls made)
+    - **Immediate fetch on accept**: When a user taps "Confirm" to accept a friend request, the status transitions to `'accepted'`, which triggers the `useEffect` dependency change and automatically fetches common groups/hangouts
+    - Stats row shows `—` for Groups and Hangouts columns when not friends; shows real counts when friends
 
 ## Key Decisions Made
 
-- **Bottom sheet pattern**: All bottom sheets now use Reanimated + GestureDetector (not Modal) for consistent animated slide + swipe-to-dismiss
-- **Cancel button style**: Full-width muted button (cancelBtn: width 100%, height 56, borderRadius 12, surfaceTertiary bg) — consistent across FABBottomSheet, friend/[id].tsx, friends-list.tsx
-- **Instagram naming**: Used "Confirm" and "Delete" (Instagram's terminology) instead of "Accept" and "Decline/Reject"
-- **Friend list bottom sheet includes avatar**: Shows the friend's avatar and name in the sheet header for context before destructive action
+- **Backend enforcement + frontend gating**: Both layers enforce the restriction — backend returns 403 for unauthorized access, frontend avoids making the calls entirely when not friends
+- **Stats row stays visible for everyone**: Friend count is always shown; Groups and Hangouts stats show `—` for non-friends
+- **Reactive fetching**: Using `friendshipStatus.status` as a `useEffect` dependency ensures common data is fetched immediately when friendship is accepted (no page reload needed)
 
 ## Previous Context
 
+- **Instagram-style friend actions**: "Friends" button opens bottom sheet, incoming requests show "Confirm"/"Delete" buttons, outgoing shows "Requested"
 - **Dual-document pattern**: Each friendship creates two mirrored Cosmos DB documents (one per user as partition key) for efficient single-partition reads
 - **FriendRequest type**: Uses `displayName`/`avatarUrl` (matching generated DTO), while `Friend` type uses `name`/`avatar` (mapped in frontend)
 - **Direction casing**: Backend sends `"Incoming"`/`"Outgoing"` (PascalCase), frontend `useApiFriendshipStatus` normalizes to `"incoming"`/`"outgoing"` (lowercase)
 
 ## Remaining Work
 
-- **Testing**: End-to-end testing of redesigned friend actions and bottom sheet animations on both screens
+- **Testing**: End-to-end testing of privacy enforcement (non-friend profile view, accept → immediate data load)
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 
 ## Important Patterns & Preferences
