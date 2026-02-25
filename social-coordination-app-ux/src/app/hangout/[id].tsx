@@ -529,14 +529,30 @@ export default function HangoutDetailScreen() {
                                         >
                                             {attendee.name}
                                         </Text>
-                                        <Text
-                                            style={[
-                                                s.attendeeTime,
-                                                { color: colors.textTertiary },
-                                            ]}
-                                        >
-                                            {attendee.time}
-                                        </Text>
+                                        {attendee.time ? (
+                                            <Text
+                                                style={[
+                                                    s.attendeeTime,
+                                                    {
+                                                        color: colors.textTertiary,
+                                                    },
+                                                ]}
+                                            >
+                                                {attendee.time}
+                                            </Text>
+                                        ) : (
+                                            <Text
+                                                style={[
+                                                    s.attendeeTime,
+                                                    {
+                                                        color: colors.textTertiary,
+                                                        fontStyle: 'italic',
+                                                    },
+                                                ]}
+                                            >
+                                                No response yet
+                                            </Text>
+                                        )}
                                     </View>
                                     {attendee.fromGroup && (
                                         <View
