@@ -32,7 +32,7 @@
 
 ## Current Status
 
-Friends feature is functionally complete with all build errors resolved. The feature follows the dual-document pattern in Cosmos DB for efficient reads. Frontend screens are wired to real API data. Invite/search screens restricted to friends-only. Friend profile page now shows groups in common and hangouts together. Privacy enforcement added — common data endpoints require accepted friendship.
+Friends feature is functionally complete. Hangout stats (Going/Maybe counts) now display accurately — backend returns separate `GoingCount` and `MaybeCount` on `HangoutSummaryResponse`, and frontend correctly distinguishes Pending (no response) from Maybe (responded "maybe"). The hangout detail page uses 3 response tabs: Going, Maybe, Can't Go.
 
 ## Known Issues
 

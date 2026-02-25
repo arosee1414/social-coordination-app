@@ -59,7 +59,10 @@ function applyFilters(
         switch (filters.rsvp) {
             case 'pending':
                 result = result.filter(
-                    (h) => h.userStatus === 'maybe' || h.userStatus === null,
+                    (h) =>
+                        h.userStatus === 'maybe' ||
+                        h.userStatus === 'pending' ||
+                        h.userStatus === null,
                 );
                 break;
             case 'accepted':

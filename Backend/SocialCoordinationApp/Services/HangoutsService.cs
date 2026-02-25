@@ -166,6 +166,7 @@ public class HangoutsService : IHangoutsService
         return hangouts.Select(h =>
         {
             var goingAttendees = h.Attendees.Where(a => a.RsvpStatus == RSVPStatus.Going).ToList();
+            var maybeCount = h.Attendees.Count(a => a.RsvpStatus == RSVPStatus.Maybe);
             return new HangoutSummaryResponse
             {
                 Id = h.Id,
@@ -176,6 +177,7 @@ public class HangoutsService : IHangoutsService
                 EndTime = h.EndTime,
                 AttendeeCount = h.Attendees.Count,
                 GoingCount = goingAttendees.Count,
+                MaybeCount = maybeCount,
                 Status = h.Status,
                 CurrentUserRsvpStatus = h.Attendees
                     .FirstOrDefault(a => a.UserId == userId)?.RsvpStatus,
@@ -434,6 +436,7 @@ public class HangoutsService : IHangoutsService
         return hangouts.Select(h =>
         {
             var goingAttendees = h.Attendees.Where(a => a.RsvpStatus == RSVPStatus.Going).ToList();
+            var maybeCount = h.Attendees.Count(a => a.RsvpStatus == RSVPStatus.Maybe);
             return new HangoutSummaryResponse
             {
                 Id = h.Id,
@@ -444,6 +447,7 @@ public class HangoutsService : IHangoutsService
                 EndTime = h.EndTime,
                 AttendeeCount = h.Attendees.Count,
                 GoingCount = goingAttendees.Count,
+                MaybeCount = maybeCount,
                 Status = h.Status,
                 CurrentUserRsvpStatus = h.Attendees
                     .FirstOrDefault(a => a.UserId == currentUserId)?.RsvpStatus,

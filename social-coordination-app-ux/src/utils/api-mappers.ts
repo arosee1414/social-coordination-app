@@ -35,8 +35,9 @@ export function mapRsvpStatus(status: ApiRSVPStatus | undefined): RSVPStatus {
         case ApiRSVPStatus.Going:
             return 'going';
         case ApiRSVPStatus.Maybe:
-        case ApiRSVPStatus.Pending:
             return 'maybe';
+        case ApiRSVPStatus.Pending:
+            return 'pending';
         case ApiRSVPStatus.NotGoing:
             return 'not-going';
         default:
@@ -140,8 +141,8 @@ export function mapHangoutSummaryToHangout(response: HangoutSummaryResponse): Ha
         creator: '', // Not available in summary response
         creatorId: response.createdByUserId ?? '',
         groupId: response.groupId ?? null,
-        going: response.attendeeCount ?? 0,
-        maybe: 0, // Not available in summary
+        going: response.goingCount ?? 0,
+        maybe: response.maybeCount ?? 0,
         userStatus: mapRsvpStatus(response.currentUserRsvpStatus),
         attendeesPreview: response.attendeeAvatarUrls ?? [],
         status: hangoutStatus,
@@ -216,8 +217,10 @@ export function mapAttendeesToRsvpGroups(attendees: HangoutAttendeeResponse[]): 
                 going.push(mapped);
                 break;
             case ApiRSVPStatus.Maybe:
-            case ApiRSVPStatus.Pending:
                 maybe.push(mapped);
+                break;
+            case ApiRSVPStatus.Pending:
+                pending.push(mapped);
                 break;
             case ApiRSVPStatus.NotGoing:
                 notGoing.push(mapped);

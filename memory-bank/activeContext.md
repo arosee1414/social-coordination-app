@@ -2,17 +2,32 @@
 
 ## Current Work Focus
 
-Bug fix — RSVP attendee list self-navigation.
+Hangout stats accuracy fix completed. Ready for next task.
 
 ## What Was Just Accomplished
 
-- **Fixed self-friendship request bug:** In `hangout/[id].tsx`, the RSVP attendee list `onPress` handler now checks if `attendee.userId === user?.id`. If the tapped attendee is the current user, it navigates to `/(tabs)/profile` instead of `/friend/${attendee.userId}`, which was incorrectly showing the "Add Friend" button for yourself.
+- **Fixed hangout Going/Maybe stats inaccuracy:** `Pending` RSVP attendees were incorrectly counted as "Maybe" on both backend summary and frontend mapper.
+
+### Backend Changes
+
+- Added `MaybeCount` property to `HangoutSummaryResponse` DTO
+- Updated `HangoutsService.GetUserHangoutsAsync()` and `GetCommonHangoutsAsync()` to compute `MaybeCount` from attendees with `RSVPStatus.Maybe` (not Pending)
+- Regenerated frontend TypeScript API client
+
+### Frontend Changes
+
+- `api-mappers.ts` — `mapRsvpStatus()`: separated `Pending` from `Maybe` (Pending now returns `'pending'`, not `'maybe'`)
+- `api-mappers.ts` — `mapHangoutSummaryToHangout()`: uses `response.goingCount` (was `attendeeCount`) and `response.maybeCount` (was hardcoded 0)
+- `api-mappers.ts` — `mapAttendeesToRsvpGroups()`: Pending attendees go to `pending[]` array, not `maybe[]`
+- `hangouts.tsx` — RSVP "pending" filter now includes `userStatus === 'pending'`
+- `hangout/[id].tsx` — Kept 3 tabs (Going/Maybe/Can't Go), no Invited tab per user preference
 
 ## Key Decisions Made
 
-- **Backend enforcement + frontend gating**: Both layers enforce the restriction — backend returns 403 for unauthorized access, frontend avoids making the calls entirely when not friends
-- **Stats row stays visible for everyone**: Friend count is always shown; Groups and Hangouts stats show `—` for non-friends
-- **Reactive fetching**: Using `friendshipStatus.status` as a `useEffect` dependency ensures common data is fetched immediately when friendship is accepted (no page reload needed)
+- **Separate Pending from Maybe**: Pending (hasn't responded) is distinct from Maybe (responded "maybe"). Fixes inflated Maybe counts.
+- **No Invited tab on hangout detail**: User prefers keeping the detail page at 3 RSVP tabs only
+- **Backend enforcement + frontend gating**: Both layers enforce restrictions — backend returns 403 for unauthorized access, frontend avoids making calls when not friends
+- **Stats row stays visible for everyone**: Friend count always shown; Groups and Hangouts stats show `—` for non-friends
 
 ## Previous Context
 
@@ -20,10 +35,11 @@ Bug fix — RSVP attendee list self-navigation.
 - **Dual-document pattern**: Each friendship creates two mirrored Cosmos DB documents (one per user as partition key) for efficient single-partition reads
 - **FriendRequest type**: Uses `displayName`/`avatarUrl` (matching generated DTO), while `Friend` type uses `name`/`avatar` (mapped in frontend)
 - **Direction casing**: Backend sends `"Incoming"`/`"Outgoing"` (PascalCase), frontend `useApiFriendshipStatus` normalizes to `"incoming"`/`"outgoing"` (lowercase)
+- **Self-navigation fix**: Hangout attendee list `onPress` routes to `/(tabs)/profile` when tapping yourself instead of `/friend/${userId}`
 
 ## Remaining Work
 
-- **Testing**: End-to-end testing of privacy enforcement (non-friend profile view, accept → immediate data load)
+- **Testing**: End-to-end testing of stats accuracy with various RSVP combinations
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 
 ## Important Patterns & Preferences

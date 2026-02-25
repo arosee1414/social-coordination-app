@@ -2074,6 +2074,13 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
             }
             return Promise.resolve<GroupSummaryResponse[]>(result200);
 
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2134,6 +2141,13 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
                 result200 = <any>null;
             }
             return Promise.resolve<HangoutSummaryResponse[]>(result200);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = ProblemDetails.fromJS(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -2955,6 +2969,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
     endTime?: Date | undefined;
     attendeeCount?: number;
     goingCount?: number;
+    maybeCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
     createdByUserId?: string | undefined;
@@ -2980,6 +2995,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
             this.endTime = _data["endTime"] ? new Date(_data["endTime"].toString()) : <any>undefined;
             this.attendeeCount = _data["attendeeCount"];
             this.goingCount = _data["goingCount"];
+            this.maybeCount = _data["maybeCount"];
             this.status = _data["status"];
             this.currentUserRsvpStatus = _data["currentUserRsvpStatus"];
             this.createdByUserId = _data["createdByUserId"];
@@ -3009,6 +3025,7 @@ export class HangoutSummaryResponse implements IHangoutSummaryResponse {
         data["endTime"] = this.endTime ? this.endTime.toISOString() : <any>undefined;
         data["attendeeCount"] = this.attendeeCount;
         data["goingCount"] = this.goingCount;
+        data["maybeCount"] = this.maybeCount;
         data["status"] = this.status;
         data["currentUserRsvpStatus"] = this.currentUserRsvpStatus;
         data["createdByUserId"] = this.createdByUserId;
@@ -3031,6 +3048,7 @@ export interface IHangoutSummaryResponse {
     endTime?: Date | undefined;
     attendeeCount?: number;
     goingCount?: number;
+    maybeCount?: number;
     status?: HangoutStatus;
     currentUserRsvpStatus?: RSVPStatus;
     createdByUserId?: string | undefined;
