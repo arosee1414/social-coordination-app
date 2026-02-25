@@ -18,6 +18,10 @@ Privacy enforcement for friend profiles — restricting common groups/hangouts d
     - **Immediate fetch on accept**: When a user taps "Confirm" to accept a friend request, the status transitions to `'accepted'`, which triggers the `useEffect` dependency change and automatically fetches common groups/hangouts
     - Stats row shows `—` for Groups and Hangouts columns when not friends; shows real counts when friends
 
+- **"Not friends" notice on profile page:**
+    - When viewing a non-friend's profile (and status is loaded), a centered notice appears below the action button with a lock icon and message: "Add [name] as a friend to see their activity and invite them to hangouts."
+    - Disappears when friendship is accepted (replaced by Groups in Common / Hangouts Together sections)
+
 ## Key Decisions Made
 
 - **Backend enforcement + frontend gating**: Both layers enforce the restriction — backend returns 403 for unauthorized access, frontend avoids making the calls entirely when not friends

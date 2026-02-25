@@ -664,6 +664,26 @@ export default function FriendProfileScreen() {
                     </View>
                 </View>
 
+                {/* Not Friends Notice */}
+                {!isFriend && !statusLoading && (
+                    <View style={styles.notFriendNotice}>
+                        <Ionicons
+                            name='lock-closed-outline'
+                            size={28}
+                            color={colors.textTertiary}
+                        />
+                        <Text
+                            style={[
+                                styles.notFriendText,
+                                { color: colors.textSecondary },
+                            ]}
+                        >
+                            Add {user.displayName} as a friend to see their
+                            activity and invite them to hangouts.
+                        </Text>
+                    </View>
+                )}
+
                 {/* Groups in Common */}
                 {isFriend && (
                     <View style={styles.section}>
@@ -1151,5 +1171,18 @@ const styles = StyleSheet.create({
     emptySectionText: {
         fontSize: 14,
         fontWeight: '500',
+    },
+    // Not friend notice
+    notFriendNotice: {
+        alignItems: 'center',
+        paddingHorizontal: 40,
+        paddingVertical: 32,
+        gap: 12,
+    },
+    notFriendText: {
+        fontSize: 14,
+        fontWeight: '500',
+        textAlign: 'center',
+        lineHeight: 20,
     },
 });
