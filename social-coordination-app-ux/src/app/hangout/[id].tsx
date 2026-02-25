@@ -544,9 +544,15 @@ export default function HangoutDetailScreen() {
                                     style={[shared.listItem]}
                                     onPress={() => {
                                         if (attendee.userId) {
-                                            router.push(
-                                                `/friend/${attendee.userId}` as any,
-                                            );
+                                            if (attendee.userId === user?.id) {
+                                                router.push(
+                                                    '/(tabs)/profile' as any,
+                                                );
+                                            } else {
+                                                router.push(
+                                                    `/friend/${attendee.userId}` as any,
+                                                );
+                                            }
                                         }
                                     }}
                                 >

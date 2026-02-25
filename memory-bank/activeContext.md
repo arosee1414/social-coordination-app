@@ -2,11 +2,11 @@
 
 ## Current Work Focus
 
-Edit hangout page guard — preventing invite management after hangout ends.
+Bug fix — RSVP attendee list self-navigation.
 
 ## What Was Just Accomplished
 
-- **Disabled "Manage Invites" on ended hangouts:** In `edit-hangout/[id].tsx`, added `hangoutStatus` and `hangoutEndTime` state variables populated from the API response. Derived an `isHangoutEnded` boolean that is `true` when `status` is `Cancelled` or `Completed`, or when `endTime` is in the past. The "Manage Invites" button is now disabled (opacity 0.5 + `disabled` prop) with a helper text explaining why when the hangout has ended.
+- **Fixed self-friendship request bug:** In `hangout/[id].tsx`, the RSVP attendee list `onPress` handler now checks if `attendee.userId === user?.id`. If the tapped attendee is the current user, it navigates to `/(tabs)/profile` instead of `/friend/${attendee.userId}`, which was incorrectly showing the "Add Friend" button for yourself.
 
 ## Key Decisions Made
 
