@@ -2,14 +2,20 @@
 
 ## Current Work Focus
 
-Find-friends stale status bug fixed. Ready for next task.
+Added 20 seed users and fixed self-result bug in find friends search. Ready for next task.
 
 ## What Was Just Accomplished
 
-- **find-friends.tsx stale friendship status fix:**
-    - Bug: After searching for a user, navigating to their profile, sending a friend request, and hitting back — the search results still showed "Add Friend" instead of "Requested/Cancel"
-    - Root cause: `useEffect` for fetching friendship statuses only triggered on `results` change, not on screen re-focus
-    - Fix: Extracted status-fetching logic into a reusable `fetchStatuses` callback, added `useFocusEffect` to re-fetch statuses when the screen regains focus (with guard to skip initial mount and avoid double-fetching)
+- **Added 20 new seed users to `SeedService.cs`:**
+    - Added 20 new user ID constants (`user_seed_*`) and corresponding `UserRecord` entries
+    - Users: Emily Chen, Marcus Williams, Sofia Rodriguez, Ryan Patel, Ava Thompson, Noah Kim, Mia Jackson, Ethan Rivera, Chloe Nguyen, Liam O'Brien, Harper Davis, Caleb Martinez, Zoe Anderson, Dylan Scott, Lily Perez, Owen Murphy, Ella Wright, Aiden Brooks, Nora Sullivan, Tyler Hughes
+    - Total seed users: 27 (7 original + 20 new) plus Alex who already exists
+
+- **Fixed self-result bug in find friends search:**
+    - Bug: Current user appeared in their own search results with an "Add" button
+    - Fix: Added `currentUserId` parameter to `SearchUsersAsync` and added `c.id != @currentUserId` filter to the Cosmos DB query
+    - Files changed: `IUsersService.cs`, `UsersService.cs`, `UsersController.cs`
+    - No API contract change — endpoint signature unchanged, no client regeneration needed
 
 ## Key Decisions Made
 

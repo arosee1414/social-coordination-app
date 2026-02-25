@@ -77,7 +77,8 @@ public class UsersController : BaseApiController
     [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<UserResponse>>> SearchUsers([FromQuery] string q)
     {
-        var result = await _usersService.SearchUsersAsync(q);
+        var userId = GetUserId();
+        var result = await _usersService.SearchUsersAsync(q, userId);
         return Ok(result);
     }
 

@@ -91,7 +91,7 @@ public class UsersService : IUsersService
         }
     }
 
-    public async Task<List<UserResponse>> SearchUsersAsync(string query)
+    public async Task<List<UserResponse>> SearchUsersAsync(string query, string currentUserId)
     {
         if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
             throw new ArgumentException("Search query must be at least 2 characters");
@@ -99,8 +99,9 @@ public class UsersService : IUsersService
         var lowerQuery = query.ToLower();
 
         var queryDefinition = new QueryDefinition(
-            "SELECT * FROM c WHERE CONTAINS(LOWER(c.email), @query) OR CONTAINS(LOWER(c.firstName), @query) OR CONTAINS(LOWER(c.lastName), @query)")
-            .WithParameter("@query", lowerQuery);
+            "SELECT * FROM c WHERE c.id != @currentUserId AND (CONTAINS(LOWER(c.email), @query) OR CONTAINS(LOWER(c.firstName), @query) OR CONTAINS(LOWER(c.lastName), @query))")
+            .WithParameter("@query", lowerQuery)
+            .WithParameter("@currentUserId", currentUserId);
 
         var users = await _cosmosContext.UsersContainer
             .QueryItemsCrossPartitionAsync<UserRecord>(queryDefinition);

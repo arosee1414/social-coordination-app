@@ -20,6 +20,28 @@ public class SeedService : ISeedService
     private const string LukeId = "user_3A8aFuVqs6CYyepF5UWfep2CwL3";       // Luke Rosenthal
     private const string JakeId = "user_3A8aIYLpq5PosjzeaDKOxj4MHv0";       // Jake Rosenthal
 
+    // Additional seed users
+    private const string EmilyId = "user_seed_emily_chen_01";                // Emily Chen
+    private const string MarcusId = "user_seed_marcus_williams_02";          // Marcus Williams
+    private const string SofiaId = "user_seed_sofia_rodriguez_03";           // Sofia Rodriguez
+    private const string RyanId = "user_seed_ryan_patel_04";                 // Ryan Patel
+    private const string AvaId = "user_seed_ava_thompson_05";                // Ava Thompson
+    private const string NoahId = "user_seed_noah_kim_06";                   // Noah Kim
+    private const string MiaId = "user_seed_mia_jackson_07";                 // Mia Jackson
+    private const string EthanId = "user_seed_ethan_rivera_08";              // Ethan Rivera
+    private const string ChloeId = "user_seed_chloe_nguyen_09";              // Chloe Nguyen
+    private const string LiamId = "user_seed_liam_obrien_10";                // Liam O'Brien
+    private const string HarperId = "user_seed_harper_davis_11";             // Harper Davis
+    private const string CalebId = "user_seed_caleb_martinez_12";            // Caleb Martinez
+    private const string ZoeId = "user_seed_zoe_anderson_13";                // Zoe Anderson
+    private const string DylanId = "user_seed_dylan_scott_14";               // Dylan Scott
+    private const string LilyId = "user_seed_lily_perez_15";                 // Lily Perez
+    private const string OwenId = "user_seed_owen_murphy_16";                // Owen Murphy
+    private const string EllaId = "user_seed_ella_wright_17";                // Ella Wright
+    private const string AidenId = "user_seed_aiden_brooks_18";              // Aiden Brooks
+    private const string NoraId = "user_seed_nora_sullivan_19";              // Nora Sullivan
+    private const string TylerId = "user_seed_tyler_hughes_20";              // Tyler Hughes
+
     // Group IDs
     private const string GroupId1 = "seed-group-01";
     private const string GroupId2 = "seed-group-02";
@@ -128,6 +150,207 @@ public class SeedService : ISeedService
                 LastName = "Rosenthal",
                 ProfileImageUrl = null,
                 CreatedAt = now.AddDays(-10),
+                UpdatedAt = now
+            },
+            // --- 20 additional seed users ---
+            new()
+            {
+                Id = EmilyId,
+                Email = "emily.chen@gmail.com",
+                FirstName = "Emily",
+                LastName = "Chen",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-30),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = MarcusId,
+                Email = "marcus.williams@gmail.com",
+                FirstName = "Marcus",
+                LastName = "Williams",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-29),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = SofiaId,
+                Email = "sofia.rodriguez@gmail.com",
+                FirstName = "Sofia",
+                LastName = "Rodriguez",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-27),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = RyanId,
+                Email = "ryan.patel@gmail.com",
+                FirstName = "Ryan",
+                LastName = "Patel",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-26),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = AvaId,
+                Email = "ava.thompson@gmail.com",
+                FirstName = "Ava",
+                LastName = "Thompson",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-24),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = NoahId,
+                Email = "noah.kim@gmail.com",
+                FirstName = "Noah",
+                LastName = "Kim",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-23),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = MiaId,
+                Email = "mia.jackson@gmail.com",
+                FirstName = "Mia",
+                LastName = "Jackson",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-22),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = EthanId,
+                Email = "ethan.rivera@gmail.com",
+                FirstName = "Ethan",
+                LastName = "Rivera",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-21),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = ChloeId,
+                Email = "chloe.nguyen@gmail.com",
+                FirstName = "Chloe",
+                LastName = "Nguyen",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-19),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = LiamId,
+                Email = "liam.obrien@gmail.com",
+                FirstName = "Liam",
+                LastName = "O'Brien",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-17),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = HarperId,
+                Email = "harper.davis@gmail.com",
+                FirstName = "Harper",
+                LastName = "Davis",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-16),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = CalebId,
+                Email = "caleb.martinez@gmail.com",
+                FirstName = "Caleb",
+                LastName = "Martinez",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-14),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = ZoeId,
+                Email = "zoe.anderson@gmail.com",
+                FirstName = "Zoe",
+                LastName = "Anderson",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-13),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = DylanId,
+                Email = "dylan.scott@gmail.com",
+                FirstName = "Dylan",
+                LastName = "Scott",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-11),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = LilyId,
+                Email = "lily.perez@gmail.com",
+                FirstName = "Lily",
+                LastName = "Perez",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-9),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = OwenId,
+                Email = "owen.murphy@gmail.com",
+                FirstName = "Owen",
+                LastName = "Murphy",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-8),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = EllaId,
+                Email = "ella.wright@gmail.com",
+                FirstName = "Ella",
+                LastName = "Wright",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-7),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = AidenId,
+                Email = "aiden.brooks@gmail.com",
+                FirstName = "Aiden",
+                LastName = "Brooks",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-6),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = NoraId,
+                Email = "nora.sullivan@gmail.com",
+                FirstName = "Nora",
+                LastName = "Sullivan",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-5),
+                UpdatedAt = now
+            },
+            new()
+            {
+                Id = TylerId,
+                Email = "tyler.hughes@gmail.com",
+                FirstName = "Tyler",
+                LastName = "Hughes",
+                ProfileImageUrl = null,
+                CreatedAt = now.AddDays(-4),
                 UpdatedAt = now
             }
         };
