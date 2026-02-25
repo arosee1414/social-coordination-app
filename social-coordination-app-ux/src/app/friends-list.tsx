@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,7 +8,15 @@ import {
     Image,
     ActivityIndicator,
     Alert,
+    Pressable,
 } from 'react-native';
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+    runOnJS,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -23,6 +31,73 @@ export default function FriendsListScreen() {
     const router = useRouter();
     const colors = useThemeColors();
     const [activeTab, setActiveTab] = useState<Tab>('friends');
+
+    const [removeSheetFriend, setRemoveSheetFriend] = useState<Friend | null>(
+        null,
+    );
+    const [isSheetRendered, setIsSheetRendered] = useState(false);
+
+    const SHEET_HIDDEN_Y = 400;
+    const CLOSE_THRESHOLD = 50;
+    const sheetTranslateY = useSharedValue(SHEET_HIDDEN_Y);
+    const overlayOpacity = useSharedValue(0);
+
+    const openSheet = useCallback(
+        (friend: Friend) => {
+            setRemoveSheetFriend(friend);
+            setIsSheetRendered(true);
+            overlayOpacity.value = withTiming(1, { duration: 200 });
+            sheetTranslateY.value = withTiming(0, { duration: 250 });
+        },
+        [overlayOpacity, sheetTranslateY],
+    );
+
+    const closeSheet = useCallback(() => {
+        overlayOpacity.value = withTiming(0, { duration: 200 });
+        sheetTranslateY.value = withTiming(
+            SHEET_HIDDEN_Y,
+            { duration: 250 },
+            () => {
+                runOnJS(setIsSheetRendered)(false);
+                runOnJS(setRemoveSheetFriend)(null);
+            },
+        );
+    }, [overlayOpacity, sheetTranslateY]);
+
+    const panGesture = Gesture.Pan()
+        .onUpdate((event) => {
+            if (event.translationY > 0) {
+                sheetTranslateY.value = event.translationY;
+                overlayOpacity.value = Math.max(
+                    0,
+                    1 - event.translationY / SHEET_HIDDEN_Y,
+                );
+            }
+        })
+        .onEnd((event) => {
+            if (event.translationY > CLOSE_THRESHOLD) {
+                overlayOpacity.value = withTiming(0, { duration: 200 });
+                sheetTranslateY.value = withTiming(
+                    SHEET_HIDDEN_Y,
+                    { duration: 200 },
+                    () => {
+                        runOnJS(setIsSheetRendered)(false);
+                        runOnJS(setRemoveSheetFriend)(null);
+                    },
+                );
+            } else {
+                sheetTranslateY.value = withTiming(0, { duration: 200 });
+                overlayOpacity.value = withTiming(1, { duration: 200 });
+            }
+        });
+
+    const overlayAnimatedStyle = useAnimatedStyle(() => ({
+        opacity: overlayOpacity.value,
+    }));
+
+    const sheetAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [{ translateY: sheetTranslateY.value }],
+    }));
 
     const {
         friends,
@@ -41,28 +116,15 @@ export default function FriendsListScreen() {
     const incomingRequests = requests.filter((r) => r.direction === 'Incoming');
     const outgoingRequests = requests.filter((r) => r.direction === 'Outgoing');
 
-    const handleRemoveFriend = (friend: Friend) => {
-        Alert.alert(
-            'Remove Friend',
-            `Are you sure you want to remove ${friend.name} as a friend?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Remove',
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await removeFriend(friend.userId);
-                        } catch {
-                            Alert.alert(
-                                'Error',
-                                'Failed to remove friend. Please try again.',
-                            );
-                        }
-                    },
-                },
-            ],
-        );
+    const handleRemoveFriend = async () => {
+        if (!removeSheetFriend) return;
+        const friendId = removeSheetFriend.userId;
+        closeSheet();
+        try {
+            await removeFriend(friendId);
+        } catch {
+            Alert.alert('Error', 'Failed to remove friend. Please try again.');
+        }
     };
 
     const handleAcceptRequest = async (request: FriendRequest) => {
@@ -132,7 +194,7 @@ export default function FriendsListScreen() {
                 ) : null}
             </View>
             <TouchableOpacity
-                onPress={() => handleRemoveFriend(item)}
+                onPress={() => openSheet(item)}
                 hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
             >
                 <Ionicons
@@ -190,25 +252,34 @@ export default function FriendsListScreen() {
             <View style={styles.requestActions}>
                 <TouchableOpacity
                     style={[
-                        styles.acceptButton,
+                        styles.confirmButton,
                         { backgroundColor: colors.primary },
                     ]}
                     onPress={() => handleAcceptRequest(item)}
+                    activeOpacity={0.7}
                 >
-                    <Ionicons name='checkmark' size={18} color='#FFFFFF' />
+                    <Text style={styles.confirmButtonText}>Confirm</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[
-                        styles.rejectButton,
-                        { backgroundColor: colors.surfaceTertiary },
+                        styles.deleteButton,
+                        {
+                            backgroundColor: colors.surfaceTertiary,
+                            borderWidth: 1,
+                            borderColor: colors.cardBorderHeavy,
+                        },
                     ]}
                     onPress={() => handleRejectRequest(item)}
+                    activeOpacity={0.7}
                 >
-                    <Ionicons
-                        name='close'
-                        size={18}
-                        color={colors.textSecondary}
-                    />
+                    <Text
+                        style={[
+                            styles.deleteButtonText,
+                            { color: colors.text },
+                        ]}
+                    >
+                        Delete
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -476,6 +547,137 @@ export default function FriendsListScreen() {
 
             {/* Content */}
             {activeTab === 'friends' ? renderFriendsTab() : renderRequestsTab()}
+
+            {/* Remove Friend Bottom Sheet */}
+            {isSheetRendered && (
+                <View style={StyleSheet.absoluteFill} pointerEvents='box-none'>
+                    <Animated.View
+                        style={[
+                            styles.bottomSheetOverlay,
+                            { backgroundColor: colors.overlayBg },
+                            overlayAnimatedStyle,
+                        ]}
+                    >
+                        <Pressable
+                            style={StyleSheet.absoluteFill}
+                            onPress={closeSheet}
+                        />
+                    </Animated.View>
+                    <GestureDetector gesture={panGesture}>
+                        <Animated.View
+                            style={[
+                                styles.bottomSheetContainer,
+                                { backgroundColor: colors.bottomSheetBg },
+                                sheetAnimatedStyle,
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.bottomSheetHandle,
+                                    {
+                                        backgroundColor:
+                                            colors.bottomSheetHandle,
+                                    },
+                                ]}
+                            />
+                            {removeSheetFriend && (
+                                <View style={styles.bottomSheetHeader}>
+                                    <View style={styles.bottomSheetAvatarRow}>
+                                        {removeSheetFriend.avatar ? (
+                                            <Image
+                                                source={{
+                                                    uri: removeSheetFriend.avatar,
+                                                }}
+                                                style={styles.bottomSheetAvatar}
+                                            />
+                                        ) : (
+                                            <View
+                                                style={[
+                                                    styles.bottomSheetAvatar,
+                                                    styles.bottomSheetAvatarFallback,
+                                                    {
+                                                        backgroundColor:
+                                                            colors.indigo50,
+                                                    },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        styles.bottomSheetAvatarText,
+                                                        {
+                                                            color: colors.primary,
+                                                        },
+                                                    ]}
+                                                >
+                                                    {removeSheetFriend.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </Text>
+                                            </View>
+                                        )}
+                                        <Text
+                                            style={[
+                                                styles.bottomSheetName,
+                                                { color: colors.text },
+                                            ]}
+                                        >
+                                            {removeSheetFriend.name}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                            <TouchableOpacity
+                                style={styles.bottomSheetActionRow}
+                                onPress={handleRemoveFriend}
+                                activeOpacity={0.6}
+                            >
+                                <View
+                                    style={[
+                                        styles.bottomSheetActionIcon,
+                                        {
+                                            backgroundColor:
+                                                'rgba(255, 59, 48, 0.1)',
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name='person-remove-outline'
+                                        size={22}
+                                        color={colors.error}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        styles.bottomSheetActionText,
+                                        { color: colors.error },
+                                    ]}
+                                >
+                                    Remove Friend
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.cancelBtn,
+                                    {
+                                        backgroundColor: colors.surfaceTertiary,
+                                    },
+                                ]}
+                                activeOpacity={0.7}
+                                onPress={closeSheet}
+                            >
+                                <Text
+                                    style={[
+                                        styles.cancelText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </GestureDetector>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
@@ -556,21 +758,30 @@ const styles = StyleSheet.create({
     },
     requestActions: {
         flexDirection: 'row',
-        gap: 6,
+        gap: 8,
     },
-    acceptButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    confirmButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    rejectButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+    confirmButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#FFFFFF',
+    },
+    deleteButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    deleteButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
     },
     pendingBadge: {
         paddingHorizontal: 10,
@@ -612,6 +823,83 @@ const styles = StyleSheet.create({
     },
     findFriendsButtonText: {
         color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    // Bottom sheet
+    bottomSheetOverlay: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    bottomSheetContainer: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingHorizontal: 24,
+        paddingTop: 12,
+        paddingBottom: 36,
+    },
+    bottomSheetHandle: {
+        width: 36,
+        height: 4,
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 16,
+    },
+    bottomSheetHeader: {
+        marginBottom: 8,
+    },
+    bottomSheetAvatarRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingVertical: 8,
+    },
+    bottomSheetAvatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+    },
+    bottomSheetAvatarFallback: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bottomSheetAvatarText: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    bottomSheetName: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    bottomSheetActionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+        paddingVertical: 14,
+    },
+    bottomSheetActionIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    bottomSheetActionText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    cancelBtn: {
+        width: '100%',
+        height: 56,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    cancelText: {
         fontSize: 16,
         fontWeight: '600',
     },

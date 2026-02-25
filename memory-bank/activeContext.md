@@ -2,31 +2,37 @@
 
 ## Current Work Focus
 
-Friend profile page enhancement — showing groups in common and shared hangouts on the friend detail page.
+Instagram-style redesign of friend action buttons (remove friend, accept/decline requests).
 
 ## What Was Just Accomplished
 
-- **Friend profile page enrichment**: Enhanced `friend/[id].tsx` to show complete friend info including:
-    - **Stats row**: Friends count, Groups in common count, Hangouts together count
-    - **Groups in Common section**: Lists shared groups with emoji, name, member count; tappable to navigate to group detail
-    - **Hangouts Together section**: Lists shared hangouts with title, date, location; tappable to navigate to hangout detail
-    - Proper empty states for both sections when no data exists
-    - Loading indicators while data fetches
-    - Sections only shown when friendship status is "accepted"
+- **Instagram-style friend actions redesign** across two screens:
 
-- **Backend: New API endpoints**: Added two new endpoints to `UsersController`:
-    - `GET /api/users/{userId}/common-groups` → Returns groups where both current user and target user are members
-    - `GET /api/users/{userId}/common-hangouts` → Returns hangouts where both current user and target user are attendees
-    - Implemented via `GetCommonGroupsAsync` in `GroupsService` and `GetCommonHangoutsAsync` in `HangoutsService`
-    - Uses Cosmos DB cross-partition queries with `ARRAY_CONTAINS` for member/attendee matching
+    **Friend Profile Page (`friend/[id].tsx`):**
+    - "Friends" status now shows as a single muted button (gray bg) with people icon + chevron-down, tapping opens a bottom sheet
+    - Bottom sheet has "Remove Friend" (red destructive row with icon) and full-width "Cancel" button
+    - Incoming requests now show side-by-side "Confirm" (filled primary blue) + "Delete" (outlined muted) text buttons — Instagram style
+    - Outgoing requests show a single "Requested" muted button
+    - "Add Friend" button remains as filled primary
+    - Button border radius changed from 24 (pill) to 10 (rounded rectangle) to match Instagram's style
 
-- **TypeScript API client regenerated**: New `commonGroups(userId)` and `commonHangouts(userId)` methods available in generated client
+    **Friends List Page (`friends-list.tsx`):**
+    - `•••` ellipsis on friend rows now opens a **bottom sheet** (with friend avatar + name header) instead of a direct Alert.alert
+    - Bottom sheet shows "Remove Friend" (red destructive) and full-width "Cancel" button
+    - Incoming request rows now have compact **"Confirm" + "Delete" text-labeled buttons** instead of small icon-only circles
+
+- **Bottom sheet consistency across all screens:**
+    - Both friend bottom sheets now use **Reanimated animated slide-up/down** (matching FABBottomSheet and HangoutFilterSheet)
+    - **Swipe-down-to-dismiss** gesture via `Gesture.Pan()` with 50px threshold (same as FABBottomSheet)
+    - **Cancel button** is now a full-width, 56px tall, rounded-12 button with `surfaceTertiary` bg and `textSecondary` text (matching FABBottomSheet's `cancelBtn` style)
+    - Replaced React Native `Modal` with conditionally-rendered absolute-fill `Animated.View` pattern
 
 ## Key Decisions Made
 
-- **Reused existing DTOs**: No new response types/DTOs needed — `GroupSummaryResponse` and `HangoutSummaryResponse` work for both endpoints
-- **Frontend uses direct API calls**: Instead of new hooks, the friend page directly calls `apiClient.commonGroups()` and `apiClient.commonHangouts()` via `useEffect`
-- **Sections conditional on friendship**: Groups in common and Hangouts together sections only render when `friendshipStatus.status === 'accepted'`
+- **Bottom sheet pattern**: All bottom sheets now use Reanimated + GestureDetector (not Modal) for consistent animated slide + swipe-to-dismiss
+- **Cancel button style**: Full-width muted button (cancelBtn: width 100%, height 56, borderRadius 12, surfaceTertiary bg) — consistent across FABBottomSheet, friend/[id].tsx, friends-list.tsx
+- **Instagram naming**: Used "Confirm" and "Delete" (Instagram's terminology) instead of "Accept" and "Decline/Reject"
+- **Friend list bottom sheet includes avatar**: Shows the friend's avatar and name in the sheet header for context before destructive action
 
 ## Previous Context
 
@@ -36,7 +42,7 @@ Friend profile page enhancement — showing groups in common and shared hangouts
 
 ## Remaining Work
 
-- **Testing**: End-to-end testing of friend profile with common groups/hangouts data
+- **Testing**: End-to-end testing of redesigned friend actions and bottom sheet animations on both screens
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 
 ## Important Patterns & Preferences
