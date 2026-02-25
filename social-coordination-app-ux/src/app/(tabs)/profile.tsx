@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import {
     View,
     Text,
@@ -8,6 +14,7 @@ import {
     ActivityIndicator,
     Animated,
     RefreshControl,
+    Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,8 +22,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useClerk } from '@clerk/clerk-expo';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { profileStats, settingsSections } from '@/src/data/mock-data';
+import { settingsSections } from '@/src/data/mock-data';
 import { useApiUser } from '@/src/hooks/useApiUser';
+import { useHangouts } from '@/src/contexts/HangoutsContext';
+import { useApiGroups } from '@/src/hooks/useApiGroups';
 
 export default function ProfileScreen() {
     const colors = useThemeColors();
@@ -24,6 +33,8 @@ export default function ProfileScreen() {
     const router = useRouter();
     const { signOut } = useClerk();
     const { user, loading: userLoading, refetch } = useApiUser();
+    const { hangouts, refetch: refetchHangouts } = useHangouts();
+    const { groups, refetch: refetchGroups } = useApiGroups();
     const [refreshing, setRefreshing] = useState(false);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
@@ -43,14 +54,29 @@ export default function ProfileScreen() {
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await refetch();
+        await Promise.all([refetch(), refetchHangouts(), refetchGroups()]);
         setRefreshing(false);
-    }, [refetch]);
+    }, [refetch, refetchHangouts, refetchGroups]);
 
     const displayName = user
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Your Name'
         : 'Your Name';
     const displayEmail = user?.email ?? 'user@example.com';
+    const avatarUrl = user?.profileImageUrl;
+
+    // Compute real stats
+    const plansCreated = useMemo(() => {
+        if (!user?.id) return 0;
+        return hangouts.filter((h) => h.creatorId === user.id).length;
+    }, [hangouts, user?.id]);
+
+    const groupsCount = groups.length;
+
+    const profileStats = [
+        { label: 'Plans Created', value: String(plansCreated) },
+        { label: 'Groups', value: String(groupsCount) },
+        { label: 'Friends', value: '0' },
+    ];
 
     const handleSignOut = async () => {
         await signOut();
@@ -91,7 +117,18 @@ export default function ProfileScreen() {
                     >
                         <View style={s.avatarRow}>
                             <View style={s.avatar}>
-                                <Text style={{ fontSize: 32 }}>👤</Text>
+                                {avatarUrl ? (
+                                    <Image
+                                        source={{ uri: avatarUrl }}
+                                        style={s.avatarImage}
+                                    />
+                                ) : (
+                                    <Ionicons
+                                        name='person'
+                                        size={32}
+                                        color='rgba(255,255,255,0.7)'
+                                    />
+                                )}
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={s.profileName}>{displayName}</Text>
@@ -257,6 +294,12 @@ const s = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
     },
     profileName: {
         fontSize: 22,

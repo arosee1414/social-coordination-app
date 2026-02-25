@@ -3,9 +3,11 @@
 ## Current Work Focus
 
 - General UI refinements and feature improvements
-- Group-to-hangout invite flow
+- Profile page improvements (real data instead of mock)
 
 ## Recent Changes
+
+- **Profile page now shows real data instead of mock stats**: Replaced hardcoded mock `profileStats` (24 plans, 5 groups, 32 friends) with real API data. Avatar now renders the user's `profileImageUrl` from the API (with Ionicons `person` fallback). "Plans Created" count is computed by filtering hangouts where `creatorId === user.id`. "Groups" count uses `groups.length` from `useApiGroups()`. Removed "Friends" stat (not yet implemented — Phase 2). Pull-to-refresh now refetches user, hangouts, and groups data. Added `Image` import, `useHangouts`, and `useApiGroups` hooks to the profile screen.
 
 - **"Invite to Hangout" from group page now associates the group with the hangout (frontend-only)**: When tapping "Invite to Hangout" on the group detail page, the `groupId` is now passed through the entire create-hangout flow so the group is added to the hangout's `invitedGroupIds`.
     - `group/[id].tsx`: "Invite to Hangout" button now passes `{ groupId }` as a route param to `/create-hangout`.
