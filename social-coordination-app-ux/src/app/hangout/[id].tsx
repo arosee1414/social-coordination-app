@@ -12,7 +12,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
-import { findFriendIdByName } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { useApiHangoutDetail } from '@/src/hooks/useApiHangoutDetail';
 import { useApiUser } from '@/src/hooks/useApiUser';
@@ -544,12 +543,9 @@ export default function HangoutDetailScreen() {
                                     key={index}
                                     style={[shared.listItem]}
                                     onPress={() => {
-                                        const friendId = findFriendIdByName(
-                                            attendee.name,
-                                        );
-                                        if (friendId) {
+                                        if (attendee.userId) {
                                             router.push(
-                                                `/friend/${friendId}` as any,
+                                                `/friend/${attendee.userId}` as any,
                                             );
                                         }
                                     }}

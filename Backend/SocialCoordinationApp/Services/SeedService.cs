@@ -44,10 +44,11 @@ public class SeedService : ISeedService
         var usersCreated = await SeedUsersAsync();
         var groupsCreated = await SeedGroupsAsync();
         var hangoutsCreated = await SeedHangoutsAsync();
+        var friendshipsCreated = await SeedFriendshipsAsync();
 
         _logger.LogInformation(
-            "Seed complete: {Users} users, {Groups} groups, {Hangouts} hangouts created",
-            usersCreated, groupsCreated, hangoutsCreated);
+            "Seed complete: {Users} users, {Groups} groups, {Hangouts} hangouts, {Friendships} friendships created",
+            usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated);
 
         return new SeedResult(usersCreated, groupsCreated, hangoutsCreated);
     }
@@ -221,6 +222,122 @@ public class SeedService : ISeedService
             }
         }
 
+        return created;
+    }
+
+    private async Task<int> SeedFriendshipsAsync()
+    {
+        var now = DateTime.UtcNow;
+
+        // Create accepted friendships (dual documents per pair)
+        var acceptedPairs = new[]
+        {
+            (AlexId, LaceyId, now.AddDays(-20)),
+            (AlexId, JordanId, now.AddDays(-18)),
+            (AlexId, MattId, now.AddDays(-15)),
+            (AlexId, LukeId, now.AddDays(-10)),
+            (AlexId, JakeId, now.AddDays(-8)),
+            (LaceyId, PietroId, now.AddDays(-12)),
+            (LaceyId, KirstinId, now.AddDays(-11)),
+        };
+
+        // Create a pending incoming request from Pietro to Alex
+        var pendingPairs = new[]
+        {
+            (PietroId, AlexId, now.AddDays(-2)), // Pietro sent to Alex → Alex has incoming
+        };
+
+        int created = 0;
+
+        foreach (var (userId, friendId, timestamp) in acceptedPairs)
+        {
+            var doc1 = new FriendshipRecord
+            {
+                Id = $"{userId}_{friendId}",
+                UserId = userId,
+                FriendId = friendId,
+                Status = FriendshipStatus.Accepted,
+                Direction = null,
+                CreatedAt = timestamp,
+                UpdatedAt = timestamp
+            };
+            var doc2 = new FriendshipRecord
+            {
+                Id = $"{friendId}_{userId}",
+                UserId = friendId,
+                FriendId = userId,
+                Status = FriendshipStatus.Accepted,
+                Direction = null,
+                CreatedAt = timestamp,
+                UpdatedAt = timestamp
+            };
+
+            try
+            {
+                await _cosmosContext.FriendshipsContainer.CreateItemAsync(doc1, new PartitionKey(userId));
+                created++;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _logger.LogWarning("Friendship {Id} already exists, skipping", doc1.Id);
+            }
+
+            try
+            {
+                await _cosmosContext.FriendshipsContainer.CreateItemAsync(doc2, new PartitionKey(friendId));
+                created++;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _logger.LogWarning("Friendship {Id} already exists, skipping", doc2.Id);
+            }
+        }
+
+        foreach (var (senderId, receiverId, timestamp) in pendingPairs)
+        {
+            var outgoing = new FriendshipRecord
+            {
+                Id = $"{senderId}_{receiverId}",
+                UserId = senderId,
+                FriendId = receiverId,
+                Status = FriendshipStatus.Pending,
+                Direction = FriendshipDirection.Outgoing,
+                CreatedAt = timestamp,
+                UpdatedAt = timestamp
+            };
+            var incoming = new FriendshipRecord
+            {
+                Id = $"{receiverId}_{senderId}",
+                UserId = receiverId,
+                FriendId = senderId,
+                Status = FriendshipStatus.Pending,
+                Direction = FriendshipDirection.Incoming,
+                CreatedAt = timestamp,
+                UpdatedAt = timestamp
+            };
+
+            try
+            {
+                await _cosmosContext.FriendshipsContainer.CreateItemAsync(outgoing, new PartitionKey(senderId));
+                created++;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _logger.LogWarning("Friendship {Id} already exists, skipping", outgoing.Id);
+            }
+
+            try
+            {
+                await _cosmosContext.FriendshipsContainer.CreateItemAsync(incoming, new PartitionKey(receiverId));
+                created++;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                _logger.LogWarning("Friendship {Id} already exists, skipping", incoming.Id);
+            }
+        }
+
+        _logger.LogInformation("Created {Count} friendship documents", created);
         return created;
     }
 

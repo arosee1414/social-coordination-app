@@ -1,0 +1,618 @@
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    FlatList,
+    Image,
+    ActivityIndicator,
+    Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { useApiFriends } from '../hooks/useApiFriends';
+import { useApiFriendRequests } from '../hooks/useApiFriendRequests';
+import { Friend, FriendRequest } from '../types';
+
+type Tab = 'friends' | 'requests';
+
+export default function FriendsListScreen() {
+    const router = useRouter();
+    const colors = useThemeColors();
+    const [activeTab, setActiveTab] = useState<Tab>('friends');
+
+    const {
+        friends,
+        loading: friendsLoading,
+        removeFriend,
+        refetch: refetchFriends,
+    } = useApiFriends();
+
+    const {
+        requests,
+        loading: requestsLoading,
+        acceptRequest,
+        rejectRequest,
+    } = useApiFriendRequests();
+
+    const incomingRequests = requests.filter((r) => r.direction === 'Incoming');
+    const outgoingRequests = requests.filter((r) => r.direction === 'Outgoing');
+
+    const handleRemoveFriend = (friend: Friend) => {
+        Alert.alert(
+            'Remove Friend',
+            `Are you sure you want to remove ${friend.name} as a friend?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await removeFriend(friend.userId);
+                        } catch {
+                            Alert.alert(
+                                'Error',
+                                'Failed to remove friend. Please try again.',
+                            );
+                        }
+                    },
+                },
+            ],
+        );
+    };
+
+    const handleAcceptRequest = async (request: FriendRequest) => {
+        try {
+            await acceptRequest(request.userId);
+            refetchFriends();
+        } catch {
+            Alert.alert('Error', 'Failed to accept request. Please try again.');
+        }
+    };
+
+    const handleRejectRequest = async (request: FriendRequest) => {
+        try {
+            await rejectRequest(request.userId);
+        } catch {
+            Alert.alert('Error', 'Failed to reject request. Please try again.');
+        }
+    };
+
+    const renderFriendItem = ({ item }: { item: Friend }) => (
+        <TouchableOpacity
+            style={[styles.listItem, { backgroundColor: colors.card }]}
+            onPress={() => router.push(`/friend/${item.userId}`)}
+            activeOpacity={0.7}
+        >
+            <View style={styles.avatarContainer}>
+                {item.avatar ? (
+                    <Image
+                        source={{ uri: item.avatar }}
+                        style={styles.avatar}
+                    />
+                ) : (
+                    <View
+                        style={[
+                            styles.avatar,
+                            styles.avatarFallback,
+                            { backgroundColor: colors.indigo50 },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.avatarFallbackText,
+                                { color: colors.primary },
+                            ]}
+                        >
+                            {item.name.charAt(0).toUpperCase()}
+                        </Text>
+                    </View>
+                )}
+            </View>
+            <View style={styles.itemContent}>
+                <Text
+                    style={[styles.itemName, { color: colors.text }]}
+                    numberOfLines={1}
+                >
+                    {item.name}
+                </Text>
+                {item.friendsSince ? (
+                    <Text
+                        style={[
+                            styles.itemSubtext,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        Friends since {item.friendsSince}
+                    </Text>
+                ) : null}
+            </View>
+            <TouchableOpacity
+                onPress={() => handleRemoveFriend(item)}
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            >
+                <Ionicons
+                    name='ellipsis-horizontal'
+                    size={20}
+                    color={colors.textSecondary}
+                />
+            </TouchableOpacity>
+        </TouchableOpacity>
+    );
+
+    const renderIncomingRequestItem = ({ item }: { item: FriendRequest }) => (
+        <View style={[styles.listItem, { backgroundColor: colors.card }]}>
+            <View style={styles.avatarContainer}>
+                {item.avatarUrl ? (
+                    <Image
+                        source={{ uri: item.avatarUrl }}
+                        style={styles.avatar}
+                    />
+                ) : (
+                    <View
+                        style={[
+                            styles.avatar,
+                            styles.avatarFallback,
+                            { backgroundColor: colors.indigo50 },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.avatarFallbackText,
+                                { color: colors.primary },
+                            ]}
+                        >
+                            {item.displayName.charAt(0).toUpperCase()}
+                        </Text>
+                    </View>
+                )}
+            </View>
+            <View style={styles.itemContent}>
+                <Text
+                    style={[styles.itemName, { color: colors.text }]}
+                    numberOfLines={1}
+                >
+                    {item.displayName}
+                </Text>
+                <Text
+                    style={[
+                        styles.itemSubtext,
+                        { color: colors.textSecondary },
+                    ]}
+                >
+                    Sent {item.sentAt}
+                </Text>
+            </View>
+            <View style={styles.requestActions}>
+                <TouchableOpacity
+                    style={[
+                        styles.acceptButton,
+                        { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => handleAcceptRequest(item)}
+                >
+                    <Ionicons name='checkmark' size={18} color='#FFFFFF' />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        styles.rejectButton,
+                        { backgroundColor: colors.surfaceTertiary },
+                    ]}
+                    onPress={() => handleRejectRequest(item)}
+                >
+                    <Ionicons
+                        name='close'
+                        size={18}
+                        color={colors.textSecondary}
+                    />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+
+    const renderOutgoingRequestItem = ({ item }: { item: FriendRequest }) => (
+        <View style={[styles.listItem, { backgroundColor: colors.card }]}>
+            <View style={styles.avatarContainer}>
+                {item.avatarUrl ? (
+                    <Image
+                        source={{ uri: item.avatarUrl }}
+                        style={styles.avatar}
+                    />
+                ) : (
+                    <View
+                        style={[
+                            styles.avatar,
+                            styles.avatarFallback,
+                            { backgroundColor: colors.indigo50 },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.avatarFallbackText,
+                                { color: colors.primary },
+                            ]}
+                        >
+                            {item.displayName.charAt(0).toUpperCase()}
+                        </Text>
+                    </View>
+                )}
+            </View>
+            <View style={styles.itemContent}>
+                <Text
+                    style={[styles.itemName, { color: colors.text }]}
+                    numberOfLines={1}
+                >
+                    {item.displayName}
+                </Text>
+                <Text
+                    style={[
+                        styles.itemSubtext,
+                        { color: colors.textSecondary },
+                    ]}
+                >
+                    Request sent
+                </Text>
+            </View>
+            <View
+                style={[
+                    styles.pendingBadge,
+                    { backgroundColor: colors.surfaceTertiary },
+                ]}
+            >
+                <Text
+                    style={[
+                        styles.pendingBadgeText,
+                        { color: colors.textSecondary },
+                    ]}
+                >
+                    Pending
+                </Text>
+            </View>
+        </View>
+    );
+
+    const renderFriendsTab = () => {
+        if (friendsLoading) {
+            return (
+                <View style={styles.centered}>
+                    <ActivityIndicator size='large' color={colors.primary} />
+                </View>
+            );
+        }
+
+        if (friends.length === 0) {
+            return (
+                <View style={styles.centered}>
+                    <Ionicons
+                        name='people-outline'
+                        size={48}
+                        color={colors.textSecondary}
+                    />
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                        No friends yet
+                    </Text>
+                    <Text
+                        style={[
+                            styles.emptySubtext,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        Find and add friends to get started
+                    </Text>
+                    <TouchableOpacity
+                        style={[
+                            styles.findFriendsButton,
+                            { backgroundColor: colors.primary },
+                        ]}
+                        onPress={() => router.push('/find-friends')}
+                    >
+                        <Text style={styles.findFriendsButtonText}>
+                            Find Friends
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
+
+        return (
+            <FlatList
+                data={friends}
+                keyExtractor={(item) => item.userId}
+                renderItem={renderFriendItem}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+            />
+        );
+    };
+
+    const renderRequestsTab = () => {
+        if (requestsLoading) {
+            return (
+                <View style={styles.centered}>
+                    <ActivityIndicator size='large' color={colors.primary} />
+                </View>
+            );
+        }
+
+        if (incomingRequests.length === 0 && outgoingRequests.length === 0) {
+            return (
+                <View style={styles.centered}>
+                    <Ionicons
+                        name='mail-outline'
+                        size={48}
+                        color={colors.textSecondary}
+                    />
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                        No pending requests
+                    </Text>
+                    <Text
+                        style={[
+                            styles.emptySubtext,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        Friend requests will appear here
+                    </Text>
+                </View>
+            );
+        }
+
+        return (
+            <FlatList
+                data={[...incomingRequests, ...outgoingRequests]}
+                keyExtractor={(item) => `${item.direction}-${item.userId}`}
+                renderItem={({ item }) =>
+                    item.direction === 'Incoming'
+                        ? renderIncomingRequestItem({ item })
+                        : renderOutgoingRequestItem({ item })
+                }
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                ListHeaderComponent={
+                    incomingRequests.length > 0 &&
+                    outgoingRequests.length > 0 ? (
+                        <View>
+                            <Text
+                                style={[
+                                    styles.sectionHeader,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Incoming
+                            </Text>
+                        </View>
+                    ) : null
+                }
+            />
+        );
+    };
+
+    return (
+        <SafeAreaView
+            style={[styles.container, { backgroundColor: colors.background }]}
+            edges={['top']}
+        >
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                >
+                    <Ionicons name='arrow-back' size={24} color={colors.text} />
+                </TouchableOpacity>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>
+                    Friends
+                </Text>
+                <TouchableOpacity onPress={() => router.push('/find-friends')}>
+                    <Ionicons
+                        name='person-add-outline'
+                        size={24}
+                        color={colors.primary}
+                    />
+                </TouchableOpacity>
+            </View>
+
+            {/* Tabs */}
+            <View
+                style={[
+                    styles.tabBar,
+                    { borderBottomColor: colors.cardBorder },
+                ]}
+            >
+                <TouchableOpacity
+                    style={[
+                        styles.tab,
+                        activeTab === 'friends' && [
+                            styles.activeTab,
+                            { borderBottomColor: colors.primary },
+                        ],
+                    ]}
+                    onPress={() => setActiveTab('friends')}
+                >
+                    <Text
+                        style={[
+                            styles.tabText,
+                            {
+                                color:
+                                    activeTab === 'friends'
+                                        ? colors.primary
+                                        : colors.textSecondary,
+                            },
+                        ]}
+                    >
+                        Friends ({friends.length})
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        styles.tab,
+                        activeTab === 'requests' && [
+                            styles.activeTab,
+                            { borderBottomColor: colors.primary },
+                        ],
+                    ]}
+                    onPress={() => setActiveTab('requests')}
+                >
+                    <Text
+                        style={[
+                            styles.tabText,
+                            {
+                                color:
+                                    activeTab === 'requests'
+                                        ? colors.primary
+                                        : colors.textSecondary,
+                            },
+                        ]}
+                    >
+                        Requests
+                        {requests.length > 0 ? ` (${requests.length})` : ''}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Content */}
+            {activeTab === 'friends' ? renderFriendsTab() : renderRequestsTab()}
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+    },
+    tabBar: {
+        flexDirection: 'row',
+        borderBottomWidth: 1,
+        marginHorizontal: 24,
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderBottomWidth: 2,
+        borderBottomColor: 'transparent',
+    },
+    activeTab: {
+        borderBottomWidth: 2,
+    },
+    tabText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    listContent: {
+        paddingHorizontal: 24,
+        paddingTop: 12,
+        paddingBottom: 24,
+    },
+    listItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        marginBottom: 4,
+    },
+    avatarContainer: {
+        marginRight: 12,
+    },
+    avatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+    },
+    avatarFallback: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarFallbackText: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    itemContent: {
+        flex: 1,
+    },
+    itemName: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    itemSubtext: {
+        fontSize: 13,
+        marginTop: 2,
+    },
+    requestActions: {
+        flexDirection: 'row',
+        gap: 6,
+    },
+    acceptButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    rejectButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    pendingBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 20,
+    },
+    pendingBadgeText: {
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    sectionHeader: {
+        fontSize: 13,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 8,
+    },
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginTop: 12,
+    },
+    emptySubtext: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    findFriendsButton: {
+        marginTop: 16,
+        paddingHorizontal: 24,
+        paddingVertical: 10,
+        borderRadius: 20,
+    },
+    findFriendsButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});

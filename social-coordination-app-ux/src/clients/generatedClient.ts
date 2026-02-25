@@ -12,6 +12,38 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Ca
 
 export interface ISocialCoordinationApiClient {
     /**
+     * @return Success
+     */
+    friendsAll(): Promise<FriendResponse[]>;
+    /**
+     * @return Success
+     */
+    count(userId: string): Promise<FriendCountResponse>;
+    /**
+     * @return Success
+     */
+    requests(): Promise<FriendRequestResponse[]>;
+    /**
+     * @return Success
+     */
+    status(friendId: string): Promise<FriendshipStatusResponse>;
+    /**
+     * @return No Content
+     */
+    request(friendId: string): Promise<void>;
+    /**
+     * @return No Content
+     */
+    accept(friendId: string): Promise<void>;
+    /**
+     * @return No Content
+     */
+    reject(friendId: string): Promise<void>;
+    /**
+     * @return No Content
+     */
+    friends(friendId: string): Promise<void>;
+    /**
      * @param body (optional) 
      * @return Created
      */
@@ -130,6 +162,465 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
 
         this.baseUrl = baseUrl ?? "";
 
+    }
+
+    /**
+     * @return Success
+     */
+    friendsAll( cancelToken?: CancelToken): Promise<FriendResponse[]> {
+        let url_ = this.baseUrl + "/api/Friends";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFriendsAll(_response);
+        });
+    }
+
+    protected processFriendsAll(response: AxiosResponse): Promise<FriendResponse[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FriendResponse.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return Promise.resolve<FriendResponse[]>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FriendResponse[]>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    count(userId: string, cancelToken?: CancelToken): Promise<FriendCountResponse> {
+        let url_ = this.baseUrl + "/api/Friends/{userId}/count";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCount(_response);
+        });
+    }
+
+    protected processCount(response: AxiosResponse): Promise<FriendCountResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = FriendCountResponse.fromJS(resultData200);
+            return Promise.resolve<FriendCountResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FriendCountResponse>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    requests( cancelToken?: CancelToken): Promise<FriendRequestResponse[]> {
+        let url_ = this.baseUrl + "/api/Friends/requests";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRequests(_response);
+        });
+    }
+
+    protected processRequests(response: AxiosResponse): Promise<FriendRequestResponse[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FriendRequestResponse.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return Promise.resolve<FriendRequestResponse[]>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FriendRequestResponse[]>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    status(friendId: string, cancelToken?: CancelToken): Promise<FriendshipStatusResponse> {
+        let url_ = this.baseUrl + "/api/Friends/status/{friendId}";
+        if (friendId === undefined || friendId === null)
+            throw new Error("The parameter 'friendId' must be defined.");
+        url_ = url_.replace("{friendId}", encodeURIComponent("" + friendId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processStatus(_response);
+        });
+    }
+
+    protected processStatus(response: AxiosResponse): Promise<FriendshipStatusResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = FriendshipStatusResponse.fromJS(resultData200);
+            return Promise.resolve<FriendshipStatusResponse>(result200);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FriendshipStatusResponse>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    request(friendId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Friends/request/{friendId}";
+        if (friendId === undefined || friendId === null)
+            throw new Error("The parameter 'friendId' must be defined.");
+        url_ = url_.replace("{friendId}", encodeURIComponent("" + friendId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRequest(_response);
+        });
+    }
+
+    protected processRequest(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    accept(friendId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Friends/accept/{friendId}";
+        if (friendId === undefined || friendId === null)
+            throw new Error("The parameter 'friendId' must be defined.");
+        url_ = url_.replace("{friendId}", encodeURIComponent("" + friendId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processAccept(_response);
+        });
+    }
+
+    protected processAccept(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    reject(friendId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Friends/reject/{friendId}";
+        if (friendId === undefined || friendId === null)
+            throw new Error("The parameter 'friendId' must be defined.");
+        url_ = url_.replace("{friendId}", encodeURIComponent("" + friendId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processReject(_response);
+        });
+    }
+
+    protected processReject(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    friends(friendId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Friends/{friendId}";
+        if (friendId === undefined || friendId === null)
+            throw new Error("The parameter 'friendId' must be defined.");
+        url_ = url_.replace("{friendId}", encodeURIComponent("" + friendId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "DELETE",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processFriends(_response);
+        });
+    }
+
+    protected processFriends(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = ProblemDetails.fromJS(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
     }
 
     /**
@@ -1737,6 +2228,182 @@ export interface ICreateUserRequest {
     profileImageUrl?: string | undefined;
 }
 
+export class FriendCountResponse implements IFriendCountResponse {
+    count?: number;
+
+    constructor(data?: IFriendCountResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.count = _data["count"];
+        }
+    }
+
+    static fromJS(data: any): FriendCountResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new FriendCountResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["count"] = this.count;
+        return data;
+    }
+}
+
+export interface IFriendCountResponse {
+    count?: number;
+}
+
+export class FriendRequestResponse implements IFriendRequestResponse {
+    userId?: string | undefined;
+    displayName?: string | undefined;
+    avatarUrl?: string | undefined;
+    direction?: string | undefined;
+    sentAt?: Date;
+
+    constructor(data?: IFriendRequestResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.displayName = _data["displayName"];
+            this.avatarUrl = _data["avatarUrl"];
+            this.direction = _data["direction"];
+            this.sentAt = _data["sentAt"] ? new Date(_data["sentAt"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FriendRequestResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new FriendRequestResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["displayName"] = this.displayName;
+        data["avatarUrl"] = this.avatarUrl;
+        data["direction"] = this.direction;
+        data["sentAt"] = this.sentAt ? this.sentAt.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFriendRequestResponse {
+    userId?: string | undefined;
+    displayName?: string | undefined;
+    avatarUrl?: string | undefined;
+    direction?: string | undefined;
+    sentAt?: Date;
+}
+
+export class FriendResponse implements IFriendResponse {
+    userId?: string | undefined;
+    displayName?: string | undefined;
+    avatarUrl?: string | undefined;
+    friendsSince?: Date;
+
+    constructor(data?: IFriendResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.displayName = _data["displayName"];
+            this.avatarUrl = _data["avatarUrl"];
+            this.friendsSince = _data["friendsSince"] ? new Date(_data["friendsSince"].toString()) : <any>undefined;
+        }
+    }
+
+    static fromJS(data: any): FriendResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new FriendResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["displayName"] = this.displayName;
+        data["avatarUrl"] = this.avatarUrl;
+        data["friendsSince"] = this.friendsSince ? this.friendsSince.toISOString() : <any>undefined;
+        return data;
+    }
+}
+
+export interface IFriendResponse {
+    userId?: string | undefined;
+    displayName?: string | undefined;
+    avatarUrl?: string | undefined;
+    friendsSince?: Date;
+}
+
+export class FriendshipStatusResponse implements IFriendshipStatusResponse {
+    status?: string | undefined;
+    direction?: string | undefined;
+
+    constructor(data?: IFriendshipStatusResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.status = _data["status"];
+            this.direction = _data["direction"];
+        }
+    }
+
+    static fromJS(data: any): FriendshipStatusResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new FriendshipStatusResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["status"] = this.status;
+        data["direction"] = this.direction;
+        return data;
+    }
+}
+
+export interface IFriendshipStatusResponse {
+    status?: string | undefined;
+    direction?: string | undefined;
+}
+
 export class GroupMemberResponse implements IGroupMemberResponse {
     userId?: string | undefined;
     displayName?: string | undefined;
@@ -2222,6 +2889,70 @@ export interface IInvitedGroupInfoResponse {
     name?: string | undefined;
     emoji?: string | undefined;
     memberCount?: number;
+}
+
+export class ProblemDetails implements IProblemDetails {
+    type?: string | undefined;
+    title?: string | undefined;
+    status?: number | undefined;
+    detail?: string | undefined;
+    instance?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IProblemDetails) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.type = _data["type"];
+            this.title = _data["title"];
+            this.status = _data["status"];
+            this.detail = _data["detail"];
+            this.instance = _data["instance"];
+        }
+    }
+
+    static fromJS(data: any): ProblemDetails {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProblemDetails();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["type"] = this.type;
+        data["title"] = this.title;
+        data["status"] = this.status;
+        data["detail"] = this.detail;
+        data["instance"] = this.instance;
+        return data;
+    }
+}
+
+export interface IProblemDetails {
+    type?: string | undefined;
+    title?: string | undefined;
+    status?: number | undefined;
+    detail?: string | undefined;
+    instance?: string | undefined;
+
+    [key: string]: any;
 }
 
 export enum RSVPStatus {

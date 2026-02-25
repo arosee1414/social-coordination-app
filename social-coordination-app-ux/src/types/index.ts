@@ -76,9 +76,19 @@ export interface GroupMember {
 
 export interface Friend {
     id: string;
+    userId: string;
     name: string;
     avatar: string;
     phone?: string;
+    friendsSince?: string;
+}
+
+export interface FriendRequest {
+    userId: string;
+    displayName: string;
+    avatarUrl: string;
+    direction: 'Incoming' | 'Outgoing';
+    sentAt: string;
 }
 
 export interface Notification {

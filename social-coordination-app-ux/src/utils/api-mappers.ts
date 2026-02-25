@@ -5,9 +5,11 @@ import type {
     GroupSummaryResponse,
     GroupMemberResponse,
     InvitedGroupInfoResponse,
+    FriendResponse,
+    FriendRequestResponse,
 } from '@/src/clients/generatedClient';
 import { HangoutStatus as ApiHangoutStatus, RSVPStatus as ApiRSVPStatus } from '@/src/clients/generatedClient';
-import type { Hangout, RSVPStatus, HangoutStatus, Attendee, AttendeesByStatus, Group, GroupMember, InvitedGroup } from '@/src/types';
+import type { Hangout, RSVPStatus, HangoutStatus, Attendee, AttendeesByStatus, Group, GroupMember, InvitedGroup, Friend, FriendRequest } from '@/src/types';
 
 /**
  * Convert API HangoutStatus enum to frontend HangoutStatus string
@@ -250,6 +252,32 @@ export function mapGroupMemberToDisplayMember(member: GroupMemberResponse): Grou
         name: member.displayName || member.userId || 'Unknown',
         avatar: member.profileImageUrl ?? null,
         role: member.role === 'Admin' ? 'Admin' : 'Member',
+    };
+}
+
+/**
+ * Map FriendResponse to frontend Friend type
+ */
+export function mapFriendResponseToFriend(response: FriendResponse): Friend {
+    return {
+        id: response.userId ?? '',
+        userId: response.userId ?? '',
+        name: response.displayName ?? '',
+        avatar: response.avatarUrl ?? '',
+        friendsSince: response.friendsSince ? new Date(response.friendsSince).toLocaleDateString() : '',
+    };
+}
+
+/**
+ * Map FriendRequestResponse to frontend FriendRequest type
+ */
+export function mapFriendRequestResponseToFriendRequest(response: FriendRequestResponse): FriendRequest {
+    return {
+        userId: response.userId ?? '',
+        displayName: response.displayName ?? '',
+        avatarUrl: response.avatarUrl ?? '',
+        direction: (response.direction as 'Incoming' | 'Outgoing') ?? 'Incoming',
+        sentAt: response.sentAt ? new Date(response.sentAt).toLocaleDateString() : '',
     };
 }
 

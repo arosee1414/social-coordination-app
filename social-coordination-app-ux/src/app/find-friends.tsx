@@ -1,528 +1,520 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
     StyleSheet,
+    TouchableOpacity,
+    FlatList,
+    TextInput,
+    Image,
+    ActivityIndicator,
     Alert,
-    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
-import { useUser } from '@clerk/clerk-expo';
-import { useThemeColors } from '@/src/hooks/useThemeColors';
-import { createSharedStyles } from '@/src/constants/shared-styles';
-import { mockFriends } from '@/src/data/mock-data';
-import { useApiUserSearch } from '@/src/hooks/useApiUserSearch';
-import { useApiUser } from '@/src/hooks/useApiUser';
-import { CreateUserRequest } from '@/src/clients/generatedClient';
+import { useRouter } from 'expo-router';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { useApiUserSearch } from '../hooks/useApiUserSearch';
+import { useApiClient } from '../hooks/useApiClient';
+import type { UserResponse } from '../clients/generatedClient';
+import { FriendshipStatusInfo } from '../hooks/useApiFriendshipStatus';
+
+interface UserWithStatus {
+    user: UserResponse;
+    friendshipStatus: FriendshipStatusInfo;
+    statusLoading?: boolean;
+}
+
+function getDisplayName(user: UserResponse): string {
+    return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown';
+}
 
 export default function FindFriendsScreen() {
-    const colors = useThemeColors();
-    const shared = createSharedStyles(colors);
     const router = useRouter();
-    const [search, setSearch] = useState('');
-    const [copied, setCopied] = useState(false);
-    const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
-    const {
-        results: apiResults,
-        loading: searchLoading,
-        searchUsers,
-    } = useApiUserSearch();
-    const { user: clerkUser } = useUser();
-    const { createUser } = useApiUser();
-    const hasSynced = useRef(false);
-
-    // One-time sync: seed backend user record with Clerk profile data on sign-up
-    useEffect(() => {
-        if (!clerkUser || hasSynced.current) return;
-        hasSynced.current = true;
-
-        const req = new CreateUserRequest();
-        req.email = clerkUser.primaryEmailAddress?.emailAddress ?? '';
-        req.firstName = clerkUser.firstName ?? '';
-        req.lastName = clerkUser.lastName ?? '';
-        req.profileImageUrl = clerkUser.imageUrl ?? undefined;
-
-        createUser(req).catch((err: any) => {
-            console.warn('Failed to seed backend user:', err);
-        });
-    }, [clerkUser, createUser]);
-
-    const inviteLink = 'hangout.app/join/abc123';
-
-    const handleCopy = async () => {
-        try {
-            await Clipboard.setStringAsync(inviteLink);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch {
-            // Fallback for environments without clipboard
-            Alert.alert('Invite Link', inviteLink);
-        }
-    };
-
-    const handleInvite = (id: string) => {
-        const next = new Set(invitedIds);
-        next.add(id);
-        setInvitedIds(next);
-    };
-
-    // Filter mock contacts by search
-    const contacts = mockFriends.filter((f) =>
-        f.name.toLowerCase().includes(search.toLowerCase()),
+    const colors = useThemeColors();
+    const apiClient = useApiClient();
+    const [searchQuery, setSearchQuery] = useState('');
+    const { results, loading, searchUsers } = useApiUserSearch();
+    const [usersWithStatus, setUsersWithStatus] = useState<UserWithStatus[]>(
+        [],
+    );
+    const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
+        {},
     );
 
-    // Debounced API search on text change
-    const handleSearchChange = (text: string) => {
-        setSearch(text);
-        if (text.length >= 2) {
-            searchUsers(text);
+    const handleSearch = useCallback(
+        async (query: string) => {
+            setSearchQuery(query);
+            if (query.trim().length >= 2) {
+                await searchUsers(query.trim());
+            }
+        },
+        [searchUsers],
+    );
+
+    // Fetch friendship status for search results
+    React.useEffect(() => {
+        async function fetchStatuses() {
+            if (!apiClient || results.length === 0) {
+                setUsersWithStatus([]);
+                return;
+            }
+
+            const items: UserWithStatus[] = [];
+            for (const user of results) {
+                try {
+                    const statusResponse = await apiClient.status(user.id!);
+                    items.push({
+                        user,
+                        friendshipStatus: {
+                            status: (statusResponse.status?.toLowerCase() ??
+                                'none') as FriendshipStatusInfo['status'],
+                            direction:
+                                statusResponse.direction?.toLowerCase() as FriendshipStatusInfo['direction'],
+                        },
+                    });
+                } catch {
+                    // 404 = no friendship
+                    items.push({
+                        user,
+                        friendshipStatus: { status: 'none' },
+                    });
+                }
+            }
+            setUsersWithStatus(items);
         }
+        fetchStatuses();
+    }, [apiClient, results]);
+
+    const handleSendRequest = async (userId: string) => {
+        if (!apiClient) return;
+        setActionLoading((prev) => ({ ...prev, [userId]: true }));
+        try {
+            await apiClient.request(userId);
+            setUsersWithStatus((prev) =>
+                prev.map((u) =>
+                    u.user.id === userId
+                        ? {
+                              ...u,
+                              friendshipStatus: {
+                                  status: 'pending',
+                                  direction: 'outgoing',
+                              },
+                          }
+                        : u,
+                ),
+            );
+        } catch {
+            Alert.alert(
+                'Error',
+                'Failed to send friend request. Please try again.',
+            );
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [userId]: false }));
+        }
+    };
+
+    const handleAcceptRequest = async (userId: string) => {
+        if (!apiClient) return;
+        setActionLoading((prev) => ({ ...prev, [userId]: true }));
+        try {
+            await apiClient.accept(userId);
+            setUsersWithStatus((prev) =>
+                prev.map((u) =>
+                    u.user.id === userId
+                        ? { ...u, friendshipStatus: { status: 'accepted' } }
+                        : u,
+                ),
+            );
+        } catch {
+            Alert.alert(
+                'Error',
+                'Failed to accept friend request. Please try again.',
+            );
+        } finally {
+            setActionLoading((prev) => ({ ...prev, [userId]: false }));
+        }
+    };
+
+    const renderActionButton = (item: UserWithStatus) => {
+        const userId = item.user.id!;
+        if (actionLoading[userId]) {
+            return (
+                <View
+                    style={[
+                        styles.actionBadge,
+                        { backgroundColor: colors.surfaceTertiary },
+                    ]}
+                >
+                    <ActivityIndicator
+                        size='small'
+                        color={colors.textSecondary}
+                    />
+                </View>
+            );
+        }
+
+        const status = item.friendshipStatus;
+
+        if (!status || status.status === 'none') {
+            return (
+                <TouchableOpacity
+                    style={[
+                        styles.addButton,
+                        { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => handleSendRequest(userId)}
+                >
+                    <Ionicons
+                        name='person-add-outline'
+                        size={16}
+                        color='#FFFFFF'
+                    />
+                    <Text style={styles.addButtonText}>Add</Text>
+                </TouchableOpacity>
+            );
+        }
+
+        if (status.status === 'pending') {
+            if (status.direction === 'incoming') {
+                return (
+                    <TouchableOpacity
+                        style={[
+                            styles.acceptButton,
+                            { backgroundColor: colors.primary },
+                        ]}
+                        onPress={() => handleAcceptRequest(userId)}
+                    >
+                        <Ionicons name='checkmark' size={16} color='#FFFFFF' />
+                        <Text style={styles.addButtonText}>Accept</Text>
+                    </TouchableOpacity>
+                );
+            }
+            return (
+                <View
+                    style={[
+                        styles.actionBadge,
+                        { backgroundColor: colors.surfaceTertiary },
+                    ]}
+                >
+                    <Text
+                        style={[
+                            styles.actionBadgeText,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        Sent
+                    </Text>
+                </View>
+            );
+        }
+
+        if (status.status === 'accepted') {
+            return (
+                <View
+                    style={[
+                        styles.actionBadge,
+                        { backgroundColor: colors.indigo50 },
+                    ]}
+                >
+                    <Ionicons
+                        name='checkmark-circle'
+                        size={14}
+                        color={colors.primary}
+                    />
+                    <Text
+                        style={[
+                            styles.actionBadgeText,
+                            { color: colors.primary },
+                        ]}
+                    >
+                        Friends
+                    </Text>
+                </View>
+            );
+        }
+
+        return null;
+    };
+
+    const renderUserItem = ({ item }: { item: UserWithStatus }) => {
+        const displayName = getDisplayName(item.user);
+        return (
+            <TouchableOpacity
+                style={[styles.userItem, { backgroundColor: colors.card }]}
+                onPress={() => router.push(`/friend/${item.user.id}`)}
+                activeOpacity={0.7}
+            >
+                <View style={styles.avatarContainer}>
+                    {item.user.profileImageUrl ? (
+                        <Image
+                            source={{ uri: item.user.profileImageUrl }}
+                            style={styles.avatar}
+                        />
+                    ) : (
+                        <View
+                            style={[
+                                styles.avatar,
+                                styles.avatarFallback,
+                                { backgroundColor: colors.indigo50 },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    styles.avatarFallbackText,
+                                    { color: colors.primary },
+                                ]}
+                            >
+                                {displayName.charAt(0).toUpperCase()}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+                <View style={styles.userInfo}>
+                    <Text
+                        style={[styles.userName, { color: colors.text }]}
+                        numberOfLines={1}
+                    >
+                        {displayName}
+                    </Text>
+                </View>
+                {renderActionButton(item)}
+            </TouchableOpacity>
+        );
     };
 
     return (
-        <SafeAreaView style={shared.screenContainer}>
+        <SafeAreaView
+            style={[styles.container, { backgroundColor: colors.background }]}
+            edges={['top']}
+        >
             {/* Header */}
-            <View style={shared.stackHeader}>
+            <View style={styles.header}>
                 <TouchableOpacity
                     onPress={() => router.back()}
-                    style={s.backBtn}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
                 >
                     <Ionicons name='arrow-back' size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[s.headerTitle, { color: colors.text }]}>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>
                     Find Friends
                 </Text>
-                <View style={{ width: 40 }} />
+                <View style={{ width: 24 }} />
             </View>
 
-            {/* Content */}
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ paddingBottom: 24 }}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
-                    <Text
-                        style={[s.introText, { color: colors.textSecondary }]}
-                    >
-                        Connect with your friends to start planning hangouts
-                        together
-                    </Text>
-
-                    {/* Invite link card */}
-                    <View
-                        style={[
-                            s.inviteCard,
-                            { backgroundColor: colors.gradientFrom },
-                        ]}
-                    >
-                        <Text style={s.inviteCardTitle}>
-                            Share Your Invite Link
-                        </Text>
-                        <Text style={s.inviteCardSubtitle}>
-                            Send this link to friends to connect instantly
-                        </Text>
-                        <View style={s.inviteLinkRow}>
-                            <Text
-                                style={s.inviteLinkText}
-                                numberOfLines={1}
-                                ellipsizeMode='tail'
-                            >
-                                {inviteLink}
-                            </Text>
-                            <TouchableOpacity
-                                style={s.copyBtn}
-                                onPress={handleCopy}
-                                activeOpacity={0.7}
-                            >
-                                {copied ? (
-                                    <Ionicons
-                                        name='checkmark'
-                                        size={20}
-                                        color='#fff'
-                                    />
-                                ) : (
-                                    <Ionicons
-                                        name='copy-outline'
-                                        size={20}
-                                        color='#fff'
-                                    />
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    {/* Search */}
-                    <View style={s.searchWrapper}>
-                        <Ionicons
-                            name='search'
-                            size={20}
-                            color={colors.textTertiary}
-                            style={s.searchIcon}
-                        />
-                        <TextInput
-                            style={[
-                                shared.searchInput,
-                                { backgroundColor: colors.surfaceTertiary },
-                            ]}
-                            placeholder='Search contacts'
-                            placeholderTextColor={colors.placeholder}
-                            value={search}
-                            onChangeText={handleSearchChange}
-                        />
-                    </View>
-
-                    {/* Contacts list */}
-                    {/* API Search Results */}
-                    {apiResults.length > 0 && (
-                        <>
-                            <Text
-                                style={[
-                                    shared.sectionLabel,
-                                    {
-                                        textTransform: 'uppercase',
-                                        marginTop: 8,
-                                    },
-                                ]}
-                            >
-                                SEARCH RESULTS
-                            </Text>
-                            <View style={{ gap: 4, marginBottom: 16 }}>
-                                {apiResults.map((user) => {
-                                    const invited = invitedIds.has(
-                                        user.id ?? '',
-                                    );
-                                    const displayName =
-                                        `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
-                                        user.email;
-                                    return (
-                                        <View
-                                            key={user.id}
-                                            style={s.contactRow}
-                                        >
-                                            <View style={shared.avatarLarge}>
-                                                <Text style={{ fontSize: 24 }}>
-                                                    👤
-                                                </Text>
-                                            </View>
-                                            <View
-                                                style={{ flex: 1, minWidth: 0 }}
-                                            >
-                                                <Text
-                                                    style={[
-                                                        s.contactName,
-                                                        { color: colors.text },
-                                                    ]}
-                                                >
-                                                    {displayName}
-                                                </Text>
-                                                <Text
-                                                    style={[
-                                                        s.contactPhone,
-                                                        {
-                                                            color: colors.textTertiary,
-                                                        },
-                                                    ]}
-                                                >
-                                                    {user.email}
-                                                </Text>
-                                            </View>
-                                            {invited ? (
-                                                <View
-                                                    style={[
-                                                        s.invitedBadge,
-                                                        {
-                                                            backgroundColor:
-                                                                colors.statusGoingBg,
-                                                        },
-                                                    ]}
-                                                >
-                                                    <Ionicons
-                                                        name='checkmark'
-                                                        size={16}
-                                                        color={
-                                                            colors.statusGoingText
-                                                        }
-                                                    />
-                                                    <Text
-                                                        style={[
-                                                            s.invitedBadgeText,
-                                                            {
-                                                                color: colors.statusGoingText,
-                                                            },
-                                                        ]}
-                                                    >
-                                                        Invited
-                                                    </Text>
-                                                </View>
-                                            ) : (
-                                                <TouchableOpacity
-                                                    style={[
-                                                        s.inviteBtn,
-                                                        {
-                                                            backgroundColor:
-                                                                colors.primary,
-                                                        },
-                                                    ]}
-                                                    onPress={() =>
-                                                        handleInvite(
-                                                            user.id ?? '',
-                                                        )
-                                                    }
-                                                    activeOpacity={0.8}
-                                                >
-                                                    <Text
-                                                        style={s.inviteBtnText}
-                                                    >
-                                                        Invite
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            )}
-                                        </View>
-                                    );
-                                })}
-                            </View>
-                        </>
-                    )}
-
-                    <Text
-                        style={[
-                            shared.sectionLabel,
-                            { textTransform: 'uppercase', marginTop: 8 },
-                        ]}
-                    >
-                        FROM YOUR CONTACTS
-                    </Text>
-                    <View style={{ gap: 4 }}>
-                        {contacts.map((contact) => {
-                            const invited = invitedIds.has(contact.id);
-                            return (
-                                <View key={contact.id} style={s.contactRow}>
-                                    <View style={shared.avatarLarge}>
-                                        <Text style={{ fontSize: 24 }}>
-                                            {contact.avatar}
-                                        </Text>
-                                    </View>
-                                    <View style={{ flex: 1, minWidth: 0 }}>
-                                        <Text
-                                            style={[
-                                                s.contactName,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {contact.name}
-                                        </Text>
-                                        {contact.phone && (
-                                            <Text
-                                                style={[
-                                                    s.contactPhone,
-                                                    {
-                                                        color: colors.textTertiary,
-                                                    },
-                                                ]}
-                                            >
-                                                {contact.phone}
-                                            </Text>
-                                        )}
-                                    </View>
-                                    {invited ? (
-                                        <View
-                                            style={[
-                                                s.invitedBadge,
-                                                {
-                                                    backgroundColor:
-                                                        colors.statusGoingBg,
-                                                },
-                                            ]}
-                                        >
-                                            <Ionicons
-                                                name='checkmark'
-                                                size={16}
-                                                color={colors.statusGoingText}
-                                            />
-                                            <Text
-                                                style={[
-                                                    s.invitedBadgeText,
-                                                    {
-                                                        color: colors.statusGoingText,
-                                                    },
-                                                ]}
-                                            >
-                                                Invited
-                                            </Text>
-                                        </View>
-                                    ) : (
-                                        <TouchableOpacity
-                                            style={[
-                                                s.inviteBtn,
-                                                {
-                                                    backgroundColor:
-                                                        colors.primary,
-                                                },
-                                            ]}
-                                            onPress={() =>
-                                                handleInvite(contact.id)
-                                            }
-                                            activeOpacity={0.8}
-                                        >
-                                            <Text style={s.inviteBtnText}>
-                                                Invite
-                                            </Text>
-                                        </TouchableOpacity>
-                                    )}
-                                </View>
-                            );
-                        })}
-                    </View>
-                </View>
-            </ScrollView>
-
-            {/* Bottom CTA */}
-            <View style={shared.bottomCTA}>
-                <TouchableOpacity
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <View
                     style={[
-                        s.skipBtn,
-                        { backgroundColor: colors.surfaceTertiary },
+                        styles.searchBar,
+                        {
+                            backgroundColor: colors.card,
+                            borderColor: colors.cardBorder,
+                        },
                     ]}
-                    onPress={() => router.replace('/(tabs)')}
-                    activeOpacity={0.7}
                 >
-                    <Text
-                        style={[s.skipBtnText, { color: colors.textSecondary }]}
-                    >
-                        Skip for Now
-                    </Text>
-                </TouchableOpacity>
+                    <Ionicons
+                        name='search'
+                        size={20}
+                        color={colors.textSecondary}
+                    />
+                    <TextInput
+                        style={[styles.searchInput, { color: colors.text }]}
+                        placeholder='Search by name...'
+                        placeholderTextColor={colors.textSecondary}
+                        value={searchQuery}
+                        onChangeText={handleSearch}
+                        autoCapitalize='none'
+                        autoCorrect={false}
+                    />
+                    {searchQuery.length > 0 && (
+                        <TouchableOpacity
+                            onPress={() => {
+                                setSearchQuery('');
+                                setUsersWithStatus([]);
+                            }}
+                        >
+                            <Ionicons
+                                name='close-circle'
+                                size={20}
+                                color={colors.textSecondary}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
+
+            {/* Results */}
+            {loading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size='large' color={colors.primary} />
+                </View>
+            ) : searchQuery.trim().length < 2 ? (
+                <View style={styles.centered}>
+                    <Ionicons
+                        name='search-outline'
+                        size={48}
+                        color={colors.textSecondary}
+                    />
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                        Search for friends
+                    </Text>
+                    <Text
+                        style={[
+                            styles.emptySubtext,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        Enter at least 2 characters to search
+                    </Text>
+                </View>
+            ) : usersWithStatus.length === 0 && !loading ? (
+                <View style={styles.centered}>
+                    <Ionicons
+                        name='people-outline'
+                        size={48}
+                        color={colors.textSecondary}
+                    />
+                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                        No users found
+                    </Text>
+                    <Text
+                        style={[
+                            styles.emptySubtext,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        Try a different search term
+                    </Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={usersWithStatus}
+                    keyExtractor={(item) => item.user.id!}
+                    renderItem={renderUserItem}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
         </SafeAreaView>
     );
 }
 
-const s = StyleSheet.create({
-    backBtn: {
-        padding: 8,
-        marginLeft: -8,
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
     },
     headerTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+    },
+    searchContainer: {
+        paddingHorizontal: 24,
+        paddingBottom: 12,
+    },
+    searchBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        gap: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        paddingVertical: 0,
+    },
+    listContent: {
+        paddingHorizontal: 24,
+        paddingBottom: 24,
+    },
+    userItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        marginBottom: 4,
+    },
+    avatarContainer: {
+        marginRight: 12,
+    },
+    avatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+    },
+    avatarFallback: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarFallbackText: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    userInfo: {
+        flex: 1,
+    },
+    userName: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    addButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 4,
+    },
+    addButtonText: {
+        color: '#FFFFFF',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    acceptButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 4,
+    },
+    actionBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 4,
+    },
+    actionBadgeText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    emptyTitle: {
         fontSize: 18,
         fontWeight: '600',
+        marginTop: 12,
     },
-    introText: {
+    emptySubtext: {
         fontSize: 16,
-        lineHeight: 22,
-        marginBottom: 20,
-    },
-    // Invite card
-    inviteCard: {
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    inviteCardTitle: {
-        color: '#fff',
-        fontSize: 17,
-        fontWeight: '600',
-        marginBottom: 6,
-    },
-    inviteCardSubtitle: {
-        color: 'rgba(255, 255, 255, 0.8)',
-        fontSize: 14,
-        marginBottom: 16,
-    },
-    inviteLinkRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        gap: 12,
-    },
-    inviteLinkText: {
-        flex: 1,
-        color: '#fff',
-        fontSize: 14,
-        fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    },
-    copyBtn: {
-        width: 36,
-        height: 36,
-        borderRadius: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    // Search
-    searchWrapper: {
-        position: 'relative',
-        marginBottom: 20,
-    },
-    searchIcon: {
-        position: 'absolute',
-        left: 14,
-        top: 14,
-        zIndex: 1,
-    },
-    // Contact row
-    contactRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 12,
-    },
-    contactName: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    contactPhone: {
-        fontSize: 13,
-        marginTop: 2,
-    },
-    inviteBtn: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-    },
-    inviteBtnText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    invitedBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 8,
-    },
-    invitedBadgeText: {
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    // Skip button
-    skipBtn: {
-        width: '100%',
-        height: 56,
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    skipBtnText: {
-        fontSize: 16,
-        fontWeight: '600',
+        textAlign: 'center',
+        marginTop: 4,
     },
 });

@@ -1,69 +1,110 @@
-# System Patterns — Social Coordination App
+# System Patterns
 
 ## System Architecture
 
-```
-┌─────────────────────────┐     ┌──────────────────────────────┐
-│  React Native (Expo)    │     │  .NET 8 Web API              │
-│  - Expo Router          │────▶│  - Controllers               │
-│  - Clerk Auth           │     │  - Services (Interface DI)   │
-│  - Generated API Client │◀────│  - Cosmos DB                 │
-│  (NSwag / Axios)        │     │  - Clerk JWT Auth            │
-└─────────────────────────┘     └──────────────────────────────┘
-```
+- **Backend**: C# .NET 8 Web API with Azure Cosmos DB
+- **Frontend**: React Native (Expo) with TypeScript
+- **Auth**: Clerk authentication with Google OAuth
+- **API Client**: Auto-generated TypeScript client via NSwag from OpenAPI/Swagger spec
+
+## Backend Patterns
+
+### Cosmos DB Structure
+
+- **Users Container** (partition key: `/userId`) — UserRecord documents
+- **Groups Container** (partition key: `/id`) — GroupRecord documents with embedded GroupMember arrays
+- **Hangouts Container** (partition key: `/groupId`) — HangoutRecord documents with embedded HangoutAttendee arrays
+- **Friendships Container** (partition key: `/userId`) — FriendshipRecord documents using dual-document pattern
+
+### Dual-Document Friendship Pattern
+
+Each friendship creates **two** mirrored Cosmos DB documents, one in each user's partition:
+
+- Document ID format: `"{userId}_{friendId}"`
+- **Pending state**: Each doc has `Direction` (Incoming/Outgoing) to track who initiated
+- **Accepted state**: `Direction` is set to `null` since both sides are equal
+- Benefits: Single-partition reads for any user's friend list (no cross-partition queries)
+- Cost: Two writes per mutation (create, accept, reject, remove)
+
+### Service Layer Pattern
+
+- Interface + Implementation (`IFriendsService` / `FriendsService`)
+- Services inject `ICosmosContext` for container access
+- Services handle business logic and data access
+- Use `QueryAsync<T>` extension method for parameterized Cosmos queries
+- Registered in DI via `ServiceCollectionExtensions.AddApplicationServices()`
+
+### Controller Pattern
+
+- Inherit from `BaseApiController` (provides `GetCurrentUserId()`, logging)
+- Route: `api/[controller]`
+- Use `ProducesResponseType` attributes for Swagger documentation
+- Return `IActionResult` (Ok, NoContent, BadRequest, NotFound)
+- Wrap `InvalidOperationException` in BadRequest responses
+
+### Seed Data Pattern
+
+- `SeedService` with individual `Seed{Entity}Async()` methods
+- Check if already seeded via COUNT query before inserting
+- Called from `SeedController` endpoint
+- Seed users: `user_alice`, `user_bob`, `user_charlie`, `user_diana`, `user_eve`
+
+## Frontend Patterns
+
+### Hook Pattern
+
+- Custom hooks encapsulate API calls and state management
+- Pattern: `useApi{Resource}` naming convention
+- Return `{ data, loading, error, refetch, ...actions }`
+- Use `useApiClient()` to get the typed API client instance
+- Use `useCallback` for memoized fetch/action functions
+- Use `useEffect` for initial data fetching
+
+### Type Mapping Pattern
+
+- Generated client DTOs → Frontend domain types via mapper functions
+- Mappers in `src/utils/api-mappers.ts`
+- Pattern: `map{DtoName}To{DomainType}(dto: DtoType): DomainType`
+- Handle nullable fields with `??` defaults
+- Convert date strings to `Date` objects
+
+### Screen Structure Pattern
+
+- `SafeAreaView` with `edges={["top"]}` as root
+- Header with back button, title, optional action button
+- Content area with `ScrollView` or `FlatList`
+- Loading state: centered `ActivityIndicator`
+- Empty state: icon + title + subtitle (+ optional action button)
+- Error handling via `Alert.alert()`
+
+### Style Consistency
+
+- Shared constants: `src/constants/theme.ts` (colors, spacing, typography, border radius)
+- Shared styles: `src/constants/shared-styles.ts` (common layout patterns)
+- Avatar pattern: 44px (list items), 96px (profile), with fallback showing first initial
+- Card/list items: `cardBackground` color, `borderRadius.lg`, consistent padding
+- Theme colors accessed via `useThemeColors()` hook
+
+### Navigation Pattern
+
+- Expo Router file-based routing
+- Stack screens registered in `src/app/_layout.tsx`
+- Dynamic routes: `[id].tsx` pattern (e.g., `friend/[id].tsx`)
+- Navigation: `router.push()`, `router.back()`, `router.replace()`
+
+## API Client Regeneration (CRITICAL)
+
+After any backend API contract change:
+
+1. Start backend: `cd Backend\SocialCoordinationApp; dotnet run`
+2. Download swagger: `curl -o social-coordination-app-ux\swagger\apiSpec.json http://localhost:5219/swagger/v1/swagger.json`
+3. Regenerate client: `cd social-coordination-app-ux; nswag openapi2tsclient /input:"swagger\apiSpec.json" /output:"src\clients\generatedClient.ts" /className:SocialCoordinationApiClient /template:Axios /generateClientInterfaces:true`
+4. Verify new methods in generated client
+5. Stop backend server
 
 ## Key Technical Decisions
 
-1. **Auto-generated API client** — NSwag generates `generatedClient.ts` from Swagger spec; never manually edited. Regeneration is mandatory when backend DTOs/controllers change.
-2. **Interface-based DI** — All services registered via interfaces (`IUsersService`, `IGroupsService`, `IHangoutsService`) for testability.
-3. **Cosmos DB with partition keys** — `Users` partitioned by `/id`, `Groups` and `Hangouts` by `/createdByUserId`.
-4. **Clerk JWT authentication** — Frontend gets tokens from Clerk; backend validates via JwtBearer middleware.
-5. **RFC 7807 Problem Details** — Global exception handling returns standardized error responses.
-6. **Correlation IDs** — Auto-generated per request, propagated via middleware, included in response headers.
-
-## Design Patterns in Use
-
-### Backend
-
-- **Controller → Service → Cosmos** — Clean separation of concerns
-- **Base API Controller** — Abstract `BaseApiController` provides `GetUserId()` and `GetCorrelationId()` helpers
-- **Extension methods for DI** — `AddInfrastructure()` and `AddApplicationServices()` keep `Program.cs` clean
-- **Generic Cosmos helpers** — `CosmosExtensions` with `ToListAsync<T>`, `InsertItem<T>`
-- **Global exception middleware** — Maps exception types to HTTP status codes
-- **Nested documents** — Group members and hangout attendees stored as nested arrays (not separate containers)
-
-### Frontend
-
-- **Expo Router** — File-based routing with `(tabs)` layout group and `(auth)` layout group
-- **Context providers** — `ApiClientContext`, `HangoutsContext`, `NotificationsContext`
-- **Custom hooks** — `useApiClient`, `useApiUser`, `useApiGroups`, `useApiHangoutDetail`, `useApiGroupDetail`, `useApiUserSearch`
-- **API mappers** — `src/utils/api-mappers.ts` transforms backend responses to frontend types
-- **Theme constants** — Centralized in `src/constants/theme.ts` and `src/constants/shared-styles.ts`
-- **Generated client wrapper** — `src/clients/api-client.ts` wraps the generated client with auth token injection
-
-## Component Relationships
-
-### Backend Dependency Chain
-
-```
-Controllers → Services (via interfaces) → CosmosContext → Cosmos DB
-                                        → ILogger
-Program.cs → ServiceCollectionExtensions → registers all above
-           → Middleware pipeline (Correlation → Exception → Auth → Controllers)
-```
-
-### Frontend Dependency Chain
-
-```
-_layout.tsx → ClerkProvider → ApiClientContext → App screens
-App screens → Custom hooks → API client (generated) → Backend API
-           → Contexts (Hangouts, Notifications)
-           → Components → Theme constants
-```
-
-## Critical Implementation Paths
-
-1. **Creating a hangout**: `create-hangout.tsx` → `useApiClient` → `generatedClient.createHangout()` → `HangoutsController.CreateHangout` → `HangoutsService.CreateHangoutAsync` → Cosmos DB
-2. **RSVP flow**: Hangout detail screen → `generatedClient.rsvp()` → `HangoutsController.RSVP` → `HangoutsService.RSVP` → Updates attendee array in Cosmos document
-3. **API client regeneration**: Backend change → `dotnet run` → download swagger.json → `nswag openapi2tsclient` → update mappers/hooks
-4. **Auth flow**: Clerk sign-in → JWT token → `tokenCache.ts` → `api-client.ts` injects Bearer header → Backend validates via JwtBearer
+- PowerShell is the shell — use `;` not `&&` to chain commands
+- `dotnet run` is blocking — run curl/nswag in separate terminals
+- Generated TypeScript client has pre-existing TS errors (62) that don't affect runtime
+- Never manually edit `generatedClient.ts`

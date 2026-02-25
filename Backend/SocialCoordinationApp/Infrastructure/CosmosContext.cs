@@ -13,6 +13,7 @@ public class CosmosContext : ICosmosContext
     public Container UsersContainer { get; private set; } = null!;
     public Container GroupsContainer { get; private set; } = null!;
     public Container HangoutsContainer { get; private set; } = null!;
+    public Container FriendshipsContainer { get; private set; } = null!;
 
     public CosmosContext(CosmosClient client, IOptions<CosmosConfiguration> config)
     {
@@ -39,5 +40,10 @@ public class CosmosContext : ICosmosContext
             new ContainerProperties("Hangouts", "/createdByUserId")
         );
         HangoutsContainer = hangoutsResponse.Container;
+
+        var friendshipsResponse = await _database.CreateContainerIfNotExistsAsync(
+            new ContainerProperties("Friendships", "/userId")
+        );
+        FriendshipsContainer = friendshipsResponse.Container;
     }
 }

@@ -1,87 +1,46 @@
-# Progress — Social Coordination App
+# Progress
 
 ## What Works
 
-- **Hangout Invitations** — Full-stack invite flow: when creating a hangout, users can invite groups and individual users. Group members are expanded into individual attendees with Pending RSVP status. Hangout detail page shows invited groups (tappable to navigate to group) and a Pending tab in RSVP responses. Backend stores `InvitedGroupIds` and populates `InvitedGroups` on detail fetch.
-- **Edit Group**: Full edit screen (`edit-group/[id].tsx`) with name/emoji editing, delete group with confirmation, and manage members navigation. Manage Members screen (`manage-group-members/[id].tsx`) with current member list, remove members, and search-to-add. Edit button and "+ Add" link only visible to group creator or admin. Group detail refetches on focus.
-- **Group Permissions (full-stack)**: Backend `AddMemberAsync` requires Admin role. Frontend gates edit button, "+ Add" link, edit-group screen, and manage-members screen behind creator-or-admin check. `UpdateGroupAsync`, `RemoveMemberAsync` already enforced admin-only. `DeleteGroupAsync` is creator-only.
-- **Edit Hangout** — Creator can edit their hangouts (title, date/time, duration, location, notes) via `edit-hangout/[id]` screen; delete hangout with confirmation; conditional edit button on detail page (only for creator)
-
-### Backend (Phase 1 — Complete)
-
-- .NET 8 Web API project scaffolded and running
-- Cosmos DB integration with Users, Groups, Hangouts containers
-- Clerk JWT authentication
-- Full CRUD for Users, Groups, and Hangouts
-- RSVP functionality
-- Group member management (add/remove)
-- Seed data controller for development testing
-- Global exception handling with RFC 7807 Problem Details
-- Correlation ID middleware
-- Swagger/OpenAPI documentation
-- Hangout duration: 8-hour default, 24-hour max validation
-
-### Frontend
-
-- React Native Expo app with file-based routing
-- Clerk authentication (Google OAuth, email sign-up/sign-in)
-- Home dashboard with Happening Now, Upcoming Hangouts, Recent Activity, Reminder Banners
-- Hangouts tab with filtering (live, upcoming, past, my hangouts)
-- Groups tab with group list
-- Notifications tab
-- Profile tab
-- Create Hangout screen with duration picker
-- Create Group screen
-- Hangout detail screen
-- Group detail screen
-- Friend profile screen
-- Find friends / user search
-- Invite selection screen
-- Auto-generated TypeScript API client (NSwag)
-- API mappers transforming backend responses to frontend types
-- Context providers (ApiClient, Hangouts, Notifications)
-
-### DevOps / Tooling
-
-- `.clinerules` with API client regeneration rules
-- Self-improving Cline reflection rule
-- Cline memory bank rule and initial documentation
-- Figma MCP server for design reference
+- **Authentication**: Clerk-based auth with Google OAuth, sign-in/sign-up flows
+- **User Management**: User creation, profile retrieval, profile updates via Cosmos DB
+- **Groups**: Full CRUD — create, list, detail, edit, member management
+- **Hangouts**: Full CRUD — create, list, detail, edit, RSVP, attendee management
+- **Friends System (NEW)**: Full backend + frontend implementation
+    - Backend: Cosmos Friendships container, FriendshipRecord model, FriendsService, FriendsController (8 endpoints)
+    - Frontend: hooks (useApiFriends, useApiFriendRequests, useApiFriendshipStatus, useApiFriendCount), screens (friends-list, friend profile, find-friends with add friend)
+    - API client regenerated with all friend endpoints
+- **User Search**: Search users by name via Cosmos DB cross-partition query
+- **Seed Data**: Comprehensive seed data for users, groups, hangouts, and friendships
+- **API Client**: Auto-generated TypeScript client via NSwag from Swagger spec
+- **Theme System**: Light/dark mode with comprehensive color tokens
+- **Navigation**: Expo Router file-based routing with tabs, modals, and deep linking
 
 ## What's Left to Build
 
-### Phase 2 (Future)
-
-- Friends system (send/accept friend requests, friend list)
-- Push notifications (Azure Notification Hubs)
-- Activity feed
-- Friend profiles with shared hangout history
-- Integration tests (xUnit with mocked Cosmos)
-- `Azure.Storage.Queues` for async processing
-
-### Potential Improvements
-
-- Offline support / caching
-- Image upload for user avatars (replace emoji-only)
-- Group chat / messaging
-- Recurring hangouts
-- Location-based features / maps integration
+- **Profile page friend count**: `profile.tsx` needs `useApiFriendCount` integration and link to `/friends-list`
+- **Seed controller wiring**: Verify `SeedFriendshipsAsync` is called from SeedController
+- **Notifications**: Currently mock data — needs real backend
+- **Home feed**: Activity feed still uses mock data
+- **Push notifications**: Not implemented
+- **Image upload**: Avatar/profile photo upload not implemented
+- **Offline support**: No offline caching strategy
+- **Pagination**: API endpoints return all results (no cursor/page support)
 
 ## Current Status
 
-The app is functional end-to-end with real backend API integration. Users can authenticate, create/manage groups, create/manage hangouts with optional duration, and RSVP. The home dashboard shows live and upcoming events. Cline rules and memory bank are now set up for consistent development across sessions.
+Friends feature is functionally complete with all build errors resolved. The feature follows the dual-document pattern in Cosmos DB for efficient reads. Frontend screens are wired to real API data. Minor integration work remains (profile page friend count display).
 
 ## Known Issues
 
-- No automated tests (manual testing via Swagger and app)
-- No push notifications yet
-- Friends system not implemented (friend profiles use mock data fallbacks)
+- PowerShell `2>nul` redirect doesn't work — must use `2>$null`
+- Generated client uses NSwag naming conventions: `friendsAll()`, `friendsPOST()`, etc. — not customizable without config changes
+- No user-by-id endpoint — friend profile uses friends list + search as fallback
 
 ## Evolution of Project Decisions
 
-1. **Started with mock data** → Migrated to real Cosmos DB backend
-2. **Manual API client** → Auto-generated via NSwag from Swagger spec
-3. **No duration on hangouts** → Added optional duration with 8h default, 24h max
-4. **`isLive` used 2-hour fallback** → Updated to 8-hour fallback to match backend default
-5. **Flat file structure** → Organized into `Models/Domain/`, `Models/DTOs/Requests/`, `Models/DTOs/Responses/`, `Models/Enums/`
-6. **No development tooling rules** → Added `.clinerules` for API regeneration, reflection, and memory bank
+1. **Cosmos DB chosen** over SQL for flexible document model and partition-based scaling
+2. **Dual-document pattern** for friendships — two writes per mutation, but fast single-partition reads
+3. **Separate Friendships container** — keeps UserRecord clean, avoids unbounded growth
+4. **NSwag for API client generation** — auto-generates TypeScript from Swagger, reducing manual API layer maintenance
+5. **Expo Router file-based routing** — screens auto-registered by file location, no manual route config needed
