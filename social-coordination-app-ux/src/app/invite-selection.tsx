@@ -25,6 +25,12 @@ import {
 } from '@/src/clients/generatedClient';
 import type { UserResponse } from '@/src/clients/generatedClient';
 
+interface ExistingAttendee {
+    userId: string;
+    displayName: string;
+    profileImageUrl: string | null;
+}
+
 type ActiveTab = 'friends' | 'groups';
 
 export default function InviteSelectionScreen() {
@@ -67,7 +73,10 @@ export default function InviteSelectionScreen() {
     const [search, setSearch] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    // Track existing attendee IDs (for add mode — to show them as already invited)
+    // Track existing attendees (for add mode — to show them as already invited with remove option)
+    const [existingAttendees, setExistingAttendees] = useState<
+        ExistingAttendee[]
+    >([]);
     const [existingAttendeeIds, setExistingAttendeeIds] = useState<Set<string>>(
         new Set(),
     );
@@ -75,6 +84,7 @@ export default function InviteSelectionScreen() {
         new Set(),
     );
     const [loadingExisting, setLoadingExisting] = useState(false);
+    const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
     // Fetch existing hangout data when in add mode
     useEffect(() => {
@@ -83,12 +93,18 @@ export default function InviteSelectionScreen() {
             try {
                 setLoadingExisting(true);
                 const hangout = await api.hangoutsGET(params.hangoutId!);
-                const attendeeIds = new Set(
-                    (hangout.attendees ?? [])
-                        .map((a) => a.userId!)
-                        .filter(Boolean),
+                const attendees = (hangout.attendees ?? []).filter(
+                    (a) => !!a.userId,
                 );
+                const attendeeIds = new Set(attendees.map((a) => a.userId!));
                 setExistingAttendeeIds(attendeeIds);
+                setExistingAttendees(
+                    attendees.map((a) => ({
+                        userId: a.userId!,
+                        displayName: a.displayName || a.userId || 'Unknown',
+                        profileImageUrl: a.profileImageUrl ?? null,
+                    })),
+                );
                 const groupIds = new Set(
                     (hangout.invitedGroupIds ?? []).filter(Boolean),
                 );
@@ -164,6 +180,48 @@ export default function InviteSelectionScreen() {
         });
         return Array.from(map.values());
     })();
+
+    const handleRemoveAttendee = (attendee: ExistingAttendee) => {
+        Alert.alert(
+            `Remove ${attendee.displayName}?`,
+            'They will be removed from this hangout.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            setRemovingUserId(attendee.userId);
+                            await api.attendeesDELETE(
+                                params.hangoutId!,
+                                attendee.userId,
+                            );
+                            // Optimistically remove from local state
+                            setExistingAttendees((prev) =>
+                                prev.filter(
+                                    (a) => a.userId !== attendee.userId,
+                                ),
+                            );
+                            setExistingAttendeeIds((prev) => {
+                                const next = new Set(prev);
+                                next.delete(attendee.userId);
+                                return next;
+                            });
+                            await refetchHangouts();
+                        } catch (err: any) {
+                            Alert.alert(
+                                'Error',
+                                err?.message ?? 'Failed to remove attendee',
+                            );
+                        } finally {
+                            setRemovingUserId(null);
+                        }
+                    },
+                },
+            ],
+        );
+    };
 
     const filteredGroups = groups.filter((g) =>
         g.name.toLowerCase().includes(search.toLowerCase()),
@@ -367,6 +425,116 @@ export default function InviteSelectionScreen() {
                                 paddingBottom: 24,
                             }}
                         >
+                            {/* Already Invited section (add mode only) */}
+                            {isAddMode && existingAttendees.length > 0 && (
+                                <View style={{ marginBottom: 16 }}>
+                                    <Text
+                                        style={{
+                                            fontSize: 13,
+                                            fontWeight: '600',
+                                            color: colors.textSecondary,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: 0.5,
+                                            marginBottom: 8,
+                                        }}
+                                    >
+                                        Already Invited
+                                    </Text>
+                                    <View style={{ gap: 8 }}>
+                                        {existingAttendees.map((attendee) => (
+                                            <View
+                                                key={attendee.userId}
+                                                style={[
+                                                    shared.selectableItemSelected,
+                                                    {
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                    },
+                                                ]}
+                                            >
+                                                {attendee.profileImageUrl ? (
+                                                    <Image
+                                                        source={{
+                                                            uri: attendee.profileImageUrl,
+                                                        }}
+                                                        style={{
+                                                            width: 44,
+                                                            height: 44,
+                                                            borderRadius: 22,
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <View
+                                                        style={[
+                                                            shared.avatarLarge,
+                                                            {
+                                                                backgroundColor:
+                                                                    colors.surfaceTertiary,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        <Ionicons
+                                                            name='person'
+                                                            size={22}
+                                                            color={
+                                                                colors.textTertiary
+                                                            }
+                                                        />
+                                                    </View>
+                                                )}
+                                                <View style={{ flex: 1 }}>
+                                                    <Text
+                                                        style={[
+                                                            s.itemName,
+                                                            {
+                                                                color: colors.text,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {attendee.displayName}
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity
+                                                    onPress={() =>
+                                                        handleRemoveAttendee(
+                                                            attendee,
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        removingUserId ===
+                                                        attendee.userId
+                                                    }
+                                                    style={{
+                                                        padding: 8,
+                                                        marginRight: -4,
+                                                    }}
+                                                    activeOpacity={0.6}
+                                                >
+                                                    {removingUserId ===
+                                                    attendee.userId ? (
+                                                        <ActivityIndicator
+                                                            size='small'
+                                                            color={
+                                                                colors.error ??
+                                                                '#FF3B30'
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <Ionicons
+                                                            name='close-circle'
+                                                            size={24}
+                                                            color={
+                                                                colors.error ??
+                                                                '#FF3B30'
+                                                            }
+                                                        />
+                                                    )}
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
+                                    </View>
+                                </View>
+                            )}
                             {userSearchLoading && (
                                 <ActivityIndicator
                                     color={colors.primary}

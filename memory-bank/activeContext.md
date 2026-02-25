@@ -6,6 +6,11 @@
 
 ## Recent Changes
 
+- **Remove invitees from invite-selection screen**: Added ability to remove existing attendees from a hangout directly in the "Add People" (invite-selection) screen.
+    - When in add mode (`hangoutId` param present), the Friends tab now shows an "Already Invited" section at the top listing all current attendees with their avatar/name and a red close-circle remove button.
+    - Tapping remove shows a confirmation `Alert.alert` dialog. On confirm, calls `api.attendeesDELETE(hangoutId, userId)`, optimistically removes from local state, and refetches hangouts context.
+    - Loading spinner shown on the remove button while the delete request is in flight.
+    - No backend changes needed — `DELETE /api/hangouts/{id}/attendees/{userId}` endpoint already existed.
 - **Fixed "Can't add people to active hangouts" bug**: After adding the `DELETE /api/hangouts/{id}/attendees/{userId}` endpoint, NSwag renamed the existing POST method from `attendees` to `attendeesPOST` (and the DELETE became `attendeesDELETE`). The `invite-selection.tsx` was still calling `api.attendees(...)` which no longer existed — updated to `api.attendeesPOST(...)`. Also added `userId` field to the frontend `Attendee` type and mapper to support future remove-attendee functionality.
     - **Backend**: Added `RemoveAttendeeAsync` to `IHangoutsService`/`HangoutsService` and `DELETE /api/hangouts/{id}/attendees/{userId}` endpoint to `HangoutsController`.
     - **Frontend**: Fixed `invite-selection.tsx` call from `api.attendees()` → `api.attendeesPOST()`. Added `userId` to `Attendee` type in `types/index.ts`. Updated `mapAttendeeToDisplayAttendee` in `api-mappers.ts` to include `userId`. Updated mock data with `userId` fields. Regenerated TypeScript API client.
