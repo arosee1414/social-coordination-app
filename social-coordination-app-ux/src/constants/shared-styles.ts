@@ -313,10 +313,8 @@ export function createSharedStyles(colors: ThemeColors) {
             flexDirection: 'row',
             alignItems: 'center',
             gap: 12,
-            padding: 12,
+            padding: 14,
             borderRadius: 12,
-            borderWidth: 2,
-            borderColor: colors.cardBorderHeavy,
         },
         selectableItemSelected: {
             flexDirection: 'row',
@@ -326,7 +324,6 @@ export function createSharedStyles(colors: ThemeColors) {
             borderRadius: 12,
             borderWidth: 2,
             borderColor: colors.primary,
-            backgroundColor: colors.indigoTint5,
         },
 
         // Check indicator
