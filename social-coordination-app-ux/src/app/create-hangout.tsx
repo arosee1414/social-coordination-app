@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, {
     DateTimePickerEvent,
@@ -51,6 +51,7 @@ export default function CreateHangoutScreen() {
     const router = useRouter();
     const api = useApiClient();
     const { refetch: refetchHangouts } = useHangouts();
+    const { groupId } = useLocalSearchParams<{ groupId?: string }>();
     const [title, setTitle] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [location, setLocation] = useState('');
@@ -185,6 +186,7 @@ export default function CreateHangoutScreen() {
             if (description) req.description = description;
             if (location) req.location = location;
             if (endTime) req.endTime = endTime;
+            if (groupId) req.invitedGroupIds = [groupId];
 
             await api.hangoutsPOST(req);
             await refetchHangouts();
@@ -215,6 +217,7 @@ export default function CreateHangoutScreen() {
         if (description) params.description = description;
         if (location) params.location = location;
         if (endTime) params.endTime = endTime.toISOString();
+        if (groupId) params.groupId = groupId;
 
         router.push({
             pathname: '/invite-selection',

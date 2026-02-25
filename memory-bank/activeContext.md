@@ -3,9 +3,14 @@
 ## Current Work Focus
 
 - General UI refinements and feature improvements
-- Suggested users in invite selection screen
+- Group-to-hangout invite flow
 
 ## Recent Changes
+
+- **"Invite to Hangout" from group page now associates the group with the hangout (frontend-only)**: When tapping "Invite to Hangout" on the group detail page, the `groupId` is now passed through the entire create-hangout flow so the group is added to the hangout's `invitedGroupIds`.
+    - `group/[id].tsx`: "Invite to Hangout" button now passes `{ groupId }` as a route param to `/create-hangout`.
+    - `create-hangout.tsx`: Reads `groupId` from `useLocalSearchParams`. In direct create mode (`handleCreateHangout`), sets `req.invitedGroupIds = [groupId]`. In invite-first mode (`handleContinue`), forwards `groupId` as a param to `/invite-selection`.
+    - `invite-selection.tsx`: Accepts optional `groupId` param. When present, defaults the active tab to "groups" and pre-selects that group in `selectedGroups` state. No backend changes needed — `CreateHangoutRequest.InvitedGroupIds` already existed.
 
 - **Suggested users in invite selection (full-stack)**: The invite-selection Friends tab now shows suggested users immediately on load, without requiring the user to search. Suggested users are people from the current user's groups.
     - **Backend**: Added `GetSuggestedUsersAsync` to `IUsersService`/`UsersService` — queries all groups where the user is a member, collects unique member user IDs (excluding self), batch looks up their UserRecords, and returns as `List<UserResponse>`. Added `GET /api/users/suggested` endpoint to `UsersController`. Regenerated TypeScript API client.

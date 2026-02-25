@@ -171,7 +171,12 @@ export default function GroupDetailScreen() {
                 >
                     <TouchableOpacity
                         style={[shared.primaryBtnLarge, { flex: 1 }]}
-                        onPress={() => router.push('/create-hangout')}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/create-hangout',
+                                params: { groupId },
+                            } as any)
+                        }
                     >
                         <Text style={shared.primaryBtnLargeText}>
                             Invite to Hangout

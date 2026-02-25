@@ -46,6 +46,7 @@ export default function InviteSelectionScreen() {
         location?: string;
         endTime?: string;
         hangoutId?: string;
+        groupId?: string;
     }>();
 
     // Determine mode: if hangoutId is present, we're adding to an existing hangout
@@ -63,9 +64,11 @@ export default function InviteSelectionScreen() {
             refetchGroups();
         }, [refetchGroups]),
     );
-    const [activeTab, setActiveTab] = useState<ActiveTab>('friends');
+    const [activeTab, setActiveTab] = useState<ActiveTab>(
+        params.groupId ? 'groups' : 'friends',
+    );
     const [selectedGroups, setSelectedGroups] = useState<Set<string>>(
-        new Set(),
+        params.groupId ? new Set([params.groupId]) : new Set(),
     );
     const [selectedFriends, setSelectedFriends] = useState<Set<string>>(
         new Set(),
@@ -332,7 +335,9 @@ export default function InviteSelectionScreen() {
         if (isAddMode) {
             return totalSelected > 0 ? 'Add People' : 'No one selected';
         }
-        return totalSelected > 0 ? 'Send Invites' : 'Skip & Create Hangout';
+        return totalSelected > 0
+            ? 'Invite & Create Hangout'
+            : 'Skip & Create Hangout';
     };
 
     return (
