@@ -108,6 +108,48 @@ public class UsersService : IUsersService
         return users.Select(MapToResponse).ToList();
     }
 
+    public async Task<List<UserResponse>> GetSuggestedUsersAsync(string userId)
+    {
+        // Find all groups the current user is a member of
+        var groupsQuery = new QueryDefinition(
+            "SELECT * FROM c WHERE ARRAY_CONTAINS(c.members, { 'userId': @userId }, true)")
+            .WithParameter("@userId", userId);
+
+        var groups = await _cosmosContext.GroupsContainer
+            .QueryItemsCrossPartitionAsync<GroupRecord>(groupsQuery);
+
+        // Collect all unique member user IDs (excluding self)
+        var memberUserIds = groups
+            .SelectMany(g => g.Members)
+            .Select(m => m.UserId)
+            .Where(id => id != userId)
+            .Distinct()
+            .ToList();
+
+        if (memberUserIds.Count == 0)
+            return new List<UserResponse>();
+
+        // Batch look up user records
+        var parameters = new List<(string name, string value)>();
+        for (int i = 0; i < memberUserIds.Count; i++)
+        {
+            parameters.Add(($"@id{i}", memberUserIds[i]));
+        }
+        var inClause = string.Join(", ", parameters.Select(p => p.name));
+        var sql = $"SELECT * FROM c WHERE c.id IN ({inClause})";
+
+        var queryDefinition = new QueryDefinition(sql);
+        foreach (var (name, value) in parameters)
+        {
+            queryDefinition = queryDefinition.WithParameter(name, value);
+        }
+
+        var users = await _cosmosContext.UsersContainer
+            .QueryItemsCrossPartitionAsync<UserRecord>(queryDefinition);
+
+        return users.Select(MapToResponse).ToList();
+    }
+
     private static UserResponse MapToResponse(UserRecord user)
     {
         return new UserResponse

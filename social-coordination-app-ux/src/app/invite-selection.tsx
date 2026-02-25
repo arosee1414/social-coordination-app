@@ -130,6 +130,26 @@ export default function InviteSelectionScreen() {
         searchUsers,
     } = useApiUserSearch();
 
+    // Suggested users (people from your groups)
+    const [suggestedUsers, setSuggestedUsers] = useState<UserResponse[]>([]);
+    const [suggestedLoading, setSuggestedLoading] = useState(false);
+
+    // Fetch suggested users on mount
+    useEffect(() => {
+        const fetchSuggested = async () => {
+            try {
+                setSuggestedLoading(true);
+                const result = await api.suggested();
+                setSuggestedUsers(result ?? []);
+            } catch (err: any) {
+                console.warn('Failed to fetch suggested users:', err);
+            } finally {
+                setSuggestedLoading(false);
+            }
+        };
+        fetchSuggested();
+    }, []);
+
     // Keep a map of selected users so we can display them even when search changes
     const [selectedUserMap, setSelectedUserMap] = useState<
         Map<string, UserResponse>
@@ -138,6 +158,7 @@ export default function InviteSelectionScreen() {
     // Debounced user search when on friends tab
     useEffect(() => {
         if (activeTab !== 'friends') return;
+        if (search.length < 2) return; // Don't search with short queries; show suggested instead
         const timer = setTimeout(() => {
             searchUsers(search);
         }, 300);
@@ -171,15 +192,25 @@ export default function InviteSelectionScreen() {
 
     const totalSelected = selectedGroups.size + selectedFriends.size;
 
-    // Merge search results with already-selected users (so selected users always show)
+    // Determine if we're in search mode or showing suggestions
+    const isSearching = search.length >= 2;
+
+    // Merge search results (or suggested users) with already-selected users
     const displayedUsers: UserResponse[] = (() => {
         const map = new Map<string, UserResponse>();
-        // Add selected users first
+        // Add selected users first (so they always show)
         selectedUserMap.forEach((u, id) => map.set(id, u));
-        // Add search results
-        userSearchResults.forEach((u) => {
-            if (u.id) map.set(u.id, u);
-        });
+        if (isSearching) {
+            // Add search results
+            userSearchResults.forEach((u) => {
+                if (u.id) map.set(u.id, u);
+            });
+        } else {
+            // Add suggested users
+            suggestedUsers.forEach((u) => {
+                if (u.id) map.set(u.id, u);
+            });
+        }
         return Array.from(map.values());
     })();
 
@@ -551,14 +582,16 @@ export default function InviteSelectionScreen() {
                                     </View>
                                 </View>
                             )}
-                            {userSearchLoading && (
+                            {(isSearching
+                                ? userSearchLoading
+                                : suggestedLoading) && (
                                 <ActivityIndicator
                                     color={colors.primary}
                                     style={{ marginVertical: 16 }}
                                 />
                             )}
                             {!userSearchLoading &&
-                                search.length >= 2 &&
+                                isSearching &&
                                 displayedUsers.length === 0 && (
                                     <Text
                                         style={{
@@ -571,8 +604,8 @@ export default function InviteSelectionScreen() {
                                         No users found
                                     </Text>
                                 )}
-                            {!userSearchLoading &&
-                                search.length < 2 &&
+                            {!suggestedLoading &&
+                                !isSearching &&
                                 displayedUsers.length === 0 && (
                                     <Text
                                         style={{
@@ -582,10 +615,26 @@ export default function InviteSelectionScreen() {
                                             textAlign: 'center',
                                         }}
                                     >
-                                        Type at least 2 characters to search for
-                                        friends
+                                        No suggested friends yet. Add people to
+                                        your groups to see them here, or search
+                                        above.
                                     </Text>
                                 )}
+                            {/* Section header */}
+                            {!isSearching && displayedUsers.length > 0 && (
+                                <Text
+                                    style={{
+                                        fontSize: 13,
+                                        fontWeight: '600',
+                                        color: colors.textSecondary,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: 0.5,
+                                        marginBottom: 8,
+                                    }}
+                                >
+                                    Suggested
+                                </Text>
+                            )}
                             <View style={{ gap: 8 }}>
                                 {displayedUsers.map((user) => {
                                     const isExisting = existingAttendeeIds.has(

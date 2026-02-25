@@ -3,8 +3,13 @@
 ## Current Work Focus
 
 - General UI refinements and feature improvements
+- Suggested users in invite selection screen
 
 ## Recent Changes
+
+- **Suggested users in invite selection (full-stack)**: The invite-selection Friends tab now shows suggested users immediately on load, without requiring the user to search. Suggested users are people from the current user's groups.
+    - **Backend**: Added `GetSuggestedUsersAsync` to `IUsersService`/`UsersService` — queries all groups where the user is a member, collects unique member user IDs (excluding self), batch looks up their UserRecords, and returns as `List<UserResponse>`. Added `GET /api/users/suggested` endpoint to `UsersController`. Regenerated TypeScript API client.
+    - **Frontend**: Updated `invite-selection.tsx` — fetches suggested users on mount via `api.suggested()`. When no search query is entered, displays suggested users under a "Suggested" section header. When the user types ≥2 characters, switches to search results as before. Empty state message updated to explain how to get suggested friends.
 
 - **Fixed RSVP selection not updating on hangout detail page**: The hangout detail page read `userStatus` from `useApiHangoutDetail` but `updateRSVP` (from `HangoutsContext`) only optimistically updated the hangouts _list_ state — never the separate detail hook state. Fixed by adding a local `rsvpOverride` state in `hangout/[id].tsx` for instant visual feedback, then awaiting `updateRSVP` and calling `refetch()` on the detail hook to sync server data. Also changed `updateRSVP` return type from `void` to `Promise<void>` in `HangoutsContext`.
 - **Remove invitees from invite-selection screen**: Added ability to remove existing attendees from a hangout directly in the "Add People" (invite-selection) screen.

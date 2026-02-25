@@ -10,4 +10,5 @@ public interface IUsersService
     Task<UserResponse> UpdateUserAsync(string clerkUserId, UpdateUserRequest request);
     Task DeleteUserAsync(string clerkUserId);
     Task<List<UserResponse>> SearchUsersAsync(string query);
+    Task<List<UserResponse>> GetSuggestedUsersAsync(string userId);
 }
