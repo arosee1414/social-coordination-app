@@ -291,7 +291,7 @@ export default function FindFriendsScreen() {
         const displayName = getDisplayName(item.user);
         return (
             <TouchableOpacity
-                style={[styles.userItem, { backgroundColor: colors.card }]}
+                style={styles.userItem}
                 onPress={() => router.push(`/friend/${item.user.id}`)}
                 activeOpacity={0.7}
             >

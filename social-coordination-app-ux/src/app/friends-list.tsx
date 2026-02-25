@@ -108,7 +108,7 @@ export default function FriendsListScreen() {
 
     const renderFriendItem = ({ item }: { item: Friend }) => (
         <TouchableOpacity
-            style={[styles.listItem, { backgroundColor: colors.card }]}
+            style={styles.listItem}
             onPress={() => router.push(`/friend/${item.userId}`)}
             activeOpacity={0.7}
         >
@@ -177,7 +177,7 @@ export default function FriendsListScreen() {
 
     const renderIncomingRequestItem = ({ item }: { item: FriendRequest }) => (
         <TouchableOpacity
-            style={[styles.listItem, { backgroundColor: colors.card }]}
+            style={styles.listItem}
             onPress={() => router.push(`/friend/${item.userId}`)}
             activeOpacity={0.7}
         >
@@ -260,7 +260,7 @@ export default function FriendsListScreen() {
 
     const renderOutgoingRequestItem = ({ item }: { item: FriendRequest }) => (
         <TouchableOpacity
-            style={[styles.listItem, { backgroundColor: colors.card }]}
+            style={styles.listItem}
             onPress={() => router.push(`/friend/${item.userId}`)}
             activeOpacity={0.7}
         >

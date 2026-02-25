@@ -2,26 +2,15 @@
 
 ## Current Work Focus
 
-RSVP improvements complete: face stack updates, Pending→Maybe merge, stats show "going/invited".
+Dark mode UI refinement for friends screens.
 
 ## What Was Just Accomplished
 
-- **Optimistic face stack update on RSVP** (`HangoutsContext.tsx`):
-    - `updateRSVP` now optimistically updates `attendeesPreview` (face stack), `goingCount`, `going`, and `maybe` counts — not just `userStatus`
-    - When user RSVPs "going": their avatar (from `useUser().imageUrl` via Clerk) is prepended to `attendeesPreview`, going/goingCount incremented
-    - When user leaves "going": avatar removed from preview, going/goingCount decremented
-    - Maybe count also adjusted on transitions to/from "maybe"
-
-- **Quick action buttons changed from "Going/Maybe" to "Going/Can't Go"** (`UpcomingHangoutsSection.tsx`):
-    - Second button now sends `'not-going'` instead of `'maybe'`
-    - Button label changed from "Maybe" to "Can't Go"
-
-- **Pending attendees merged into Maybe** (`api-mappers.ts` + `HangoutsService.cs`):
-    - Frontend: `mapAttendeesToRsvpGroups` routes `Pending` RSVP status into `maybe` array (detail page tabs)
-    - Backend: `MaybeCount` in `GetUserHangoutsAsync` and `GetCommonHangoutsAsync` now includes both `Maybe` and `Pending` attendees
-
-- **Hangouts tab stats changed** (`hangouts.tsx`):
-    - Status row now shows "{going} going" and "{attendeeCount} invited" instead of "{going} going" and "{maybe} maybe"
+- **Removed card background from friend list rows in dark mode** (`friends-list.tsx`, `find-friends.tsx`):
+    - Removed `backgroundColor: colors.card` from list item rows on both screens
+    - In dark mode, `colors.card` (`#1C1C1E`) was visibly different from `colors.background` (`#151718`), creating an unwanted card effect around each person row
+    - In light mode, both colors were `#fff` so this change has no visual impact there
+    - Affected: `renderFriendItem`, `renderIncomingRequestItem`, `renderOutgoingRequestItem` in friends-list; `renderUserItem` in find-friends
 
 ## Key Decisions Made
 
