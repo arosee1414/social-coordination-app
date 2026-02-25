@@ -2,14 +2,19 @@
 
 ## Current Work Focus
 
-Wired "Manage Friends" button on profile tab to friends list. Ready for next task.
+Replaced bottom sheet with popover context menu for friend removal on friends list page. Ready for next task.
 
 ## What Was Just Accomplished
 
-- **Wired "Manage Friends" settings button on profile tab:**
-    - The "Manage Friends" item in the Account settings section of the profile tab previously had no `onPress` handler
-    - Added `onPress` that navigates to `/friends-list`, matching the same behavior as tapping the Friends count stat in the profile header card
-    - File changed: `social-coordination-app-ux/src/app/(tabs)/profile.tsx`
+- **Replaced bottom sheet with popover menu on friends list page:**
+    - Removed the full-width animated bottom sheet (overlay, pan gesture, Reanimated animations) for removing friends from `friends-list.tsx`
+    - Replaced with a lightweight popover/context menu that appears anchored next to the ellipsis (`⋯`) button
+    - Uses `measureInWindow` on a ref wrapping the ellipsis button to position the menu precisely
+    - Transparent `Pressable` backdrop dismisses the menu on outside tap
+    - Menu has consistent card styling (border radius 12, border, shadow) matching the app's design system
+    - Removed unused imports: `Animated`, `Gesture`, `GestureDetector`, `Pressable` (from Reanimated), `useSharedValue`, `useAnimatedStyle`, `withTiming`, `runOnJS`
+    - The friend detail page (`friend/[id].tsx`) still uses bottom sheets — this change was only for the friends list page as requested
+    - File changed: `social-coordination-app-ux/src/app/friends-list.tsx`
 
 ## Key Decisions Made
 
@@ -20,7 +25,8 @@ Wired "Manage Friends" button on profile tab to friends list. Ready for next tas
 
 ## Previous Context
 
-- **Instagram-style friend actions**: "Friends" button opens bottom sheet, incoming requests show "Confirm"/"Delete" buttons, outgoing shows "Requested"
+- **Friends list uses popover menu**: Ellipsis button on friend rows opens a small context menu (not a bottom sheet) for the "Remove Friend" action. Friend detail page still uses bottom sheets for remove/cancel actions.
+- **Instagram-style friend actions on detail page**: "Friends" button opens bottom sheet, incoming requests show "Confirm"/"Delete" buttons, outgoing shows "Requested"
 - **Dual-document pattern**: Each friendship creates two mirrored Cosmos DB documents (one per user as partition key) for efficient single-partition reads
 - **FriendRequest type**: Uses `displayName`/`avatarUrl` (matching generated DTO), while `Friend` type uses `name`/`avatar` (mapped in frontend)
 - **Direction casing**: Backend sends `"Incoming"`/`"Outgoing"` (PascalCase), frontend `useApiFriendshipStatus` normalizes to `"incoming"`/`"outgoing"` (lowercase)

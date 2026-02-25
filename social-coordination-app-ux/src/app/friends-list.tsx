@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -9,14 +9,8 @@ import {
     ActivityIndicator,
     Alert,
     Pressable,
+    Platform,
 } from 'react-native';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withTiming,
-    runOnJS,
-} from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -32,72 +26,31 @@ export default function FriendsListScreen() {
     const colors = useThemeColors();
     const [activeTab, setActiveTab] = useState<Tab>('friends');
 
-    const [removeSheetFriend, setRemoveSheetFriend] = useState<Friend | null>(
-        null,
-    );
-    const [isSheetRendered, setIsSheetRendered] = useState(false);
+    // Popover menu state
+    const [menuFriend, setMenuFriend] = useState<Friend | null>(null);
+    const [menuPosition, setMenuPosition] = useState<{
+        x: number;
+        y: number;
+    }>({ x: 0, y: 0 });
 
-    const SHEET_HIDDEN_Y = 400;
-    const CLOSE_THRESHOLD = 50;
-    const sheetTranslateY = useSharedValue(SHEET_HIDDEN_Y);
-    const overlayOpacity = useSharedValue(0);
+    const ellipsisRefs = useRef<Record<string, View | null>>({});
 
-    const openSheet = useCallback(
-        (friend: Friend) => {
-            setRemoveSheetFriend(friend);
-            setIsSheetRendered(true);
-            overlayOpacity.value = withTiming(1, { duration: 200 });
-            sheetTranslateY.value = withTiming(0, { duration: 250 });
-        },
-        [overlayOpacity, sheetTranslateY],
-    );
+    const openMenu = useCallback((friend: Friend, friendId: string) => {
+        const ref = ellipsisRefs.current[friendId];
+        if (ref) {
+            ref.measureInWindow((x, y, width, height) => {
+                setMenuPosition({
+                    x: x + width - 160, // align right edge of menu with right edge of button
+                    y: y + height + 4, // just below the button
+                });
+                setMenuFriend(friend);
+            });
+        }
+    }, []);
 
-    const closeSheet = useCallback(() => {
-        overlayOpacity.value = withTiming(0, { duration: 200 });
-        sheetTranslateY.value = withTiming(
-            SHEET_HIDDEN_Y,
-            { duration: 250 },
-            () => {
-                runOnJS(setIsSheetRendered)(false);
-                runOnJS(setRemoveSheetFriend)(null);
-            },
-        );
-    }, [overlayOpacity, sheetTranslateY]);
-
-    const panGesture = Gesture.Pan()
-        .onUpdate((event) => {
-            if (event.translationY > 0) {
-                sheetTranslateY.value = event.translationY;
-                overlayOpacity.value = Math.max(
-                    0,
-                    1 - event.translationY / SHEET_HIDDEN_Y,
-                );
-            }
-        })
-        .onEnd((event) => {
-            if (event.translationY > CLOSE_THRESHOLD) {
-                overlayOpacity.value = withTiming(0, { duration: 200 });
-                sheetTranslateY.value = withTiming(
-                    SHEET_HIDDEN_Y,
-                    { duration: 200 },
-                    () => {
-                        runOnJS(setIsSheetRendered)(false);
-                        runOnJS(setRemoveSheetFriend)(null);
-                    },
-                );
-            } else {
-                sheetTranslateY.value = withTiming(0, { duration: 200 });
-                overlayOpacity.value = withTiming(1, { duration: 200 });
-            }
-        });
-
-    const overlayAnimatedStyle = useAnimatedStyle(() => ({
-        opacity: overlayOpacity.value,
-    }));
-
-    const sheetAnimatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateY: sheetTranslateY.value }],
-    }));
+    const closeMenu = useCallback(() => {
+        setMenuFriend(null);
+    }, []);
 
     const {
         friends,
@@ -126,9 +79,9 @@ export default function FriendsListScreen() {
     const outgoingRequests = requests.filter((r) => r.direction === 'Outgoing');
 
     const handleRemoveFriend = async () => {
-        if (!removeSheetFriend) return;
-        const friendId = removeSheetFriend.userId;
-        closeSheet();
+        if (!menuFriend) return;
+        const friendId = menuFriend.userId;
+        closeMenu();
         try {
             await removeFriend(friendId);
         } catch {
@@ -202,16 +155,23 @@ export default function FriendsListScreen() {
                     </Text>
                 ) : null}
             </View>
-            <TouchableOpacity
-                onPress={() => openSheet(item)}
-                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            <View
+                ref={(ref) => {
+                    ellipsisRefs.current[item.userId] = ref;
+                }}
+                collapsable={false}
             >
-                <Ionicons
-                    name='ellipsis-horizontal'
-                    size={20}
-                    color={colors.textSecondary}
-                />
-            </TouchableOpacity>
+                <TouchableOpacity
+                    onPress={() => openMenu(item, item.userId)}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                >
+                    <Ionicons
+                        name='ellipsis-horizontal'
+                        size={20}
+                        color={colors.textSecondary}
+                    />
+                </TouchableOpacity>
+            </View>
         </TouchableOpacity>
     );
 
@@ -570,134 +530,48 @@ export default function FriendsListScreen() {
             {/* Content */}
             {activeTab === 'friends' ? renderFriendsTab() : renderRequestsTab()}
 
-            {/* Remove Friend Bottom Sheet */}
-            {isSheetRendered && (
+            {/* Popover Menu */}
+            {menuFriend && (
                 <View style={StyleSheet.absoluteFill} pointerEvents='box-none'>
-                    <Animated.View
+                    {/* Transparent backdrop to dismiss menu on outside tap */}
+                    <Pressable
+                        style={StyleSheet.absoluteFill}
+                        onPress={closeMenu}
+                    />
+                    <View
                         style={[
-                            styles.bottomSheetOverlay,
-                            { backgroundColor: colors.overlayBg },
-                            overlayAnimatedStyle,
+                            styles.popoverMenu,
+                            {
+                                backgroundColor: colors.card,
+                                borderColor: colors.cardBorder,
+                                top: menuPosition.y,
+                                left: menuPosition.x,
+                            },
+                            Platform.OS === 'android'
+                                ? styles.popoverMenuElevation
+                                : styles.popoverMenuShadow,
                         ]}
                     >
-                        <Pressable
-                            style={StyleSheet.absoluteFill}
-                            onPress={closeSheet}
-                        />
-                    </Animated.View>
-                    <GestureDetector gesture={panGesture}>
-                        <Animated.View
-                            style={[
-                                styles.bottomSheetContainer,
-                                { backgroundColor: colors.bottomSheetBg },
-                                sheetAnimatedStyle,
-                            ]}
+                        <TouchableOpacity
+                            style={styles.popoverMenuItem}
+                            onPress={handleRemoveFriend}
+                            activeOpacity={0.6}
                         >
-                            <View
-                                style={[
-                                    styles.bottomSheetHandle,
-                                    {
-                                        backgroundColor:
-                                            colors.bottomSheetHandle,
-                                    },
-                                ]}
+                            <Ionicons
+                                name='person-remove-outline'
+                                size={18}
+                                color={colors.error}
                             />
-                            {removeSheetFriend && (
-                                <View style={styles.bottomSheetHeader}>
-                                    <View style={styles.bottomSheetAvatarRow}>
-                                        {removeSheetFriend.avatar ? (
-                                            <Image
-                                                source={{
-                                                    uri: removeSheetFriend.avatar,
-                                                }}
-                                                style={styles.bottomSheetAvatar}
-                                            />
-                                        ) : (
-                                            <View
-                                                style={[
-                                                    styles.bottomSheetAvatar,
-                                                    styles.bottomSheetAvatarFallback,
-                                                    {
-                                                        backgroundColor:
-                                                            colors.indigo50,
-                                                    },
-                                                ]}
-                                            >
-                                                <Text
-                                                    style={[
-                                                        styles.bottomSheetAvatarText,
-                                                        {
-                                                            color: colors.primary,
-                                                        },
-                                                    ]}
-                                                >
-                                                    {removeSheetFriend.name
-                                                        .charAt(0)
-                                                        .toUpperCase()}
-                                                </Text>
-                                            </View>
-                                        )}
-                                        <Text
-                                            style={[
-                                                styles.bottomSheetName,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {removeSheetFriend.name}
-                                        </Text>
-                                    </View>
-                                </View>
-                            )}
-                            <TouchableOpacity
-                                style={styles.bottomSheetActionRow}
-                                onPress={handleRemoveFriend}
-                                activeOpacity={0.6}
-                            >
-                                <View
-                                    style={[
-                                        styles.bottomSheetActionIcon,
-                                        {
-                                            backgroundColor:
-                                                'rgba(255, 59, 48, 0.1)',
-                                        },
-                                    ]}
-                                >
-                                    <Ionicons
-                                        name='person-remove-outline'
-                                        size={22}
-                                        color={colors.error}
-                                    />
-                                </View>
-                                <Text
-                                    style={[
-                                        styles.bottomSheetActionText,
-                                        { color: colors.error },
-                                    ]}
-                                >
-                                    Remove Friend
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
+                            <Text
                                 style={[
-                                    styles.cancelBtn,
-                                    {
-                                        backgroundColor: colors.surfaceTertiary,
-                                    },
+                                    styles.popoverMenuItemText,
+                                    { color: colors.error },
                                 ]}
-                                activeOpacity={0.7}
-                                onPress={closeSheet}
                             >
-                                <Text
-                                    style={[
-                                        styles.cancelText,
-                                        { color: colors.textSecondary },
-                                    ]}
-                                >
-                                    Cancel
-                                </Text>
-                            </TouchableOpacity>
-                        </Animated.View>
-                    </GestureDetector>
+                                Remove Friend
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             )}
         </SafeAreaView>
@@ -852,81 +726,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    // Bottom sheet
-    bottomSheetOverlay: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    bottomSheetContainer: {
+    // Popover menu
+    popoverMenu: {
         position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingHorizontal: 24,
-        paddingTop: 12,
-        paddingBottom: 36,
-    },
-    bottomSheetHandle: {
-        width: 36,
-        height: 4,
-        borderRadius: 2,
-        alignSelf: 'center',
-        marginBottom: 16,
-    },
-    bottomSheetHeader: {
-        marginBottom: 8,
-    },
-    bottomSheetAvatarRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingVertical: 8,
-    },
-    bottomSheetAvatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-    },
-    bottomSheetAvatarFallback: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    bottomSheetAvatarText: {
-        fontSize: 18,
-        fontWeight: '700',
-    },
-    bottomSheetName: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    bottomSheetActionRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 16,
-        paddingVertical: 14,
-    },
-    bottomSheetActionIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    bottomSheetActionText: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    cancelBtn: {
-        width: '100%',
-        height: 56,
+        width: 180,
         borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 8,
+        borderWidth: 1,
+        paddingVertical: 4,
+        zIndex: 1000,
     },
-    cancelText: {
-        fontSize: 16,
+    popoverMenuShadow: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+    },
+    popoverMenuElevation: {
+        elevation: 8,
+    },
+    popoverMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    popoverMenuItemText: {
+        fontSize: 15,
         fontWeight: '600',
     },
 });
