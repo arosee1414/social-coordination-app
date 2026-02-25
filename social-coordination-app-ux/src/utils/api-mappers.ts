@@ -33,10 +33,10 @@ export function mapRsvpStatus(status: ApiRSVPStatus | undefined): RSVPStatus {
         case ApiRSVPStatus.Going:
             return 'going';
         case ApiRSVPStatus.Maybe:
+        case ApiRSVPStatus.Pending:
             return 'maybe';
         case ApiRSVPStatus.NotGoing:
             return 'not-going';
-        case ApiRSVPStatus.Pending:
         default:
             return null;
     }
@@ -214,12 +214,12 @@ export function mapAttendeesToRsvpGroups(attendees: HangoutAttendeeResponse[]): 
                 going.push(mapped);
                 break;
             case ApiRSVPStatus.Maybe:
+            case ApiRSVPStatus.Pending:
                 maybe.push(mapped);
                 break;
             case ApiRSVPStatus.NotGoing:
                 notGoing.push(mapped);
                 break;
-            case ApiRSVPStatus.Pending:
             default:
                 pending.push(mapped);
                 break;

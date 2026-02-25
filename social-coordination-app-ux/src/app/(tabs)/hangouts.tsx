@@ -58,12 +58,12 @@ function applyFilters(
     if (filters.rsvp !== 'all') {
         switch (filters.rsvp) {
             case 'pending':
-                result = result.filter((h) => h.userStatus === null);
+                result = result.filter(
+                    (h) => h.userStatus === 'maybe' || h.userStatus === null,
+                );
                 break;
             case 'accepted':
-                result = result.filter(
-                    (h) => h.userStatus === 'going' || h.userStatus === 'maybe',
-                );
+                result = result.filter((h) => h.userStatus === 'going');
                 break;
             case 'declined':
                 result = result.filter((h) => h.userStatus === 'not-going');

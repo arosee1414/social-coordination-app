@@ -158,9 +158,9 @@ export function HangoutFilterSheet({
 
     const rsvpOptions: { value: FilterRSVP; label: string }[] = [
         { value: 'all', label: 'All' },
-        { value: 'pending', label: 'Pending' },
-        { value: 'accepted', label: 'Accepted' },
-        { value: 'declined', label: 'Declined' },
+        { value: 'pending', label: 'Maybe' },
+        { value: 'accepted', label: 'Going' },
+        { value: 'declined', label: "Can't Go" },
     ];
 
     const dateOptions: { value: FilterDate; label: string }[] =

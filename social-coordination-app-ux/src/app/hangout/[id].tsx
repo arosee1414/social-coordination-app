@@ -75,7 +75,7 @@ export default function HangoutDetailScreen() {
         { key: 'maybe', label: 'Maybe', count: attendeesByStatus.maybe.length },
         {
             key: 'not-going',
-            label: 'Not Going',
+            label: "Can't Go",
             count: attendeesByStatus.notGoing.length,
         },
     ];

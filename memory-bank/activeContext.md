@@ -2,12 +2,16 @@
 
 ## Current Work Focus
 
-- Hangout detail page cleanup: removed extra "Pending" tab, restored original 3 tabs (Going, Maybe, Not Going)
-- Hangout invite system: inviting members and groups to hangouts, displaying them on hangout detail page
+- Merged Pending and Maybe RSVP statuses into one unified "Maybe" concept
+- Consistent wording across all RSVP-related UI (tabs, buttons, filters, badges)
 
 ## Recent Changes
 
-- **Removed Pending tab from hangout detail**: The RESPONSES section on `hangout/[id].tsx` now has only the original 3 tabs: Going, Maybe, and Not Going. Removed the Pending tab that was recently added. The `pending` field still exists in `AttendeesByStatus` type and mapper but is no longer displayed in the UI.
+- **Merged Pending + Maybe into unified "Maybe" status**: Users with no response (Pending) and users who explicitly chose "Maybe" now both appear in the same "Maybe" bucket throughout the app. This means invited users who haven't responded yet show up in the "Maybe" tab on the hangout detail page instead of being invisible.
+    - `api-mappers.ts`: `mapRsvpStatus` now maps both `ApiRSVPStatus.Pending` and `ApiRSVPStatus.Maybe` → `'maybe'`. `mapAttendeesToRsvpGroups` puts both Pending and Maybe attendees into the `maybe` array.
+    - `hangout/[id].tsx`: Renamed "Not Going" tab label to "Can't Go" for consistency with the RSVP button text.
+    - `HangoutFilterSheet.tsx`: Renamed RSVP filter labels from "Pending/Accepted/Declined" to "Maybe/Going/Can't Go" for consistency.
+    - `hangouts.tsx`: Updated filter logic so "Maybe" filter matches `userStatus === 'maybe' || null`, "Going" filter matches only `'going'`.
 - **Hangout Invitations (full-stack)**: Implemented end-to-end invite flow for hangouts:
     - **Backend**: Added `InvitedGroupIds` and `InviteeUserIds` to `CreateHangoutRequest` and `HangoutRecord`. Created `InvitedGroupInfoResponse` DTO. Updated `HangoutResponse` to include `InvitedGroups` list. Updated `HangoutsService.CreateHangoutAsync` to expand group members into individual attendees with Pending RSVP status, and to store invited group IDs on the record. Updated `GetHangoutByIdAsync` to populate `InvitedGroups` from stored group IDs.
     - **Frontend**: Updated `invite-selection.tsx` to send selected group IDs and individual user IDs to the API. Updated `useApiHangoutDetail` hook to expose `invitedGroups`. Updated `api-mappers.ts` with `mapInvitedGroupInfoToInvitedGroup` and added Pending status to RSVP grouping. Updated `hangout/[id].tsx` to show real invited groups (tappable, navigates to group detail) and a "Pending" tab in the RSVP responses section. Removed mock data dependencies (`mockInvitedGroups`, `mockInvitedFriends`). Added `pending` field to `AttendeesByStatus` type and all usages.
