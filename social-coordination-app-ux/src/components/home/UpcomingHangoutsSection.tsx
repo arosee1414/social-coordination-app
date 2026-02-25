@@ -207,7 +207,7 @@ export function UpcomingHangoutsSection({
                                         activeOpacity={0.8}
                                         onPress={(e) => {
                                             e.stopPropagation?.();
-                                            onRSVP(hangout.id, 'maybe');
+                                            onRSVP(hangout.id, 'not-going');
                                         }}
                                         style={[
                                             styles.rsvpBtn,
@@ -225,7 +225,7 @@ export function UpcomingHangoutsSection({
                                                 },
                                             ]}
                                         >
-                                            Maybe
+                                            {"Can't Go"}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>

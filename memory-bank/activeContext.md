@@ -2,19 +2,21 @@
 
 ## Current Work Focus
 
-Replaced bottom sheet with popover context menu for friend removal on friends list page. Ready for next task.
+Optimistic RSVP updates now include face stack and counts. Homepage quick actions changed to Going / Can't Go.
 
 ## What Was Just Accomplished
 
-- **Replaced bottom sheet with popover menu on friends list page:**
-    - Removed the full-width animated bottom sheet (overlay, pan gesture, Reanimated animations) for removing friends from `friends-list.tsx`
-    - Replaced with a lightweight popover/context menu that appears anchored next to the ellipsis (`⋯`) button
-    - Uses `measureInWindow` on a ref wrapping the ellipsis button to position the menu precisely
-    - Transparent `Pressable` backdrop dismisses the menu on outside tap
-    - Menu has consistent card styling (border radius 12, border, shadow) matching the app's design system
-    - Removed unused imports: `Animated`, `Gesture`, `GestureDetector`, `Pressable` (from Reanimated), `useSharedValue`, `useAnimatedStyle`, `withTiming`, `runOnJS`
-    - The friend detail page (`friend/[id].tsx`) still uses bottom sheets — this change was only for the friends list page as requested
-    - File changed: `social-coordination-app-ux/src/app/friends-list.tsx`
+- **Optimistic face stack update on RSVP** (`HangoutsContext.tsx`):
+    - `updateRSVP` now optimistically updates `attendeesPreview` (face stack), `goingCount`, `going`, and `maybe` counts — not just `userStatus`
+    - When user RSVPs "going": their avatar (from `useUser().imageUrl` via Clerk) is prepended to `attendeesPreview`, going/goingCount incremented
+    - When user leaves "going": avatar removed from preview, going/goingCount decremented
+    - Maybe count also adjusted on transitions to/from "maybe"
+    - Added `useUser` import from `@clerk/clerk-expo`; `user` added to `updateRSVP` dependency array
+
+- **Quick action buttons changed from "Going/Maybe" to "Going/Can't Go"** (`UpcomingHangoutsSection.tsx`):
+    - Second button now sends `'not-going'` instead of `'maybe'`
+    - Button label changed from "Maybe" to "Can't Go"
+    - Styling unchanged (uses `surfaceTertiary` background, same as before)
 
 ## Key Decisions Made
 

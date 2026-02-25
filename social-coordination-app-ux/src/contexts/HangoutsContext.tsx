@@ -13,7 +13,7 @@ import {
     mapRsvpStatusToApi,
 } from '@/src/utils/api-mappers';
 import { UpdateRSVPRequest } from '@/src/clients/generatedClient';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 
 interface HangoutsContextValue {
     hangouts: Hangout[];
@@ -57,13 +57,62 @@ export function HangoutsProvider({ children }: { children: ReactNode }) {
         fetchHangouts();
     }, [fetchHangouts]);
 
+    const { user } = useUser();
+
     const updateRSVP = useCallback(
         async (hangoutId: string, status: RSVPStatus) => {
-            // Optimistic update
+            const userAvatar = user?.imageUrl ?? null;
+
+            // Optimistic update — also update face stack & counts
             setHangouts((prev) =>
-                prev.map((h) =>
-                    h.id === hangoutId ? { ...h, userStatus: status } : h,
-                ),
+                prev.map((h) => {
+                    if (h.id !== hangoutId) return h;
+
+                    const prevStatus = h.userStatus;
+                    const wasGoing = prevStatus === 'going';
+                    const nowGoing = status === 'going';
+                    const wasMaybe = prevStatus === 'maybe';
+                    const nowMaybe = status === 'maybe';
+
+                    let attendeesPreview = [...h.attendeesPreview];
+                    let goingCount = h.goingCount ?? h.going;
+                    let going = h.going;
+                    let maybe = h.maybe;
+
+                    // Adjust going count & face stack
+                    if (wasGoing && !nowGoing) {
+                        goingCount = Math.max(0, goingCount - 1);
+                        going = Math.max(0, going - 1);
+                        // Remove the user's avatar from preview
+                        const idx = attendeesPreview.indexOf(userAvatar);
+                        if (idx !== -1) {
+                            attendeesPreview.splice(idx, 1);
+                        }
+                    }
+                    if (!wasGoing && nowGoing) {
+                        goingCount += 1;
+                        going += 1;
+                        // Add user's avatar to the front of the preview
+                        attendeesPreview = [userAvatar, ...attendeesPreview];
+                    }
+
+                    // Adjust maybe count
+                    if (wasMaybe && !nowMaybe) {
+                        maybe = Math.max(0, maybe - 1);
+                    }
+                    if (!wasMaybe && nowMaybe) {
+                        maybe += 1;
+                    }
+
+                    return {
+                        ...h,
+                        userStatus: status,
+                        attendeesPreview,
+                        goingCount,
+                        going,
+                        maybe,
+                    };
+                }),
             );
 
             try {
@@ -76,7 +125,7 @@ export function HangoutsProvider({ children }: { children: ReactNode }) {
                 await fetchHangouts();
             }
         },
-        [api, fetchHangouts],
+        [api, fetchHangouts, user],
     );
 
     return (
