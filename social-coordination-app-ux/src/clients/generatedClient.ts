@@ -153,6 +153,14 @@ export interface ISocialCoordinationApiClient {
      * @return Success
      */
     suggested(): Promise<UserResponse[]>;
+    /**
+     * @return Success
+     */
+    commonGroups(userId: string): Promise<GroupSummaryResponse[]>;
+    /**
+     * @return Success
+     */
+    commonHangouts(userId: string): Promise<HangoutSummaryResponse[]>;
 }
 
 export class SocialCoordinationApiClient implements ISocialCoordinationApiClient {
@@ -2010,6 +2018,128 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<UserResponse[]>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    commonGroups(userId: string, cancelToken?: CancelToken): Promise<GroupSummaryResponse[]> {
+        let url_ = this.baseUrl + "/api/users/{userId}/common-groups";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCommonGroups(_response);
+        });
+    }
+
+    protected processCommonGroups(response: AxiosResponse): Promise<GroupSummaryResponse[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(GroupSummaryResponse.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return Promise.resolve<GroupSummaryResponse[]>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GroupSummaryResponse[]>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    commonHangouts(userId: string, cancelToken?: CancelToken): Promise<HangoutSummaryResponse[]> {
+        let url_ = this.baseUrl + "/api/users/{userId}/common-hangouts";
+        if (userId === undefined || userId === null)
+            throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCommonHangouts(_response);
+        });
+    }
+
+    protected processCommonHangouts(response: AxiosResponse): Promise<HangoutSummaryResponse[]> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(HangoutSummaryResponse.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return Promise.resolve<HangoutSummaryResponse[]>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<HangoutSummaryResponse[]>(null as any);
     }
 }
 

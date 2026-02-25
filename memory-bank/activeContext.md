@@ -2,18 +2,31 @@
 
 ## Current Work Focus
 
-Group creation enhancement — adding member selection during group creation.
+Friend profile page enhancement — showing groups in common and shared hangouts on the friend detail page.
 
 ## What Was Just Accomplished
 
-- **Add members during group creation**: Added an "Add Members" / "Manage Members" button to `create-group.tsx` (matching the same button pattern from `edit-group/[id].tsx`). Uses a shared state module (`pendingGroupMembers.ts`) + `useFocusEffect` + `router.back()` pattern to pass selected member IDs between screens without stack buildup. The `CreateGroupRequest` now includes `memberUserIds` when members are selected. The backend already supported `MemberUserIds` on `CreateGroupRequest` — this was a frontend-only change.
-- **Shared state for cross-screen data**: Created `src/utils/pendingGroupMembers.ts` — a simple mutable object that `create-group` writes to before pushing `add-members`, and `add-members` writes to before calling `router.back()`. `create-group` re-reads via `useFocusEffect`. This avoids `router.navigate`/`router.replace` which caused duplicate screen entries in the stack.
+- **Friend profile page enrichment**: Enhanced `friend/[id].tsx` to show complete friend info including:
+    - **Stats row**: Friends count, Groups in common count, Hangouts together count
+    - **Groups in Common section**: Lists shared groups with emoji, name, member count; tappable to navigate to group detail
+    - **Hangouts Together section**: Lists shared hangouts with title, date, location; tappable to navigate to hangout detail
+    - Proper empty states for both sections when no data exists
+    - Loading indicators while data fetches
+    - Sections only shown when friendship status is "accepted"
+
+- **Backend: New API endpoints**: Added two new endpoints to `UsersController`:
+    - `GET /api/users/{userId}/common-groups` → Returns groups where both current user and target user are members
+    - `GET /api/users/{userId}/common-hangouts` → Returns hangouts where both current user and target user are attendees
+    - Implemented via `GetCommonGroupsAsync` in `GroupsService` and `GetCommonHangoutsAsync` in `HangoutsService`
+    - Uses Cosmos DB cross-partition queries with `ARRAY_CONTAINS` for member/attendee matching
+
+- **TypeScript API client regenerated**: New `commonGroups(userId)` and `commonHangouts(userId)` methods available in generated client
 
 ## Key Decisions Made
 
-- **Frontend-only changes**: No backend changes were needed — `GET /api/friends` already returns only accepted friends, `GET /api/groups` already returns only user's groups
-- **Client-side filtering**: Since the friends list is typically small, all filtering is done client-side instead of API-side search. This is simpler and more responsive.
-- **Consistent empty states**: All three screens now show proper empty states with "Find Friends" CTA when user has no friends, following existing design patterns
+- **Reused existing DTOs**: No new response types/DTOs needed — `GroupSummaryResponse` and `HangoutSummaryResponse` work for both endpoints
+- **Frontend uses direct API calls**: Instead of new hooks, the friend page directly calls `apiClient.commonGroups()` and `apiClient.commonHangouts()` via `useEffect`
+- **Sections conditional on friendship**: Groups in common and Hangouts together sections only render when `friendshipStatus.status === 'accepted'`
 
 ## Previous Context
 
@@ -23,12 +36,12 @@ Group creation enhancement — adding member selection during group creation.
 
 ## Remaining Work
 
-- **Testing**: End-to-end testing of invite flow with friends-only restriction
+- **Testing**: End-to-end testing of friend profile with common groups/hangouts data
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 
 ## Important Patterns & Preferences
 
 - **Cosmos enum serialization**: Always add `[JsonConverter(typeof(StringEnumConverter))]` to enum properties in domain models
-- Generated client method naming: `friendsAll()`, `friendsPOST(friendId)`, `friendsDELETE(friendId)`, `requestsAll()`, `requestsPOST(friendId)`, `accept(friendId)`, `reject(friendId)`, `status(friendId)`, `count(userId)`
+- Generated client method naming: `friendsAll()`, `friendsPOST(friendId)`, `friendsDELETE(friendId)`, `requestsAll()`, `requestsPOST(friendId)`, `accept(friendId)`, `reject(friendId)`, `status(friendId)`, `count(userId)`, `commonGroups(userId)`, `commonHangouts(userId)`
 - Theme colors: Use `colors.card` (not `cardBackground`), `colors.indigo50` (not `primaryLight`), `colors.surfaceTertiary` (not `backgroundSecondary`), `colors.error` (not `danger`), `colors.cardBorder` (not `border`)
 - PowerShell shell: Use `;` to chain commands, NOT `&&`; `2>$null` for stderr redirect (not `2>nul`)

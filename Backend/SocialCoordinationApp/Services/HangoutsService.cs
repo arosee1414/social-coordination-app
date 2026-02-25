@@ -394,6 +394,69 @@ public class HangoutsService : IHangoutsService
         return await MapToResponseAsync(response.Resource);
     }
 
+    public async Task<List<HangoutSummaryResponse>> GetCommonHangoutsAsync(string currentUserId, string otherUserId)
+    {
+        // Find all hangouts where both users are attendees (or creator)
+        var queryDefinition = new QueryDefinition(
+            "SELECT * FROM c WHERE ARRAY_CONTAINS(c.attendees, { 'userId': @currentUserId }, true) AND ARRAY_CONTAINS(c.attendees, { 'userId': @otherUserId }, true)")
+            .WithParameter("@currentUserId", currentUserId)
+            .WithParameter("@otherUserId", otherUserId);
+
+        var hangouts = await _cosmosContext.HangoutsContainer
+            .QueryItemsCrossPartitionAsync<HangoutRecord>(queryDefinition);
+
+        // Collect all unique Going attendee user IDs (up to 5 per hangout for avatar preview)
+        var allAttendeeIds = hangouts
+            .SelectMany(h => h.Attendees
+                .Where(a => a.RsvpStatus == RSVPStatus.Going)
+                .Take(5)
+                .Select(a => a.UserId))
+            .Distinct()
+            .ToList();
+
+        // Batch-lookup user records for avatar URLs
+        var avatarMap = new Dictionary<string, string?>();
+        if (allAttendeeIds.Count > 0)
+        {
+            var userQuery = new QueryDefinition(
+                "SELECT c.id, c.profileImageUrl FROM c WHERE ARRAY_CONTAINS(@userIds, c.id)")
+                .WithParameter("@userIds", allAttendeeIds);
+
+            var users = await _cosmosContext.UsersContainer
+                .QueryItemsCrossPartitionAsync<UserRecord>(userQuery);
+
+            foreach (var u in users)
+            {
+                avatarMap[u.Id] = u.ProfileImageUrl;
+            }
+        }
+
+        return hangouts.Select(h =>
+        {
+            var goingAttendees = h.Attendees.Where(a => a.RsvpStatus == RSVPStatus.Going).ToList();
+            return new HangoutSummaryResponse
+            {
+                Id = h.Id,
+                Title = h.Title,
+                Emoji = h.Emoji,
+                Location = h.Location,
+                StartTime = h.StartTime,
+                EndTime = h.EndTime,
+                AttendeeCount = h.Attendees.Count,
+                GoingCount = goingAttendees.Count,
+                Status = h.Status,
+                CurrentUserRsvpStatus = h.Attendees
+                    .FirstOrDefault(a => a.UserId == currentUserId)?.RsvpStatus,
+                CreatedByUserId = h.CreatedByUserId,
+                GroupId = h.GroupId,
+                AttendeeAvatarUrls = goingAttendees
+                    .Take(5)
+                    .Select(a => avatarMap.GetValueOrDefault(a.UserId))
+                    .ToList()
+            };
+        }).ToList();
+    }
+
     private async Task<HangoutRecord> GetHangoutRecordAsync(string hangoutId)
     {
         var queryDefinition = new QueryDefinition(

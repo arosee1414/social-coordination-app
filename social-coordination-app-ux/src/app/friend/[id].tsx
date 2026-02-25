@@ -16,6 +16,11 @@ import { useThemeColors } from '../../hooks/useThemeColors';
 import { useApiFriendshipStatus } from '../../hooks/useApiFriendshipStatus';
 import { useApiFriendCount } from '../../hooks/useApiFriends';
 import { useApiClient } from '../../hooks/useApiClient';
+import {
+    mapGroupSummaryToGroup,
+    mapHangoutSummaryToHangout,
+} from '../../utils/api-mappers';
+import type { Group, Hangout } from '../../types';
 
 interface FriendProfile {
     userId: string;
@@ -31,6 +36,10 @@ export default function FriendProfileScreen() {
 
     const [user, setUser] = useState<FriendProfile | null>(null);
     const [userLoading, setUserLoading] = useState(true);
+    const [commonGroups, setCommonGroups] = useState<Group[]>([]);
+    const [commonGroupsLoading, setCommonGroupsLoading] = useState(true);
+    const [commonHangouts, setCommonHangouts] = useState<Hangout[]>([]);
+    const [commonHangoutsLoading, setCommonHangoutsLoading] = useState(true);
 
     const {
         status: friendshipStatus,
@@ -49,7 +58,6 @@ export default function FriendProfileScreen() {
             if (!apiClient || !id) return;
             try {
                 setUserLoading(true);
-                // Direct user lookup by ID
                 const userResponse = await apiClient.users(id);
                 if (userResponse) {
                     const name =
@@ -62,7 +70,6 @@ export default function FriendProfileScreen() {
                     });
                     return;
                 }
-                // Fallback
                 setUser({
                     userId: id,
                     displayName: 'Unknown User',
@@ -78,6 +85,44 @@ export default function FriendProfileScreen() {
             }
         }
         fetchUser();
+    }, [apiClient, id]);
+
+    // Fetch common groups
+    useEffect(() => {
+        async function fetchCommonGroups() {
+            if (!apiClient || !id) return;
+            try {
+                setCommonGroupsLoading(true);
+                const result = await apiClient.commonGroups(id);
+                setCommonGroups((result ?? []).map(mapGroupSummaryToGroup));
+            } catch (err) {
+                console.warn('Error fetching common groups:', err);
+                setCommonGroups([]);
+            } finally {
+                setCommonGroupsLoading(false);
+            }
+        }
+        fetchCommonGroups();
+    }, [apiClient, id]);
+
+    // Fetch common hangouts
+    useEffect(() => {
+        async function fetchCommonHangouts() {
+            if (!apiClient || !id) return;
+            try {
+                setCommonHangoutsLoading(true);
+                const result = await apiClient.commonHangouts(id);
+                setCommonHangouts(
+                    (result ?? []).map(mapHangoutSummaryToHangout),
+                );
+            } catch (err) {
+                console.warn('Error fetching common hangouts:', err);
+                setCommonHangouts([]);
+            } finally {
+                setCommonHangoutsLoading(false);
+            }
+        }
+        fetchCommonHangouts();
     }, [apiClient, id]);
 
     const handleSendRequest = async () => {
@@ -291,6 +336,8 @@ export default function FriendProfileScreen() {
         }
     };
 
+    const isFriend = friendshipStatus.status === 'accepted';
+
     if (userLoading) {
         return (
             <SafeAreaView
@@ -431,6 +478,46 @@ export default function FriendProfileScreen() {
                                 Friends
                             </Text>
                         </View>
+                        <View style={styles.statItem}>
+                            <Text
+                                style={[
+                                    styles.statNumber,
+                                    { color: colors.text },
+                                ]}
+                            >
+                                {commonGroupsLoading
+                                    ? '—'
+                                    : commonGroups.length}
+                            </Text>
+                            <Text
+                                style={[
+                                    styles.statLabel,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Groups
+                            </Text>
+                        </View>
+                        <View style={styles.statItem}>
+                            <Text
+                                style={[
+                                    styles.statNumber,
+                                    { color: colors.text },
+                                ]}
+                            >
+                                {commonHangoutsLoading
+                                    ? '—'
+                                    : commonHangouts.length}
+                            </Text>
+                            <Text
+                                style={[
+                                    styles.statLabel,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Hangouts
+                            </Text>
+                        </View>
                     </View>
 
                     {/* Action Button */}
@@ -438,6 +525,257 @@ export default function FriendProfileScreen() {
                         {renderActionButton()}
                     </View>
                 </View>
+
+                {/* Groups in Common */}
+                {isFriend && (
+                    <View style={styles.section}>
+                        <Text
+                            style={[
+                                styles.sectionTitle,
+                                { color: colors.text },
+                            ]}
+                        >
+                            Groups in Common
+                        </Text>
+                        {commonGroupsLoading ? (
+                            <ActivityIndicator
+                                size='small'
+                                color={colors.primary}
+                                style={{ marginTop: 12 }}
+                            />
+                        ) : commonGroups.length > 0 ? (
+                            <View style={styles.cardList}>
+                                {commonGroups.map((group) => (
+                                    <TouchableOpacity
+                                        key={group.id}
+                                        style={[
+                                            styles.groupCard,
+                                            {
+                                                backgroundColor:
+                                                    colors.indigo50,
+                                            },
+                                        ]}
+                                        onPress={() =>
+                                            router.push(
+                                                `/group/${group.id}` as any,
+                                            )
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.groupRow}>
+                                            <Text style={styles.groupIcon}>
+                                                {group.icon}
+                                            </Text>
+                                            <View style={{ flex: 1 }}>
+                                                <Text
+                                                    style={[
+                                                        styles.groupName,
+                                                        {
+                                                            color: colors.text,
+                                                        },
+                                                    ]}
+                                                >
+                                                    {group.name}
+                                                </Text>
+                                                <View style={styles.memberRow}>
+                                                    <Ionicons
+                                                        name='people-outline'
+                                                        size={14}
+                                                        color={
+                                                            colors.textSecondary
+                                                        }
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.memberText,
+                                                            {
+                                                                color: colors.textSecondary,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {group.memberCount}{' '}
+                                                        members
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                            <Ionicons
+                                                name='chevron-forward'
+                                                size={20}
+                                                color={colors.textTertiary}
+                                            />
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        ) : (
+                            <View style={styles.emptySection}>
+                                <Ionicons
+                                    name='people-outline'
+                                    size={28}
+                                    color={colors.textTertiary}
+                                />
+                                <Text
+                                    style={[
+                                        styles.emptySectionText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    No groups in common
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                )}
+
+                {/* Hangouts Together */}
+                {isFriend && (
+                    <View style={[styles.section, { paddingBottom: 32 }]}>
+                        <Text
+                            style={[
+                                styles.sectionTitle,
+                                { color: colors.text },
+                            ]}
+                        >
+                            Hangouts Together
+                        </Text>
+                        {commonHangoutsLoading ? (
+                            <ActivityIndicator
+                                size='small'
+                                color={colors.primary}
+                                style={{ marginTop: 12 }}
+                            />
+                        ) : commonHangouts.length > 0 ? (
+                            <View style={styles.cardList}>
+                                {commonHangouts.map((hangout) => (
+                                    <TouchableOpacity
+                                        key={hangout.id}
+                                        style={[
+                                            styles.hangoutCard,
+                                            {
+                                                backgroundColor: colors.card,
+                                                borderColor: colors.cardBorder,
+                                            },
+                                        ]}
+                                        onPress={() =>
+                                            router.push(
+                                                `/hangout/${hangout.id}` as any,
+                                            )
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.hangoutRow}>
+                                            <View
+                                                style={[
+                                                    styles.hangoutEmojiContainer,
+                                                    {
+                                                        backgroundColor:
+                                                            colors.indigo50,
+                                                    },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={styles.hangoutEmoji}
+                                                >
+                                                    {hangout.title.charAt(0) ===
+                                                    '🎉'
+                                                        ? '🎉'
+                                                        : '🎉'}
+                                                </Text>
+                                            </View>
+                                            <View style={{ flex: 1 }}>
+                                                <Text
+                                                    style={[
+                                                        styles.hangoutTitle,
+                                                        {
+                                                            color: colors.text,
+                                                        },
+                                                    ]}
+                                                    numberOfLines={1}
+                                                >
+                                                    {hangout.title}
+                                                </Text>
+                                                <View
+                                                    style={
+                                                        styles.hangoutDetails
+                                                    }
+                                                >
+                                                    <Ionicons
+                                                        name='calendar-outline'
+                                                        size={13}
+                                                        color={
+                                                            colors.textSecondary
+                                                        }
+                                                    />
+                                                    <Text
+                                                        style={[
+                                                            styles.hangoutDetailText,
+                                                            {
+                                                                color: colors.textSecondary,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {hangout.date ??
+                                                            hangout.timeUntil}
+                                                    </Text>
+                                                    {hangout.location && (
+                                                        <>
+                                                            <Ionicons
+                                                                name='location-outline'
+                                                                size={13}
+                                                                color={
+                                                                    colors.textSecondary
+                                                                }
+                                                                style={{
+                                                                    marginLeft: 8,
+                                                                }}
+                                                            />
+                                                            <Text
+                                                                style={[
+                                                                    styles.hangoutDetailText,
+                                                                    {
+                                                                        color: colors.textSecondary,
+                                                                    },
+                                                                ]}
+                                                                numberOfLines={
+                                                                    1
+                                                                }
+                                                            >
+                                                                {
+                                                                    hangout.location
+                                                                }
+                                                            </Text>
+                                                        </>
+                                                    )}
+                                                </View>
+                                            </View>
+                                            <Ionicons
+                                                name='chevron-forward'
+                                                size={20}
+                                                color={colors.textTertiary}
+                                            />
+                                        </View>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        ) : (
+                            <View style={styles.emptySection}>
+                                <Ionicons
+                                    name='calendar-outline'
+                                    size={28}
+                                    color={colors.textTertiary}
+                                />
+                                <Text
+                                    style={[
+                                        styles.emptySectionText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    No hangouts together
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
@@ -535,5 +873,91 @@ const styles = StyleSheet.create({
     actionButtonText: {
         fontSize: 16,
         fontWeight: '600',
+    },
+    // Sections
+    section: {
+        paddingHorizontal: 24,
+        paddingTop: 8,
+        paddingBottom: 16,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 12,
+    },
+    cardList: {
+        gap: 10,
+    },
+    // Group cards
+    groupCard: {
+        borderRadius: 14,
+        padding: 16,
+    },
+    groupRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    groupIcon: {
+        fontSize: 32,
+    },
+    groupName: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    memberRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    memberText: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    // Hangout cards
+    hangoutCard: {
+        borderRadius: 14,
+        padding: 14,
+        borderWidth: 1,
+    },
+    hangoutRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    hangoutEmojiContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    hangoutEmoji: {
+        fontSize: 22,
+    },
+    hangoutTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 3,
+    },
+    hangoutDetails: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    hangoutDetailText: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    // Empty section states
+    emptySection: {
+        alignItems: 'center',
+        paddingVertical: 20,
+        gap: 8,
+    },
+    emptySectionText: {
+        fontSize: 14,
+        fontWeight: '500',
     },
 });

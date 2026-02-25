@@ -9,10 +9,14 @@ namespace SocialCoordinationApp.Controllers;
 public class UsersController : BaseApiController
 {
     private readonly IUsersService _usersService;
+    private readonly IGroupsService _groupsService;
+    private readonly IHangoutsService _hangoutsService;
 
-    public UsersController(IUsersService usersService)
+    public UsersController(IUsersService usersService, IGroupsService groupsService, IHangoutsService hangoutsService)
     {
         _usersService = usersService;
+        _groupsService = groupsService;
+        _hangoutsService = hangoutsService;
     }
 
     [HttpPost("me")]
@@ -81,6 +85,24 @@ public class UsersController : BaseApiController
     {
         var userId = GetUserId();
         var result = await _usersService.GetSuggestedUsersAsync(userId);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/common-groups")]
+    [ProducesResponseType(typeof(List<GroupSummaryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<GroupSummaryResponse>>> GetCommonGroups(string userId)
+    {
+        var currentUserId = GetUserId();
+        var result = await _groupsService.GetCommonGroupsAsync(currentUserId, userId);
+        return Ok(result);
+    }
+
+    [HttpGet("{userId}/common-hangouts")]
+    [ProducesResponseType(typeof(List<HangoutSummaryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<HangoutSummaryResponse>>> GetCommonHangouts(string userId)
+    {
+        var currentUserId = GetUserId();
+        var result = await _hangoutsService.GetCommonHangoutsAsync(currentUserId, userId);
         return Ok(result);
     }
 }

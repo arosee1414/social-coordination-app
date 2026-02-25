@@ -200,6 +200,26 @@ public class GroupsService : IGroupsService
         return await MapToResponseAsync(response.Resource);
     }
 
+    public async Task<List<GroupSummaryResponse>> GetCommonGroupsAsync(string currentUserId, string otherUserId)
+    {
+        // Find all groups where both users are members
+        var queryDefinition = new QueryDefinition(
+            "SELECT * FROM c WHERE ARRAY_CONTAINS(c.members, { 'userId': @currentUserId }, true) AND ARRAY_CONTAINS(c.members, { 'userId': @otherUserId }, true)")
+            .WithParameter("@currentUserId", currentUserId)
+            .WithParameter("@otherUserId", otherUserId);
+
+        var groups = await _cosmosContext.GroupsContainer
+            .QueryItemsCrossPartitionAsync<GroupRecord>(queryDefinition);
+
+        return groups.Select(g => new GroupSummaryResponse
+        {
+            Id = g.Id,
+            Name = g.Name,
+            Emoji = g.Emoji,
+            MemberCount = g.Members.Count
+        }).ToList();
+    }
+
     private async Task<GroupRecord> GetGroupRecordAsync(string groupId)
     {
         var queryDefinition = new QueryDefinition(

@@ -14,4 +14,5 @@ public interface IHangoutsService
     Task<HangoutResponse> CancelHangoutAsync(string hangoutId, string userId);
     Task<HangoutResponse> AddAttendeesAsync(string hangoutId, string userId, AddHangoutAttendeesRequest request);
     Task<HangoutResponse> RemoveAttendeeAsync(string hangoutId, string callerUserId, string attendeeUserId);
+    Task<List<HangoutSummaryResponse>> GetCommonHangoutsAsync(string currentUserId, string otherUserId);
 }

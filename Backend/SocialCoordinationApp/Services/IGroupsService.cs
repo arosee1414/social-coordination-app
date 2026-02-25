@@ -12,4 +12,5 @@ public interface IGroupsService
     Task DeleteGroupAsync(string groupId, string userId);
     Task<GroupResponse> AddMemberAsync(string groupId, string userId, AddGroupMemberRequest request);
     Task<GroupResponse> RemoveMemberAsync(string groupId, string userId, string memberUserId);
+    Task<List<GroupSummaryResponse>> GetCommonGroupsAsync(string currentUserId, string otherUserId);
 }
