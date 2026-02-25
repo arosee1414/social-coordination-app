@@ -51,6 +51,22 @@ public class UsersController : BaseApiController
         return NoContent();
     }
 
+    [HttpGet("{userId}")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserResponse>> GetUserById(string userId)
+    {
+        try
+        {
+            var result = await _usersService.GetUserAsync(userId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpGet("search")]
     [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<UserResponse>>> SearchUsers([FromQuery] string q)

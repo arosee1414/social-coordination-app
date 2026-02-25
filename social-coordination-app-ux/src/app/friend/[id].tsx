@@ -49,29 +49,16 @@ export default function FriendProfileScreen() {
             if (!apiClient || !id) return;
             try {
                 setUserLoading(true);
-                // Try to find user via search - search by id
-                // First try getting from friends list
-                const friendsResponse = await apiClient.friendsAll();
-                const found = friendsResponse?.find((f) => f.userId === id);
-                if (found) {
-                    setUser({
-                        userId: found.userId ?? id,
-                        displayName: found.displayName ?? 'Unknown',
-                        avatarUrl: found.avatarUrl ?? undefined,
-                    });
-                    return;
-                }
-                // Try search
-                const searchResults = await apiClient.search(id);
-                const searchFound = searchResults?.find((u) => u.id === id);
-                if (searchFound) {
+                // Direct user lookup by ID
+                const userResponse = await apiClient.users(id);
+                if (userResponse) {
                     const name =
-                        `${searchFound.firstName ?? ''} ${searchFound.lastName ?? ''}`.trim() ||
+                        `${userResponse.firstName ?? ''} ${userResponse.lastName ?? ''}`.trim() ||
                         'Unknown';
                     setUser({
-                        userId: searchFound.id ?? id,
+                        userId: userResponse.id ?? id,
                         displayName: name,
-                        avatarUrl: searchFound.profileImageUrl ?? undefined,
+                        avatarUrl: userResponse.profileImageUrl ?? undefined,
                     });
                     return;
                 }
