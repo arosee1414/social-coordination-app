@@ -48,9 +48,9 @@ export default function HangoutDetailScreen() {
     );
 
     const rsvp = hangout?.userStatus ?? null;
-    const [activeTab, setActiveTab] = useState<
-        'going' | 'maybe' | 'not-going' | 'pending'
-    >('going');
+    const [activeTab, setActiveTab] = useState<'going' | 'maybe' | 'not-going'>(
+        'going',
+    );
 
     const ITEM_HEIGHT = 72;
     const ITEM_GAP = 8;
@@ -59,7 +59,6 @@ export default function HangoutDetailScreen() {
             attendeesByStatus.going.length,
             attendeesByStatus.maybe.length,
             attendeesByStatus.notGoing.length,
-            attendeesByStatus.pending.length,
         );
         const cappedCount = Math.min(maxCount, 6);
         return (
@@ -68,7 +67,7 @@ export default function HangoutDetailScreen() {
     }, [attendeesByStatus]);
 
     const tabs: {
-        key: 'going' | 'maybe' | 'not-going' | 'pending';
+        key: 'going' | 'maybe' | 'not-going';
         label: string;
         count: number;
     }[] = [
@@ -79,11 +78,6 @@ export default function HangoutDetailScreen() {
             label: 'Not Going',
             count: attendeesByStatus.notGoing.length,
         },
-        {
-            key: 'pending',
-            label: 'Pending',
-            count: attendeesByStatus.pending.length,
-        },
     ];
 
     const attendeeList =
@@ -91,9 +85,7 @@ export default function HangoutDetailScreen() {
             ? attendeesByStatus.going
             : activeTab === 'maybe'
               ? attendeesByStatus.maybe
-              : activeTab === 'pending'
-                ? attendeesByStatus.pending
-                : attendeesByStatus.notGoing;
+              : attendeesByStatus.notGoing;
 
     if (!hangout && !loading) {
         return (
