@@ -2,7 +2,7 @@
 
 ## Current Work Focus
 
-Optimistic RSVP updates now include face stack and counts. Homepage quick actions changed to Going / Can't Go.
+RSVP improvements complete: face stack updates, Pending→Maybe merge, stats show "going/invited".
 
 ## What Was Just Accomplished
 
@@ -11,12 +11,17 @@ Optimistic RSVP updates now include face stack and counts. Homepage quick action
     - When user RSVPs "going": their avatar (from `useUser().imageUrl` via Clerk) is prepended to `attendeesPreview`, going/goingCount incremented
     - When user leaves "going": avatar removed from preview, going/goingCount decremented
     - Maybe count also adjusted on transitions to/from "maybe"
-    - Added `useUser` import from `@clerk/clerk-expo`; `user` added to `updateRSVP` dependency array
 
 - **Quick action buttons changed from "Going/Maybe" to "Going/Can't Go"** (`UpcomingHangoutsSection.tsx`):
     - Second button now sends `'not-going'` instead of `'maybe'`
     - Button label changed from "Maybe" to "Can't Go"
-    - Styling unchanged (uses `surfaceTertiary` background, same as before)
+
+- **Pending attendees merged into Maybe** (`api-mappers.ts` + `HangoutsService.cs`):
+    - Frontend: `mapAttendeesToRsvpGroups` routes `Pending` RSVP status into `maybe` array (detail page tabs)
+    - Backend: `MaybeCount` in `GetUserHangoutsAsync` and `GetCommonHangoutsAsync` now includes both `Maybe` and `Pending` attendees
+
+- **Hangouts tab stats changed** (`hangouts.tsx`):
+    - Status row now shows "{going} going" and "{attendeeCount} invited" instead of "{going} going" and "{maybe} maybe"
 
 ## Key Decisions Made
 

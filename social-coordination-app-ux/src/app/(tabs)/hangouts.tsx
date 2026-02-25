@@ -460,7 +460,7 @@ export default function HangoutsScreen() {
                                                     },
                                                 ]}
                                             >
-                                                {hangout.maybe} maybe
+                                                {hangout.attendeeCount} invited
                                             </Text>
                                         </View>
                                         {hangout.userStatus === 'going' && (

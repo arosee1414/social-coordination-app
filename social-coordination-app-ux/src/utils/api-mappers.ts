@@ -220,13 +220,13 @@ export function mapAttendeesToRsvpGroups(attendees: HangoutAttendeeResponse[]): 
                 maybe.push(mapped);
                 break;
             case ApiRSVPStatus.Pending:
-                pending.push(mapped);
+                maybe.push(mapped);
                 break;
             case ApiRSVPStatus.NotGoing:
                 notGoing.push(mapped);
                 break;
             default:
-                pending.push(mapped);
+                maybe.push(mapped);
                 break;
         }
     }
