@@ -16,18 +16,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useNotifications } from '@/src/contexts/NotificationsContext';
-import {
-    mockRecentActivity,
-    mockReminderBanner,
-    findFriendIdByName,
-} from '@/src/data/mock-data';
+import { mockRecentActivity, findFriendIdByName } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { HappeningNowSection } from '@/src/components/home/HappeningNowSection';
 import { ReminderBannerCard } from '@/src/components/home/ReminderBannerCard';
 import { UpcomingHangoutsSection } from '@/src/components/home/UpcomingHangoutsSection';
 import { RecentActivitySection } from '@/src/components/home/RecentActivitySection';
 import { FABBottomSheet } from '@/src/components/home/FABBottomSheet';
-import { RSVPStatus } from '@/src/types';
+import { RSVPStatus, ReminderBanner } from '@/src/types';
 
 export default function HomeScreen() {
     const colors = useThemeColors();
@@ -60,6 +56,32 @@ export default function HomeScreen() {
         await refetch();
         setRefreshing(false);
     }, [refetch]);
+
+    // Compute dynamic reminder banner: find soonest upcoming hangout where user hasn't RSVP'd
+    const pendingHangout =
+        hangouts
+            .filter(
+                (h) => h.status === 'upcoming' && h.userStatus === 'pending',
+            )
+            .sort((a, b) => {
+                const aTime = a.startTime
+                    ? new Date(a.startTime).getTime()
+                    : Infinity;
+                const bTime = b.startTime
+                    ? new Date(b.startTime).getTime()
+                    : Infinity;
+                return aTime - bTime;
+            })[0] ?? null;
+
+    const reminderBanner: ReminderBanner | null = pendingHangout
+        ? {
+              id: pendingHangout.id,
+              title: `You haven't RSVP'd to ${pendingHangout.title}`,
+              subtitle: pendingHangout.date
+                  ? `${pendingHangout.date} at ${pendingHangout.time} — respond now!`
+                  : 'Respond now!',
+          }
+        : null;
 
     const liveHangouts = hangouts.filter((h) => h.status === 'live');
     const upcomingHangouts = hangouts
@@ -227,10 +249,15 @@ export default function HomeScreen() {
                             onPress={handleHangoutPress}
                         />
 
-                        {hangouts.length > 0 && (
+                        {reminderBanner && (
                             <View style={{ paddingTop: 16, paddingBottom: 16 }}>
                                 <ReminderBannerCard
-                                    reminder={mockReminderBanner}
+                                    reminder={reminderBanner}
+                                    onPress={() =>
+                                        router.push(
+                                            `/hangout/${reminderBanner.id}` as any,
+                                        )
+                                    }
                                 />
                             </View>
                         )}

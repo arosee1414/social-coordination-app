@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ReminderBanner } from '@/src/types';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -7,14 +7,24 @@ import { createSharedStyles } from '@/src/constants/shared-styles';
 
 interface ReminderBannerCardProps {
     reminder: ReminderBanner;
+    onPress?: () => void;
 }
 
-export function ReminderBannerCard({ reminder }: ReminderBannerCardProps) {
+export function ReminderBannerCard({
+    reminder,
+    onPress,
+}: ReminderBannerCardProps) {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
 
+    const Wrapper = onPress ? TouchableOpacity : View;
+    const wrapperProps = onPress ? { onPress, activeOpacity: 0.7 } : {};
+
     return (
-        <View style={[shared.reminderBanner, styles.wrapper]}>
+        <Wrapper
+            {...wrapperProps}
+            style={[shared.reminderBanner, styles.wrapper]}
+        >
             {/* Clock icon circle */}
             <View
                 style={[
@@ -44,7 +54,7 @@ export function ReminderBannerCard({ reminder }: ReminderBannerCardProps) {
                     {reminder.subtitle}
                 </Text>
             </View>
-        </View>
+        </Wrapper>
     );
 }
 

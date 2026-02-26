@@ -21,6 +21,7 @@
 
 ## Recently Completed
 
+- **Dynamic reminder banner**: Replaced the hardcoded `mockReminderBanner` on the Home screen with a real, dynamically computed banner. It only shows when the user has an upcoming hangout they haven't RSVP'd to (`userStatus === 'pending'`), displays the real hangout title and date/time, and is tappable (navigates to the hangout detail). Hidden entirely when all upcoming hangouts have been responded to.
 - **Mutual friend suggestions**: Full-stack feature that suggests people the user shares groups or hangouts with but isn't friends with. Backend `GET /api/users/suggested` returns `SuggestedFriendResponse` with mutual group/hangout counts and names. Frontend `find-friends.tsx` shows a "People You May Know" section with suggestion cards when no search is active. New `useApiSuggestedFriends` hook handles data fetching with optimistic removal on friend request send.
 - **Friends tab replaces Search tab**: Replaced the Search tab with a Friends tab featuring friend management (list, remove, accept/reject requests). Profile's "Manage Friends" button and Friends stat now navigate to the Friends tab.
 - **Navigation restructuring**: Moved Notifications from bottom tab to stack route (accessible via bell icon on Home header).

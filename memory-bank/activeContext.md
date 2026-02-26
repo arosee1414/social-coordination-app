@@ -2,17 +2,18 @@
 
 ## Current Work Focus
 
-Mutual friend suggestions feature — suggesting people you share groups/hangouts with but aren't friends with yet.
+Replacing hardcoded mock data on the Home screen with real dynamic data.
 
 ## What Was Just Accomplished
 
-- **Implemented mutual friend suggestions (full stack)**:
-    - **Backend**: Created `SuggestedFriendResponse` DTO with `UserId`, `DisplayName`, `AvatarUrl`, `MutualGroupCount`, `MutualHangoutCount`, `MutualGroupNames`, `MutualHangoutNames`
-    - **Backend**: Rewrote `GetSuggestedUsersAsync()` in `UsersService` to query both groups and hangouts the user belongs to, collect co-members/co-attendees, filter out existing friends and pending requests, score by total mutual connections, and return top 20 suggestions with context
-    - **Backend**: Updated `IUsersService` and `UsersController` to use the new `SuggestedFriendResponse` return type
-    - **API Client**: Regenerated `generatedClient.ts` — now includes `SuggestedFriendResponse` class with all fields
-    - **Frontend**: Created `useApiSuggestedFriends` hook that fetches suggestions on mount, provides `removeSuggestion()` for optimistic removal after sending a request, and `refetch()` for screen re-focus
-    - **Frontend**: Updated `find-friends.tsx` to show a "People You May Know" section when no search query is active, displaying suggestion cards with avatars, names, mutual context labels (e.g., "2 shared groups · 1 shared hangout"), and "Add Friend" buttons
+- **Dynamic reminder banner on Home screen**:
+    - Replaced the hardcoded `mockReminderBanner` ("You haven't RSVP'd to Movie night") with a dynamically computed banner
+    - Banner now shows only when the user has an upcoming hangout with `userStatus === 'pending'` (hasn't RSVP'd)
+    - Picks the soonest pending upcoming hangout and displays its real title and date/time
+    - Banner is tappable — navigates to the hangout detail page so user can RSVP
+    - Added `onPress` prop to `ReminderBannerCard` component
+    - Removed `mockReminderBanner` from `mock-data.ts` and its import from `index.tsx`
+    - Banner is hidden entirely when user has RSVP'd to all upcoming hangouts
 
 ## Key Decisions Made
 

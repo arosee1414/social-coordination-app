@@ -9,7 +9,6 @@ import {
     ProfileStat,
     SettingsSection,
     RecentActivity,
-    ReminderBanner,
     FriendProfile,
     FriendGroupInCommon,
     FriendUpcomingHangout,
@@ -118,11 +117,6 @@ export const mockRecentActivity: RecentActivity[] = [
     { id: 'ra5', text: 'Nina started Coffee & coworking', avatar: '👩🏾' },
 ];
 
-export const mockReminderBanner: ReminderBanner = {
-    id: 'rem1',
-    title: 'You haven\'t RSVP\'d to Movie night',
-    subtitle: 'Starts Friday at 8:00 PM — respond now!',
-};
 
 export const mockAttendees: AttendeesByStatus = {
     going: [
