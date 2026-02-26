@@ -2,17 +2,17 @@
 
 ## Current Work Focus
 
-Dark mode toggle on Profile tab — user-controlled theme switching. Refinements complete.
+Profile tab UI refinement — Instagram-style profile header layout.
 
 ## What Was Just Accomplished
 
-- **Added Dark Mode toggle to Profile tab**: Implemented a full theme preference system matching the Figma design:
-    - Created `ThemeContext` (`src/contexts/ThemeContext.tsx`) with `ThemeProvider` that manages `themePreference` (`system` | `light` | `dark`), resolves `effectiveScheme`, and persists via `expo-secure-store`
-    - Updated `useThemeColors` hook to read from `ThemeContext` instead of raw `useColorScheme()`
-    - Wrapped the app root layout with `ThemeProvider`, split into `RootLayoutInner` to consume the context for `NavigationThemeProvider`
-    - Updated `(tabs)/_layout.tsx` to use `useThemeContext()` instead of `useColorScheme()`
-    - Added "Preferences" section to Profile screen with moon icon, toggle switch, and descriptive hint text below
-    - Added `toggleTrackOn`/`toggleTrackOff` colors to both light and dark theme palettes
+- **Converted Profile header from card to centered layout matching friend profile page**: Removed the primary-colored card container and replaced with a centered, flat layout:
+    - Centered 96px avatar with initial-letter fallback (matching friend profile page pattern)
+    - Centered display name (24px bold) and email below
+    - Stats row (Plans Created, Groups, Friends) centered below email with horizontal padding
+    - All text uses theme-aware colors (`colors.text`, `colors.textSecondary`)
+    - No card background, shadow, or border radius — content floats on page background
+    - All stat tap navigation preserved (Plans Created → Hangouts hosting tab, Groups → Groups tab, Friends → Friends list)
 
 ## Key Decisions Made
 

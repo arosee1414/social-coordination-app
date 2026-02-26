@@ -126,107 +126,122 @@ export default function ProfileScreen() {
                     />
                 }
             >
-                {/* Profile Header Card */}
-                <View
-                    style={{
-                        paddingHorizontal: 24,
-                        paddingTop: 16,
-                        paddingBottom: 24,
-                    }}
-                >
-                    <View
-                        style={[
-                            s.profileCard,
-                            { backgroundColor: colors.primary },
-                        ]}
-                    >
-                        <View style={s.avatarRow}>
-                            <View style={s.avatar}>
-                                {avatarUrl ? (
-                                    <Image
-                                        source={{ uri: avatarUrl }}
-                                        style={s.avatarImage}
-                                    />
-                                ) : (
-                                    <Ionicons
-                                        name='person'
-                                        size={32}
-                                        color='rgba(255,255,255,0.7)'
-                                    />
-                                )}
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={s.profileName}>{displayName}</Text>
-                                <Text style={s.profileEmail}>
-                                    {displayEmail}
+                {/* Profile Header — centered like friend profile page */}
+                <View style={s.profileSection}>
+                    {/* Avatar */}
+                    <View style={s.avatarContainer}>
+                        {avatarUrl ? (
+                            <Image
+                                source={{ uri: avatarUrl }}
+                                style={s.avatar}
+                            />
+                        ) : (
+                            <View
+                                style={[
+                                    s.avatar,
+                                    s.avatarFallback,
+                                    { backgroundColor: colors.indigo50 },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        s.avatarFallbackText,
+                                        { color: colors.primary },
+                                    ]}
+                                >
+                                    {displayName.charAt(0).toUpperCase()}
                                 </Text>
                             </View>
-                        </View>
-                        {/* Stats */}
-                        <View style={s.statsRow}>
-                            {profileStats.map((stat, index) => {
-                                const content = (
-                                    <View key={index} style={s.statItem}>
-                                        <Text style={s.statValue}>
-                                            {stat.value}
-                                        </Text>
-                                        <Text style={s.statLabel}>
-                                            {stat.label}
-                                        </Text>
-                                    </View>
+                        )}
+                    </View>
+
+                    {/* Name */}
+                    <Text style={[s.displayName, { color: colors.text }]}>
+                        {displayName}
+                    </Text>
+
+                    {/* Email */}
+                    <Text
+                        style={[
+                            s.displayEmail,
+                            { color: colors.textSecondary },
+                        ]}
+                    >
+                        {displayEmail}
+                    </Text>
+
+                    {/* Stats Row */}
+                    <View style={s.statsRow}>
+                        {profileStats.map((stat, index) => {
+                            const content = (
+                                <View key={index} style={s.statItem}>
+                                    <Text
+                                        style={[
+                                            s.statValue,
+                                            { color: colors.text },
+                                        ]}
+                                    >
+                                        {stat.value}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            s.statLabel,
+                                            {
+                                                color: colors.textSecondary,
+                                            },
+                                        ]}
+                                    >
+                                        {stat.label}
+                                    </Text>
+                                </View>
+                            );
+                            if (stat.label === 'Friends') {
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() =>
+                                            router.push('/friends-list' as any)
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        {content}
+                                    </TouchableOpacity>
                                 );
-                                if (stat.label === 'Friends') {
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            onPress={() =>
-                                                router.push(
-                                                    '/friends-list' as any,
-                                                )
-                                            }
-                                            activeOpacity={0.7}
-                                        >
-                                            {content}
-                                        </TouchableOpacity>
-                                    );
-                                }
-                                if (stat.label === 'Groups') {
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            onPress={() =>
-                                                router.push(
-                                                    '/(tabs)/groups' as any,
-                                                )
-                                            }
-                                            activeOpacity={0.7}
-                                        >
-                                            {content}
-                                        </TouchableOpacity>
-                                    );
-                                }
-                                if (stat.label === 'Plans Created') {
-                                    return (
-                                        <TouchableOpacity
-                                            key={index}
-                                            onPress={() =>
-                                                router.push({
-                                                    pathname:
-                                                        '/(tabs)/hangouts' as any,
-                                                    params: {
-                                                        role: 'hosting',
-                                                    },
-                                                })
-                                            }
-                                            activeOpacity={0.7}
-                                        >
-                                            {content}
-                                        </TouchableOpacity>
-                                    );
-                                }
-                                return content;
-                            })}
-                        </View>
+                            }
+                            if (stat.label === 'Groups') {
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() =>
+                                            router.push('/(tabs)/groups' as any)
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        {content}
+                                    </TouchableOpacity>
+                                );
+                            }
+                            if (stat.label === 'Plans Created') {
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() =>
+                                            router.push({
+                                                pathname:
+                                                    '/(tabs)/hangouts' as any,
+                                                params: {
+                                                    role: 'hosting',
+                                                },
+                                            })
+                                        }
+                                        activeOpacity={0.7}
+                                    >
+                                        {content}
+                                    </TouchableOpacity>
+                                );
+                            }
+                            return content;
+                        })}
                     </View>
                 </View>
 
@@ -510,46 +525,47 @@ export default function ProfileScreen() {
 }
 
 const s = StyleSheet.create({
-    profileCard: {
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    avatarRow: {
-        flexDirection: 'row',
+    profileSection: {
         alignItems: 'center',
-        gap: 16,
-        marginBottom: 20,
+        paddingHorizontal: 24,
+        paddingTop: 16,
+        paddingBottom: 24,
+    },
+    avatarContainer: {
+        marginBottom: 12,
     },
     avatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        width: 96,
+        height: 96,
+        borderRadius: 48,
+    },
+    avatarFallback: {
         justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'hidden',
     },
-    avatarImage: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
+    avatarFallbackText: {
+        fontSize: 36,
+        fontWeight: '700',
     },
-    profileName: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 2,
+    displayName: {
+        fontSize: 24,
+        fontWeight: '700',
+        marginBottom: 4,
     },
-    profileEmail: { fontSize: 14, color: 'rgba(255,255,255,0.8)' },
-    statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
-    statItem: { alignItems: 'center' },
-    statValue: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
-    statLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+    displayEmail: {
+        fontSize: 14,
+        marginBottom: 12,
+    },
+    statsRow: {
+        flexDirection: 'row',
+        marginBottom: 0,
+    },
+    statItem: {
+        alignItems: 'center',
+        paddingHorizontal: 24,
+    },
+    statValue: { fontSize: 20, fontWeight: '700' },
+    statLabel: { fontSize: 13, marginTop: 2 },
     settingsCard: { borderRadius: 12, borderWidth: 1, overflow: 'hidden' },
     settingsItem: {
         flexDirection: 'row',
