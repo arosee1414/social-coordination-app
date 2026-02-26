@@ -21,7 +21,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useClerk } from '@clerk/clerk-expo';
+import { useClerk, useUser } from '@clerk/clerk-expo';
 import { useScrollToTop } from '@react-navigation/native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { useThemeContext } from '@/src/contexts/ThemeContext';
@@ -39,6 +39,7 @@ export default function ProfileScreen() {
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { signOut } = useClerk();
+    const { user: clerkUser } = useUser();
     const { user, loading: userLoading, refetch } = useApiUser();
     const { hangouts, refetch: refetchHangouts } = useHangouts();
     const { groups, refetch: refetchGroups } = useApiGroups();
@@ -428,6 +429,66 @@ export default function ProfileScreen() {
                             </View>
                         </View>
                     </View>
+
+                    {/* Security Section — only for password-based accounts */}
+                    {clerkUser?.passwordEnabled && (
+                        <View>
+                            <Text
+                                style={[
+                                    shared.sectionLabel,
+                                    { textTransform: 'uppercase' },
+                                ]}
+                            >
+                                Security
+                            </Text>
+                            <View
+                                style={[
+                                    s.settingsCard,
+                                    {
+                                        backgroundColor: colors.card,
+                                        borderColor: colors.cardBorder,
+                                    },
+                                ]}
+                            >
+                                <TouchableOpacity
+                                    style={s.settingsItem}
+                                    activeOpacity={0.7}
+                                    onPress={() =>
+                                        router.push('/security' as any)
+                                    }
+                                >
+                                    <View
+                                        style={[
+                                            s.settingsIcon,
+                                            {
+                                                backgroundColor:
+                                                    colors.surfaceTertiary,
+                                            },
+                                        ]}
+                                    >
+                                        <Ionicons
+                                            name='lock-closed'
+                                            size={20}
+                                            color={colors.primary}
+                                        />
+                                    </View>
+                                    <Text
+                                        style={[
+                                            s.settingsLabel,
+                                            { color: colors.text },
+                                        ]}
+                                    >
+                                        Change Password
+                                    </Text>
+                                    <Ionicons
+                                        name='chevron-forward'
+                                        size={20}
+                                        color={colors.textTertiary}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
 
                     {/* Remaining sections (Support, etc.) */}
                     {settingsSections.map((section, sIdx) => (

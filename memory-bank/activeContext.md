@@ -2,15 +2,21 @@
 
 ## Current Work Focus
 
-Groups tab UI rework — changed from vertical list to 2-column square card grid layout.
+Added Account section with Security page (change password) to the profile screen.
 
 ## What Was Just Accomplished
 
-- **Reworked Groups tab to 2-column grid**: Replaced the single-column vertical list of rectangular group cards with a 2-column grid of square cards.
-- **Square card layout**: Each card uses `width = height = cardWidth` computed from screen width, padding, and gap to ensure perfect squares.
-- **Centered card content**: Icon (large emoji), group name (centered, up to 2 lines), and member count are vertically and horizontally centered within each card.
-- **Grid layout**: Uses `flexDirection: 'row'` + `flexWrap: 'wrap'` with `gap: 12` and `paddingHorizontal: 24` for consistent spacing.
-- **Preserved**: Header, empty state, loading spinner, pull-to-refresh, navigation, and background color logic all unchanged.
+- **Added SECURITY section to profile page**: New section between Preferences and Support with a "Change Password" button (lock-closed icon + chevron) that navigates to `/security`. Only shown when `clerkUser.passwordEnabled` is true (hides for Google OAuth-only users).
+- **Created `security.tsx` stack screen**: Full change password page with:
+    - Current password, new password, and confirm new password fields
+    - Eye toggle icons for showing/hiding each password field
+    - Client-side validation (empty fields, min 8 chars, password match)
+    - Clerk `user.updatePassword()` integration for actual password change
+    - Success alert navigates back, errors displayed inline
+    - Keyboard-aware layout with scroll and dismiss
+    - Consistent styling using shared styles and theme colors
+- **Registered `/security` route** in `_layout.tsx` with `slide_from_right` animation
+- **OAuth-aware**: Security section conditionally rendered — Google-only users never see it
 
 ## Key Decisions Made
 
