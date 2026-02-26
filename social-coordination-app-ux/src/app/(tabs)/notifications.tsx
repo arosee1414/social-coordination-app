@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useScrollToTop } from '@react-navigation/native';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
@@ -23,6 +24,8 @@ export default function NotificationsScreen() {
     const router = useRouter();
     const { notifications, markAsRead, markAllAsRead, deleteNotification } =
         useNotifications();
+    const scrollRef = useRef<ScrollView>(null);
+    useScrollToTop(scrollRef);
     const swipeableRefs = useRef<Map<string, Swipeable>>(new Map());
     const openSwipeableRef = useRef<Swipeable | null>(null);
 
@@ -147,7 +150,7 @@ export default function NotificationsScreen() {
                 </Text>
             </View>
 
-            <ScrollView style={{ flex: 1 }}>
+            <ScrollView ref={scrollRef} style={{ flex: 1 }}>
                 {notifications.map((notification) => (
                     <Animated.View
                         key={notification.id}

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useScrollToTop } from '@react-navigation/native';
 import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -26,6 +27,8 @@ export default function GroupsScreen() {
     const router = useRouter();
     const { groups, loading, refetch } = useApiGroups();
     const [refreshing, setRefreshing] = useState(false);
+    const scrollRef = useRef<ScrollView>(null);
+    useScrollToTop(scrollRef);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -69,6 +72,7 @@ export default function GroupsScreen() {
             </View>
 
             <ScrollView
+                ref={scrollRef}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}

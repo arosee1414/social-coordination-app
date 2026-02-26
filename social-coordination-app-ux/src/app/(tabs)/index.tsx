@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useScrollToTop } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
@@ -33,6 +34,9 @@ export default function HomeScreen() {
     const router = useRouter();
     const { hangouts, loading, updateRSVP, refetch } = useHangouts();
     const [refreshing, setRefreshing] = useState(false);
+
+    const scrollRef = useRef<ScrollView>(null);
+    useScrollToTop(scrollRef);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -130,6 +134,7 @@ export default function HomeScreen() {
 
             {/* Content — always rendered to avoid layout shift */}
             <ScrollView
+                ref={scrollRef}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}

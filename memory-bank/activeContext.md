@@ -2,11 +2,11 @@
 
 ## Current Work Focus
 
-UI consistency polish across friend-related screens.
+UX polish — scroll-to-top on tab re-tap.
 
 ## What Was Just Accomplished
 
-- **Made find-friends action buttons rectangular**: Updated `addButton`, `acceptButton`, and `actionBadge` styles in `find-friends.tsx` to use `borderRadius: 8`, `paddingHorizontal: 16`, `paddingVertical: 7` — matching the Confirm/Delete button shape in `friends-list.tsx`
+- **Added scroll-to-top on tab re-tap**: Added `useScrollToTop` from `@react-navigation/native` to all 5 tab screens (Home, Hangouts, Groups, Notifications, Profile). Tapping the already-active tab now scrolls the content back to the top.
 
 ## Key Decisions Made
 

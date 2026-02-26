@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useClerk } from '@clerk/clerk-expo';
+import { useScrollToTop } from '@react-navigation/native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { settingsSections } from '@/src/data/mock-data';
@@ -39,6 +40,8 @@ export default function ProfileScreen() {
     const { count: friendsCount, refetch: refetchFriendCount } =
         useApiFriendCount(user?.id);
     const [refreshing, setRefreshing] = useState(false);
+    const scrollRef = useRef<ScrollView>(null);
+    useScrollToTop(scrollRef);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -97,6 +100,7 @@ export default function ProfileScreen() {
             edges={['top', 'left', 'right']}
         >
             <ScrollView
+                ref={scrollRef}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
