@@ -16,21 +16,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useNotifications } from '@/src/contexts/NotificationsContext';
-import { mockRecentActivity, findFriendIdByName } from '@/src/data/mock-data';
 import { useHangouts } from '@/src/contexts/HangoutsContext';
 import { HappeningNowSection } from '@/src/components/home/HappeningNowSection';
 import { ReminderBannerCard } from '@/src/components/home/ReminderBannerCard';
 import { UpcomingHangoutsSection } from '@/src/components/home/UpcomingHangoutsSection';
 import { RecentActivitySection } from '@/src/components/home/RecentActivitySection';
 import { FABBottomSheet } from '@/src/components/home/FABBottomSheet';
-import { RSVPStatus, ReminderBanner } from '@/src/types';
+import { RSVPStatus, ReminderBanner, Notification } from '@/src/types';
 
 export default function HomeScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { hangouts, loading, updateRSVP, refetch } = useHangouts();
-    const { unreadCount } = useNotifications();
+    const {
+        notifications,
+        unreadCount,
+        markAsRead,
+        refresh: refreshNotifications,
+    } = useNotifications();
     const [refreshing, setRefreshing] = useState(false);
 
     const scrollRef = useRef<ScrollView>(null);
@@ -53,9 +57,9 @@ export default function HomeScreen() {
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await refetch();
+        await Promise.all([refetch(), refreshNotifications()]);
         setRefreshing(false);
-    }, [refetch]);
+    }, [refetch, refreshNotifications]);
 
     // Compute dynamic reminder banner: find soonest upcoming hangout where user hasn't RSVP'd
     const pendingHangout =
@@ -111,27 +115,33 @@ export default function HomeScreen() {
         updateRSVP(hangoutId, status);
     };
 
-    const handleActivityPress = (activityId: string) => {
-        const activity = mockRecentActivity.find((a) => a.id === activityId);
-        if (activity) {
-            const firstName = activity.text.split(' ')[0];
-            const nameMap: Record<string, string> = {
-                Sarah: 'Sarah Chen',
-                Mike: 'Mike Johnson',
-                Emma: 'Emma Wilson',
-                Alex: 'Alex Turner',
-                Nina: 'Nina Patel',
-                David: 'David Kim',
-                Lisa: 'Lisa Martinez',
-                Tom: 'Tom Anderson',
-            };
-            const fullName = nameMap[firstName];
-            if (fullName) {
-                const friendId = findFriendIdByName(fullName);
-                if (friendId) {
-                    router.push(`/friend/${friendId}` as any);
+    const handleNotificationPress = (notification: Notification) => {
+        // Mark as read (fire-and-forget)
+        if (!notification.isRead) {
+            markAsRead(notification.id);
+        }
+
+        switch (notification.type) {
+            case 'Rsvp':
+            case 'HangoutInvite':
+            case 'HangoutCreated':
+                if (notification.hangoutId) {
+                    router.push(`/hangout/${notification.hangoutId}` as any);
                 }
-            }
+                break;
+            case 'GroupCreated':
+            case 'MemberAdded':
+            case 'MemberRemoved':
+                if (notification.groupId) {
+                    router.push(`/group/${notification.groupId}` as any);
+                }
+                break;
+            case 'FriendRequest':
+            case 'FriendAccepted':
+                if (notification.actorUserId) {
+                    router.push(`/friend/${notification.actorUserId}` as any);
+                }
+                break;
         }
     };
 
@@ -272,8 +282,8 @@ export default function HomeScreen() {
                 )}
 
                 <RecentActivitySection
-                    activities={mockRecentActivity}
-                    onActivityPress={handleActivityPress}
+                    notifications={notifications.slice(0, 10)}
+                    onNotificationPress={handleNotificationPress}
                 />
             </ScrollView>
 

@@ -7,7 +7,6 @@ import {
     GroupMember,
     ProfileStat,
     SettingsSection,
-    RecentActivity,
     FriendProfile,
     FriendGroupInCommon,
     FriendUpcomingHangout,
@@ -106,14 +105,6 @@ export const mockHangouts: Hangout[] = [
         attendeeCount: 5,
         date: 'Fri, Feb 21',
     },
-];
-
-export const mockRecentActivity: RecentActivity[] = [
-    { id: 'ra1', text: 'Sarah is going to Drinks at The Rooftop', avatar: '👩🏻' },
-    { id: 'ra2', text: 'Mike created Weekend brunch catch-up', avatar: '👨🏽' },
-    { id: 'ra3', text: 'Emma invited Close Friends to Movie night', avatar: '👩🏼' },
-    { id: 'ra4', text: 'Alex joined Basketball at the park', avatar: '👨🏼' },
-    { id: 'ra5', text: 'Nina started Coffee & coworking', avatar: '👩🏾' },
 ];
 
 
@@ -414,13 +405,6 @@ export const mockFriendRecentActivities: FriendRecentActivity[] = [
     { id: '3', text: 'Went to Brunch Club', time: '1 week ago', icon: '☕' },
     { id: '4', text: 'Attended Movie Night', time: '2 weeks ago', icon: '🎬' },
 ];
-
-export function findFriendIdByName(name: string): string | undefined {
-    const friend = mockFriends.find(
-        (f) => f.name.toLowerCase() === name.toLowerCase(),
-    );
-    return friend?.id;
-}
 
 export const groupBgColors: Record<
     string,

@@ -2,11 +2,11 @@
 
 ## Current State (Feb 26, 2026)
 
-The full-stack notifications system has been implemented and is working end-to-end. Minor UX fixes are being applied.
+The full-stack notifications system has been implemented and is working end-to-end. The home screen "Recent Activity" section now uses real notifications data instead of mock data.
 
 ## Current Work Focus
 
-Post-implementation UX polish and bug fixes.
+Post-implementation UX polish and wiring up real data to replace remaining mock data.
 
 ## Recent Changes
 
@@ -72,12 +72,25 @@ All calls are wrapped in try/catch to prevent blocking the main operation. Each 
 
 - **Find Friends swipe-back gesture**: Removed `gestureEnabled: false` from the `find-friends` Stack.Screen in `_layout.tsx`. The screen was previously only navigable back via the header button; now the standard iOS swipe-back gesture works.
 
+## Recent Activity Section — Real Data (Feb 26, 2026)
+
+Replaced mock recent activity on the home screen with real notifications from the API:
+
+- **`RecentActivitySection` component**: Rewritten to accept `Notification[]` instead of `RecentActivity[]`. Uses type-based Ionicons icons with color-coded circles (same mapping as notifications screen). Shows `message` text and relative time via `formatTimeAgo`.
+- **Home screen (`index.tsx`)**: Now passes `notifications.slice(0, 10)` from `NotificationsContext` instead of `mockRecentActivity`. Press handler navigates to hangout/group/friend based on notification type. Pull-to-refresh now also refreshes notifications.
+- **Cleanup**: Removed `mockRecentActivity`, `findFriendIdByName` from `mock-data.ts`. Removed `RecentActivity` type from `types/index.ts`. Removed corresponding imports from home screen.
+- No backend changes needed — reuses existing notifications API.
+
+## Recent Activity UX Improvements (Feb 26, 2026)
+
+- **Text layout redesign**: Changed from horizontal icon+text layout to vertical layout — icon & timestamp in a header row, then title (bold, 2-line max) and message (secondary, 1-line) below. This avoids truncation of longer notification text.
+- **Mark as read on tap**: Tapping a recent activity card now calls `markAsRead(notification.id)` before navigating, reducing the unread badge count.
+
 ## Next Steps
 
-- Test the full notifications flow end-to-end
-- Consider adding notification deep-linking (tap notification to navigate to hangout/group/friend)
 - Consider adding push notifications via Expo or similar
 - Monitor notification volume and consider batching/throttling if needed
+- Continue replacing remaining mock data with real API data
 
 ## Active Decisions and Considerations
 

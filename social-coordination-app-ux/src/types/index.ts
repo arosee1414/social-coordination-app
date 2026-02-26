@@ -25,12 +25,6 @@ export interface Hangout {
     description?: string | null;
 }
 
-export interface RecentActivity {
-    id: string;
-    text: string;
-    avatar: string;
-}
-
 export interface ReminderBanner {
     id: string;
     title: string;
