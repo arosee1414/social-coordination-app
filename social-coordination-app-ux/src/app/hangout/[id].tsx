@@ -144,13 +144,6 @@ export default function HangoutDetailScreen() {
                     Hangout Details
                 </Text>
                 <View style={s.headerActions}>
-                    <TouchableOpacity>
-                        <Ionicons
-                            name='share-social-outline'
-                            size={24}
-                            color={colors.text}
-                        />
-                    </TouchableOpacity>
                     {isCreator && (
                         <TouchableOpacity
                             onPress={() =>
