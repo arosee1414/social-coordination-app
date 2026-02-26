@@ -8,13 +8,13 @@ import {
     Keyboard,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
+    Pressable,
     ScrollView,
     StyleSheet,
 } from 'react-native';
 import { isClerkAPIResponseError, useSignIn, useSSO } from '@clerk/clerk-expo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Ionicons } from '@expo/vector-icons';
 import GoogleLogo from '@/src/components/GoogleLogo';
 import { ClerkAPIError } from '@clerk/types';
@@ -32,6 +32,7 @@ export default function SignInPage() {
     const { email } = useLocalSearchParams();
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
+    const headerHeight = useHeaderHeight();
     const [emailAddress, setEmailAddress] = useState<string>(
         (email as string) ?? '',
     );
@@ -163,23 +164,24 @@ export default function SignInPage() {
     };
 
     return (
-        <SafeAreaView
+        <View
             style={[
                 shared.screenContainer,
                 { backgroundColor: colors.background },
             ]}
         >
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
+                keyboardVerticalOffset={headerHeight}
             >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <ScrollView
-                        style={{ flex: 1 }}
-                        contentContainerStyle={s.scrollContent}
-                        keyboardShouldPersistTaps='handled'
-                        showsVerticalScrollIndicator={false}
-                    >
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={[s.scrollContent, { flexGrow: 1 }]}
+                    keyboardShouldPersistTaps='handled'
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Pressable onPress={Keyboard.dismiss} style={{ flex: 1 }}>
                         {/* Title section */}
                         <View style={s.titleSection}>
                             <Text style={[s.title, { color: colors.text }]}>
@@ -309,8 +311,8 @@ export default function SignInPage() {
                                 {errorMessage}
                             </Text>
                         )}
-                    </ScrollView>
-                </TouchableWithoutFeedback>
+                    </Pressable>
+                </ScrollView>
             </KeyboardAvoidingView>
 
             {/* Toggle to sign up - fixed at bottom */}
@@ -326,7 +328,7 @@ export default function SignInPage() {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 

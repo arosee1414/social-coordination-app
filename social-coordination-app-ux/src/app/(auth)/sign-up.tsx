@@ -8,14 +8,14 @@ import {
     Keyboard,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
+    Pressable,
     ScrollView,
     StyleSheet,
 } from 'react-native';
 import { isClerkAPIResponseError, useSignUp, useSSO } from '@clerk/clerk-expo';
 import { ClerkAPIError } from '@clerk/types';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { Ionicons } from '@expo/vector-icons';
 import GoogleLogo from '@/src/components/GoogleLogo';
 import Dialog from 'react-native-dialog';
@@ -32,6 +32,7 @@ export default function SignUpPage() {
     const router = useRouter();
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
+    const headerHeight = useHeaderHeight();
 
     const [emailAddress, setEmailAddress] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -169,23 +170,24 @@ export default function SignUpPage() {
     }, []);
 
     return (
-        <SafeAreaView
+        <View
             style={[
                 shared.screenContainer,
                 { backgroundColor: colors.background },
             ]}
         >
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
+                keyboardVerticalOffset={headerHeight}
             >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <ScrollView
-                        style={{ flex: 1 }}
-                        contentContainerStyle={s.scrollContent}
-                        keyboardShouldPersistTaps='handled'
-                        showsVerticalScrollIndicator={false}
-                    >
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={[s.scrollContent, { flexGrow: 1 }]}
+                    keyboardShouldPersistTaps='handled'
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Pressable onPress={Keyboard.dismiss} style={{ flex: 1 }}>
                         <Dialog.Container visible={pendingVerification}>
                             <Dialog.Title>Verify Your Email</Dialog.Title>
                             <Dialog.Description>
@@ -355,8 +357,8 @@ export default function SignUpPage() {
                                 {errorMessage}
                             </Text>
                         )}
-                    </ScrollView>
-                </TouchableWithoutFeedback>
+                    </Pressable>
+                </ScrollView>
             </KeyboardAvoidingView>
 
             {/* Toggle to sign in - fixed at bottom */}
@@ -372,7 +374,7 @@ export default function SignUpPage() {
                     </Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
