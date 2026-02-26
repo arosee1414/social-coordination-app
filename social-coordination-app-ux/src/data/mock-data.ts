@@ -327,14 +327,6 @@ export const profileStats: ProfileStat[] = [
 
 export const settingsSections: SettingsSection[] = [
     {
-        title: 'Account',
-        items: [
-            { iconName: 'people', label: 'Manage Friends', badge: null },
-            { iconName: 'notifications', label: 'Notifications', badge: null },
-            { iconName: 'calendar', label: 'Calendar Sync', badge: null },
-        ],
-    },
-    {
         title: 'Support',
         items: [
             { iconName: 'help-circle', label: 'Help & Feedback', badge: null },

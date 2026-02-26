@@ -2,22 +2,15 @@
 
 ## Current Work Focus
 
-Navigation restructuring — Search tab replaced with Friends tab, Manage Friends linked to tab.
+Profile tab cleanup — removed redundant Manage Friends button, reorganized settings into Preferences section.
 
 ## What Was Just Accomplished
 
-- **Replaced Search tab with Friends tab**: The bottom tab bar now shows: Home, Hangouts, Groups, **Friends**, Profile (replacing Search).
-- **Created new Friends tab** (`src/app/(tabs)/friends.tsx`): Adapted from `friends-list.tsx` stack screen for tab use:
-    - Header with "Friends" title, "Manage your friends and requests" subtitle, and person-add icon to navigate to `/find-friends`
-    - Friends/Requests underline tabs with counts
-    - Friends tab: Uses `useApiFriends()` for real friend data, each row shows avatar/name/friendsSince, ellipsis popover for Remove Friend
-    - Requests tab: Shows incoming (Confirm/Delete) and outgoing (Requested) friend requests
-    - Pull-to-refresh, `useScrollToTop` for tab re-tap, `useFocusEffect` to refetch on focus
-    - Full theme support (light/dark), consistent shared styles
-- **Updated Profile "Manage Friends" navigation**: Both the "Manage Friends" settings button and the Friends stat counter in Profile now navigate to `/(tabs)/friends` (previously went to `/friends-list` stack screen)
-- **Deleted Search tab**: Removed `src/app/(tabs)/search.tsx`
-- **Differentiated tab icons**: Friends tab uses `Ionicons` `people-outline` to distinguish from Groups tab's `person.2.fill`
-- **Previous**: Notifications moved from tab to stack route (bell icon on Home header)
+- **Removed "Manage Friends" button from Profile**: Since there's now a dedicated Friends tab, the Manage Friends settings item was redundant. Removed it entirely along with the whole Account section from `settingsSections` in `mock-data.ts`.
+- **Moved Notifications to Preferences section**: The Notifications row now lives in the Preferences card on the Profile tab (navigates to `/notifications`), instead of being in the Account section.
+- **Moved Calendar Sync to Preferences section**: Calendar Sync row also moved into the Preferences card, appearing between Notifications and Dark Mode toggle.
+- **Profile Preferences card now contains**: Notifications → Calendar Sync → Dark Mode toggle (with hint text below).
+- **Remaining sections**: Support section (Help & Feedback) renders below Preferences, followed by Sign Out button.
 
 ## Key Decisions Made
 
@@ -45,6 +38,7 @@ Navigation restructuring — Search tab replaced with Friends tab, Manage Friend
 ## Remaining Work
 
 - **`friends-list.tsx` cleanup**: The old stack screen `friends-list.tsx` still exists but is no longer referenced by any navigation. Can be removed in a future cleanup pass.
+- **Calendar Sync implementation**: The Calendar Sync button is in the UI but has no `onPress` handler yet — needs actual calendar sync functionality.
 - **Testing**: End-to-end testing of dark mode toggle persistence and visual correctness across all screens
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 

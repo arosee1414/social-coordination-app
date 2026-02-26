@@ -255,82 +255,7 @@ export default function ProfileScreen() {
                         paddingBottom: 24,
                     }}
                 >
-                    {/* Account section (index 0) */}
-                    {settingsSections.slice(0, 1).map((section, sIdx) => (
-                        <View key={sIdx}>
-                            <Text
-                                style={[
-                                    shared.sectionLabel,
-                                    { textTransform: 'uppercase' },
-                                ]}
-                            >
-                                {section.title}
-                            </Text>
-                            <View
-                                style={[
-                                    s.settingsCard,
-                                    {
-                                        backgroundColor: colors.card,
-                                        borderColor: colors.cardBorder,
-                                    },
-                                ]}
-                            >
-                                {section.items.map((item, iIdx) => (
-                                    <TouchableOpacity
-                                        key={iIdx}
-                                        style={[
-                                            s.settingsItem,
-                                            iIdx < section.items.length - 1 && {
-                                                borderBottomWidth: 1,
-                                                borderBottomColor:
-                                                    colors.cardBorder,
-                                            },
-                                        ]}
-                                        activeOpacity={0.7}
-                                        onPress={
-                                            item.label === 'Manage Friends'
-                                                ? () =>
-                                                      router.push(
-                                                          '/(tabs)/friends' as any,
-                                                      )
-                                                : undefined
-                                        }
-                                    >
-                                        <View
-                                            style={[
-                                                s.settingsIcon,
-                                                {
-                                                    backgroundColor:
-                                                        colors.surfaceTertiary,
-                                                },
-                                            ]}
-                                        >
-                                            <Ionicons
-                                                name={item.iconName as any}
-                                                size={20}
-                                                color={colors.primary}
-                                            />
-                                        </View>
-                                        <Text
-                                            style={[
-                                                s.settingsLabel,
-                                                { color: colors.text },
-                                            ]}
-                                        >
-                                            {item.label}
-                                        </Text>
-                                        <Ionicons
-                                            name='chevron-forward'
-                                            size={20}
-                                            color={colors.textTertiary}
-                                        />
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </View>
-                    ))}
-
-                    {/* Preferences Section — Dark Mode Toggle (between Account and Support) */}
+                    {/* Preferences Section */}
                     <View>
                         <Text
                             style={[
@@ -349,6 +274,92 @@ export default function ProfileScreen() {
                                 },
                             ]}
                         >
+                            {/* Notifications */}
+                            <TouchableOpacity
+                                style={[
+                                    s.settingsItem,
+                                    {
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: colors.cardBorder,
+                                    },
+                                ]}
+                                activeOpacity={0.7}
+                                onPress={() =>
+                                    router.push('/notifications' as any)
+                                }
+                            >
+                                <View
+                                    style={[
+                                        s.settingsIcon,
+                                        {
+                                            backgroundColor:
+                                                colors.surfaceTertiary,
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name='notifications'
+                                        size={20}
+                                        color={colors.primary}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        s.settingsLabel,
+                                        { color: colors.text },
+                                    ]}
+                                >
+                                    Notifications
+                                </Text>
+                                <Ionicons
+                                    name='chevron-forward'
+                                    size={20}
+                                    color={colors.textTertiary}
+                                />
+                            </TouchableOpacity>
+
+                            {/* Calendar Sync */}
+                            <TouchableOpacity
+                                style={[
+                                    s.settingsItem,
+                                    {
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: colors.cardBorder,
+                                    },
+                                ]}
+                                activeOpacity={0.7}
+                            >
+                                <View
+                                    style={[
+                                        s.settingsIcon,
+                                        {
+                                            backgroundColor:
+                                                colors.surfaceTertiary,
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name='calendar'
+                                        size={20}
+                                        color={colors.primary}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        s.settingsLabel,
+                                        { color: colors.text },
+                                    ]}
+                                >
+                                    Calendar Sync
+                                </Text>
+                                <Ionicons
+                                    name='chevron-forward'
+                                    size={20}
+                                    color={colors.textTertiary}
+                                />
+                            </TouchableOpacity>
+
+                            {/* Dark Mode */}
                             <View style={s.settingsItem}>
                                 <View
                                     style={[
@@ -416,7 +427,7 @@ export default function ProfileScreen() {
                     </View>
 
                     {/* Remaining sections (Support, etc.) */}
-                    {settingsSections.slice(1).map((section, sIdx) => (
+                    {settingsSections.map((section, sIdx) => (
                         <View key={`rest-${sIdx}`}>
                             <Text
                                 style={[
