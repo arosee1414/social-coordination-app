@@ -16,7 +16,7 @@
 - **Invite/Search Restriction**: All invite and member-selection screens (hangout invite, group add members, manage group members) now only allow selecting accepted friends and groups the user is a member of — no general user search
 - **Seed Data**: Comprehensive seed data for users, groups, hangouts, and friendships
 - **API Client**: Auto-generated TypeScript client via NSwag from Swagger spec
-- **Theme System**: Light/dark mode with comprehensive color tokens
+- **Theme System**: Light/dark mode with comprehensive color tokens, user-controlled dark mode toggle on Profile tab (persisted via AsyncStorage through ThemeContext)
 - **Navigation**: Expo Router file-based routing with tabs, modals, and deep linking
 
 ## What's Left to Build

@@ -15,6 +15,8 @@ import {
     Animated,
     RefreshControl,
     Image,
+    Switch,
+    InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -22,6 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useClerk } from '@clerk/clerk-expo';
 import { useScrollToTop } from '@react-navigation/native';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
+import { useThemeContext } from '@/src/contexts/ThemeContext';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { settingsSections } from '@/src/data/mock-data';
 import { useApiUser } from '@/src/hooks/useApiUser';
@@ -31,6 +34,8 @@ import { useApiFriendCount } from '@/src/hooks/useApiFriends';
 
 export default function ProfileScreen() {
     const colors = useThemeColors();
+    const { effectiveScheme, themePreference, setThemePreference } =
+        useThemeContext();
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { signOut } = useClerk();
@@ -40,8 +45,16 @@ export default function ProfileScreen() {
     const { count: friendsCount, refetch: refetchFriendCount } =
         useApiFriendCount(user?.id);
     const [refreshing, setRefreshing] = useState(false);
+    const [localDarkMode, setLocalDarkMode] = useState(
+        effectiveScheme === 'dark',
+    );
     const scrollRef = useRef<ScrollView>(null);
     useScrollToTop(scrollRef);
+
+    // Sync local toggle state when effectiveScheme changes externally
+    useEffect(() => {
+        setLocalDarkMode(effectiveScheme === 'dark');
+    }, [effectiveScheme]);
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
@@ -225,7 +238,8 @@ export default function ProfileScreen() {
                         paddingBottom: 24,
                     }}
                 >
-                    {settingsSections.map((section, sIdx) => (
+                    {/* Account section (index 0) */}
+                    {settingsSections.slice(0, 1).map((section, sIdx) => (
                         <View key={sIdx}>
                             <Text
                                 style={[
@@ -264,6 +278,158 @@ export default function ProfileScreen() {
                                                       )
                                                 : undefined
                                         }
+                                    >
+                                        <View
+                                            style={[
+                                                s.settingsIcon,
+                                                {
+                                                    backgroundColor:
+                                                        colors.surfaceTertiary,
+                                                },
+                                            ]}
+                                        >
+                                            <Ionicons
+                                                name={item.iconName as any}
+                                                size={20}
+                                                color={colors.primary}
+                                            />
+                                        </View>
+                                        <Text
+                                            style={[
+                                                s.settingsLabel,
+                                                { color: colors.text },
+                                            ]}
+                                        >
+                                            {item.label}
+                                        </Text>
+                                        <Ionicons
+                                            name='chevron-forward'
+                                            size={20}
+                                            color={colors.textTertiary}
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    ))}
+
+                    {/* Preferences Section — Dark Mode Toggle (between Account and Support) */}
+                    <View>
+                        <Text
+                            style={[
+                                shared.sectionLabel,
+                                { textTransform: 'uppercase' },
+                            ]}
+                        >
+                            Preferences
+                        </Text>
+                        <View
+                            style={[
+                                s.settingsCard,
+                                {
+                                    backgroundColor: colors.card,
+                                    borderColor: colors.cardBorder,
+                                },
+                            ]}
+                        >
+                            <View style={s.settingsItem}>
+                                <View
+                                    style={[
+                                        s.settingsIcon,
+                                        {
+                                            backgroundColor:
+                                                colors.surfaceTertiary,
+                                        },
+                                    ]}
+                                >
+                                    <Ionicons
+                                        name='moon'
+                                        size={20}
+                                        color={colors.primary}
+                                    />
+                                </View>
+                                <Text
+                                    style={[
+                                        s.settingsLabel,
+                                        { color: colors.text },
+                                    ]}
+                                >
+                                    Dark Mode
+                                </Text>
+                                <Switch
+                                    value={localDarkMode}
+                                    onValueChange={(value) => {
+                                        setLocalDarkMode(value);
+                                        InteractionManager.runAfterInteractions(
+                                            () => {
+                                                setThemePreference(
+                                                    value ? 'dark' : 'light',
+                                                );
+                                            },
+                                        );
+                                    }}
+                                    trackColor={{
+                                        false: '#787880',
+                                        true: '#007AFF',
+                                    }}
+                                    ios_backgroundColor='#787880'
+                                />
+                            </View>
+                            <View
+                                style={[
+                                    s.darkModeHint,
+                                    {
+                                        borderTopColor: colors.cardBorder,
+                                        backgroundColor: colors.surfaceTertiary,
+                                    },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        s.darkModeHintText,
+                                        { color: colors.textTertiary },
+                                    ]}
+                                >
+                                    {effectiveScheme === 'dark'
+                                        ? 'Dark mode is enabled. Enjoy the darker theme!'
+                                        : 'Enable dark mode for a comfortable viewing experience in low light.'}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Remaining sections (Support, etc.) */}
+                    {settingsSections.slice(1).map((section, sIdx) => (
+                        <View key={`rest-${sIdx}`}>
+                            <Text
+                                style={[
+                                    shared.sectionLabel,
+                                    { textTransform: 'uppercase' },
+                                ]}
+                            >
+                                {section.title}
+                            </Text>
+                            <View
+                                style={[
+                                    s.settingsCard,
+                                    {
+                                        backgroundColor: colors.card,
+                                        borderColor: colors.cardBorder,
+                                    },
+                                ]}
+                            >
+                                {section.items.map((item, iIdx) => (
+                                    <TouchableOpacity
+                                        key={iIdx}
+                                        style={[
+                                            s.settingsItem,
+                                            iIdx < section.items.length - 1 && {
+                                                borderBottomWidth: 1,
+                                                borderBottomColor:
+                                                    colors.cardBorder,
+                                            },
+                                        ]}
+                                        activeOpacity={0.7}
                                     >
                                         <View
                                             style={[
@@ -400,6 +566,15 @@ const s = StyleSheet.create({
         alignItems: 'center',
     },
     settingsLabel: { flex: 1, fontSize: 16, fontWeight: '500' },
+    darkModeHint: {
+        borderTopWidth: 1,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+    },
+    darkModeHintText: {
+        fontSize: 12,
+        lineHeight: 16,
+    },
     signOutBtn: {
         flexDirection: 'row',
         alignItems: 'center',

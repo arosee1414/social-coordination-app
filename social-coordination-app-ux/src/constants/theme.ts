@@ -102,6 +102,10 @@ export const Colors = {
         // FAB
         fabShadow: 'rgba(0, 122, 255, 0.3)',
 
+        // Toggle switch
+        toggleTrackOn: '#007AFF',
+        toggleTrackOff: '#787880',
+
         // Overlay & bottom sheet
         overlayBg: 'rgba(0, 0, 0, 0.4)',
         bottomSheetBg: '#fff',
@@ -202,6 +206,10 @@ export const Colors = {
 
         // FAB
         fabShadow: 'rgba(0, 122, 255, 0.15)',
+
+        // Toggle switch
+        toggleTrackOn: '#0A84FF',
+        toggleTrackOff: '#48484A',
 
         // Overlay & bottom sheet
         overlayBg: 'rgba(0, 0, 0, 0.6)',

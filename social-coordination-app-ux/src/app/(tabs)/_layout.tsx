@@ -4,12 +4,12 @@ import React from 'react';
 import { HapticTab } from '@/src/components/haptic-tab';
 import { IconSymbol } from '@/src/components/ui/icon-symbol';
 import { Colors } from '@/src/constants/theme';
-import { useColorScheme } from '@/src/hooks/use-color-scheme';
+import { useThemeContext } from '@/src/contexts/ThemeContext';
 import { useNotifications } from '@/src/contexts/NotificationsContext';
 
 export default function TabLayout() {
-    const colorScheme = useColorScheme();
-    const colors = Colors[colorScheme ?? 'light'];
+    const { effectiveScheme } = useThemeContext();
+    const colors = Colors[effectiveScheme];
     const { unreadCount } = useNotifications();
 
     return (

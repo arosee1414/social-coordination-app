@@ -1,12 +1,11 @@
 import {
     DarkTheme,
     DefaultTheme,
-    ThemeProvider,
+    ThemeProvider as NavigationThemeProvider,
 } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import 'react-native-reanimated';
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo';
-import { useColorScheme } from '@/src/hooks/use-color-scheme';
 import { tokenCache } from './utils/tokenCache';
 import React from 'react';
 import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
@@ -15,12 +14,12 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NotificationsProvider } from '@/src/contexts/NotificationsContext';
 import { HangoutsProvider } from '@/src/contexts/HangoutsContext';
 import { ApiClientProvider } from '@/src/contexts/ApiClientContext';
+import { ThemeProvider, useThemeContext } from '@/src/contexts/ThemeContext';
 
 // Keep the splash screen visible until we explicitly hide it
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-    const colorScheme = useColorScheme();
     const [fontsLoaded] = useFonts({
         Pacifico_400Regular,
     });
@@ -32,27 +31,37 @@ export default function RootLayout() {
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <ThemeProvider
-                value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-            >
-                <ClerkProvider
-                    tokenCache={tokenCache}
-                    publishableKey={
-                        'pk_test_ZHluYW1pYy1oZXJtaXQtMTguY2xlcmsuYWNjb3VudHMuZGV2JA'
-                    }
-                >
-                    <ClerkLoaded>
-                        <ApiClientProvider>
-                            <NotificationsProvider>
-                                <HangoutsProvider>
-                                    <RootLayoutNav />
-                                </HangoutsProvider>
-                            </NotificationsProvider>
-                        </ApiClientProvider>
-                    </ClerkLoaded>
-                </ClerkProvider>
+            <ThemeProvider>
+                <RootLayoutInner />
             </ThemeProvider>
         </GestureHandlerRootView>
+    );
+}
+
+function RootLayoutInner(): React.JSX.Element {
+    const { effectiveScheme } = useThemeContext();
+
+    return (
+        <NavigationThemeProvider
+            value={effectiveScheme === 'dark' ? DarkTheme : DefaultTheme}
+        >
+            <ClerkProvider
+                tokenCache={tokenCache}
+                publishableKey={
+                    'pk_test_ZHluYW1pYy1oZXJtaXQtMTguY2xlcmsuYWNjb3VudHMuZGV2JA'
+                }
+            >
+                <ClerkLoaded>
+                    <ApiClientProvider>
+                        <NotificationsProvider>
+                            <HangoutsProvider>
+                                <RootLayoutNav />
+                            </HangoutsProvider>
+                        </NotificationsProvider>
+                    </ApiClientProvider>
+                </ClerkLoaded>
+            </ClerkProvider>
+        </NavigationThemeProvider>
     );
 }
 

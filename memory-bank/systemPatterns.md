@@ -77,6 +77,15 @@ Each friendship creates **two** mirrored Cosmos DB documents, one in each user's
 - Empty state: icon + title + subtitle (+ optional action button)
 - Error handling via `Alert.alert()`
 
+### Theme / Dark Mode Pattern
+
+- `ThemeContext` (`src/contexts/ThemeContext.tsx`) wraps the entire app in `_layout.tsx`
+- Manages `themePreference` (`system` | `light` | `dark`) with AsyncStorage persistence
+- Resolves `effectiveScheme` (`light` | `dark`) by combining preference with system setting
+- `useThemeColors()` hook reads from `ThemeContext` to return the correct color palette
+- `useThemeContext()` hook gives access to `effectiveScheme`, `themePreference`, and `setThemePreference`
+- Dark mode toggle lives in the Profile tab's "Preferences" section
+
 ### Style Consistency
 
 - Shared constants: `src/constants/theme.ts` (colors, spacing, typography, border radius)
