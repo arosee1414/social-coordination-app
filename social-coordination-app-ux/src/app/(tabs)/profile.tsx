@@ -199,6 +199,7 @@ export default function ProfileScreen() {
                                 return (
                                     <TouchableOpacity
                                         key={index}
+                                        style={{ flex: 1 }}
                                         onPress={() =>
                                             router.push(
                                                 '/(tabs)/friends' as any,
@@ -214,6 +215,7 @@ export default function ProfileScreen() {
                                 return (
                                     <TouchableOpacity
                                         key={index}
+                                        style={{ flex: 1 }}
                                         onPress={() =>
                                             router.push('/(tabs)/groups' as any)
                                         }
@@ -227,6 +229,7 @@ export default function ProfileScreen() {
                                 return (
                                     <TouchableOpacity
                                         key={index}
+                                        style={{ flex: 1 }}
                                         onPress={() =>
                                             router.push({
                                                 pathname:
@@ -571,11 +574,12 @@ const s = StyleSheet.create({
     },
     statsRow: {
         flexDirection: 'row',
+        alignSelf: 'stretch',
         marginBottom: 0,
     },
     statItem: {
+        flex: 1,
         alignItems: 'center',
-        paddingHorizontal: 24,
     },
     statValue: { fontSize: 20, fontWeight: '700' },
     statLabel: { fontSize: 13, marginTop: 2 },

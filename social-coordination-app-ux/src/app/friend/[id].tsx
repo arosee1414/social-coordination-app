@@ -1052,11 +1052,12 @@ const styles = StyleSheet.create({
     },
     statsRow: {
         flexDirection: 'row',
+        alignSelf: 'stretch',
         marginBottom: 16,
     },
     statItem: {
+        flex: 1,
         alignItems: 'center',
-        paddingHorizontal: 24,
     },
     statNumber: {
         fontSize: 20,
