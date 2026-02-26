@@ -2,15 +2,11 @@
 
 ## Current Work Focus
 
-Profile card stats navigation.
+UI consistency polish across friend-related screens.
 
 ## What Was Just Accomplished
 
-- **Made profile card stats interactive**:
-    - "Groups" stat now navigates to `/(tabs)/groups` when tapped
-    - "Plans Created" stat now navigates to `/(tabs)/hangouts` with `role=hosting` param, which pre-applies the "Hosting" filter
-    - `hangouts.tsx` reads `useLocalSearchParams` for a `role` param and initializes/updates filter state accordingly
-    - Pattern matches existing "Friends" stat → `/friends-list` navigation
+- **Made find-friends action buttons rectangular**: Updated `addButton`, `acceptButton`, and `actionBadge` styles in `find-friends.tsx` to use `borderRadius: 8`, `paddingHorizontal: 16`, `paddingVertical: 7` — matching the Confirm/Delete button shape in `friends-list.tsx`
 
 ## Key Decisions Made
 

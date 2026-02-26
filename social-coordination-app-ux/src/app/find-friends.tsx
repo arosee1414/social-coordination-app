@@ -522,9 +522,9 @@ const styles = StyleSheet.create({
     addButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 8,
         gap: 4,
     },
     addButtonText: {
@@ -535,17 +535,17 @@ const styles = StyleSheet.create({
     acceptButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 8,
         gap: 4,
     },
     actionBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 7,
+        borderRadius: 8,
         gap: 4,
     },
     actionBadgeText: {
