@@ -93,14 +93,16 @@ export interface FriendRequest {
 
 export interface Notification {
     id: string;
-    type: 'rsvp' | 'invite' | 'reminder' | 'group' | 'friend' | 'group_created';
-    icon?: string;
+    type: string;
     title: string;
     message: string;
     time: string;
-    unread: boolean;
-    color?: string;
-    relatedEntityId?: string;
+    isRead: boolean;
+    recipientUserId?: string;
+    actorUserId?: string;
+    hangoutId?: string | null;
+    groupId?: string | null;
+    createdAt?: string;
 }
 
 export interface ProfileStat {

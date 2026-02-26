@@ -8,5 +8,6 @@ public interface ICosmosContext
     Container GroupsContainer { get; }
     Container HangoutsContainer { get; }
     Container FriendshipsContainer { get; }
+    Container NotificationsContainer { get; }
     Task InitializeAsync();
 }

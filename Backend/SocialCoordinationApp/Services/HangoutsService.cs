@@ -11,11 +11,13 @@ public class HangoutsService : IHangoutsService
 {
     private readonly ICosmosContext _cosmosContext;
     private readonly ILogger<HangoutsService> _logger;
+    private readonly INotificationsService _notificationsService;
 
-    public HangoutsService(ICosmosContext cosmosContext, ILogger<HangoutsService> logger)
+    public HangoutsService(ICosmosContext cosmosContext, ILogger<HangoutsService> logger, INotificationsService notificationsService)
     {
         _cosmosContext = cosmosContext;
         _logger = logger;
+        _notificationsService = notificationsService;
     }
 
     public async Task<HangoutResponse> CreateHangoutAsync(string userId, CreateHangoutRequest request)
@@ -112,6 +114,26 @@ public class HangoutsService : IHangoutsService
             .CreateItemAsync(hangout, new PartitionKey(userId));
 
         _logger.LogInformation("Hangout {HangoutId} created by user {UserId}", hangout.Id, userId);
+
+        // Send HangoutInvite notifications to all invitees (excluding creator)
+        var creatorDisplayName = await GetUserDisplayNameAsync(userId);
+        foreach (var attendee in hangout.Attendees.Where(a => a.UserId != userId))
+        {
+            try
+            {
+                await _notificationsService.CreateNotificationAsync(
+                    recipientUserId: attendee.UserId,
+                    actorUserId: userId,
+                    type: NotificationType.HangoutInvite,
+                    title: $"{creatorDisplayName} invited you",
+                    message: $"to \"{hangout.Title}\"",
+                    hangoutId: hangout.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create HangoutInvite notification for user {UserId}", attendee.UserId);
+            }
+        }
 
         return await MapToResponseAsync(response.Resource);
     }
@@ -272,6 +294,33 @@ public class HangoutsService : IHangoutsService
         _logger.LogInformation("User {UserId} RSVP'd {Status} to hangout {HangoutId}",
             userId, request.Status, hangoutId);
 
+        // Send Rsvp notification to hangout creator (if RSVP user is not the creator)
+        if (hangout.CreatedByUserId != userId)
+        {
+            try
+            {
+                var rsvpUserName = await GetUserDisplayNameAsync(userId);
+                var statusText = request.Status switch
+                {
+                    RSVPStatus.Going => "is going",
+                    RSVPStatus.Maybe => "is maybe",
+                    RSVPStatus.NotGoing => "can't make it",
+                    _ => "updated their RSVP"
+                };
+                await _notificationsService.CreateNotificationAsync(
+                    recipientUserId: hangout.CreatedByUserId,
+                    actorUserId: userId,
+                    type: NotificationType.Rsvp,
+                    title: $"{rsvpUserName} {statusText}",
+                    message: $"for \"{hangout.Title}\"",
+                    hangoutId: hangout.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create Rsvp notification for hangout creator {CreatorId}", hangout.CreatedByUserId);
+            }
+        }
+
         return await MapToResponseAsync(response.Resource);
     }
 
@@ -348,6 +397,35 @@ public class HangoutsService : IHangoutsService
 
         _logger.LogInformation("Added {Count} attendees to hangout {HangoutId} by user {UserId}",
             newAttendeesAdded, hangoutId, userId);
+
+        // Send HangoutInvite notifications to newly added attendees
+        if (newAttendeesAdded > 0)
+        {
+            var inviterDisplayName = await GetUserDisplayNameAsync(userId);
+            // Get the newly added attendees (those with Pending status that were just added)
+            var newAttendees = hangout.Attendees
+                .Where(a => a.UserId != userId && a.RsvpStatus == RSVPStatus.Pending && !existingUserIds.Except(hangout.Attendees.Select(att => att.UserId)).Contains(a.UserId))
+                .ToList();
+
+            // Simpler approach: just notify all pending attendees that aren't the creator
+            foreach (var att in hangout.Attendees.Where(a => a.UserId != userId && a.RsvpStatus == RSVPStatus.Pending))
+            {
+                try
+                {
+                    await _notificationsService.CreateNotificationAsync(
+                        recipientUserId: att.UserId,
+                        actorUserId: userId,
+                        type: NotificationType.HangoutInvite,
+                        title: $"{inviterDisplayName} invited you",
+                        message: $"to \"{hangout.Title}\"",
+                        hangoutId: hangout.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to create HangoutInvite notification for user {UserId}", att.UserId);
+                }
+            }
+        }
 
         return await MapToResponseAsync(response.Resource);
     }

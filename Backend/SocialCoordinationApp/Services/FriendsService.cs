@@ -11,12 +11,14 @@ public class FriendsService : IFriendsService
     private readonly ICosmosContext _cosmosContext;
     private readonly IUsersService _usersService;
     private readonly ILogger<FriendsService> _logger;
+    private readonly INotificationsService _notificationsService;
 
-    public FriendsService(ICosmosContext cosmosContext, IUsersService usersService, ILogger<FriendsService> logger)
+    public FriendsService(ICosmosContext cosmosContext, IUsersService usersService, ILogger<FriendsService> logger, INotificationsService notificationsService)
     {
         _cosmosContext = cosmosContext;
         _usersService = usersService;
         _logger = logger;
+        _notificationsService = notificationsService;
     }
 
     public async Task<List<FriendResponse>> GetFriendsAsync(string userId)
@@ -172,6 +174,22 @@ public class FriendsService : IFriendsService
             .CreateItemAsync(incoming, new PartitionKey(friendId));
 
         _logger.LogInformation("Friend request sent from {UserId} to {FriendId}", userId, friendId);
+
+        // Send FriendRequest notification to the recipient
+        try
+        {
+            var senderDisplayName = await GetUserDisplayNameAsync(userId);
+            await _notificationsService.CreateNotificationAsync(
+                recipientUserId: friendId,
+                actorUserId: userId,
+                type: NotificationType.FriendRequest,
+                title: $"{senderDisplayName} sent you a friend request",
+                message: "Tap to respond");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create FriendRequest notification for user {FriendId}", friendId);
+        }
     }
 
     public async Task AcceptFriendRequestAsync(string userId, string friendId)
@@ -209,6 +227,22 @@ public class FriendsService : IFriendsService
                 .ReplaceItemAsync(outgoingRecord, outgoingId, new PartitionKey(friendId));
 
             _logger.LogInformation("Friend request accepted: {UserId} accepted {FriendId}", userId, friendId);
+
+            // Send FriendAccepted notification to the original sender (friendId)
+            try
+            {
+                var accepterDisplayName = await GetUserDisplayNameAsync(userId);
+                await _notificationsService.CreateNotificationAsync(
+                    recipientUserId: friendId,
+                    actorUserId: userId,
+                    type: NotificationType.FriendAccepted,
+                    title: $"{accepterDisplayName} accepted your friend request",
+                    message: "You can now plan hangouts together");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create FriendAccepted notification for user {FriendId}", friendId);
+            }
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -263,6 +297,20 @@ public class FriendsService : IFriendsService
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             throw new InvalidOperationException("No pending friend request found.");
+        }
+    }
+
+    private async Task<string> GetUserDisplayNameAsync(string userId)
+    {
+        try
+        {
+            var user = await _usersService.GetUserAsync(userId);
+            var fullName = $"{user.FirstName} {user.LastName}".Trim();
+            return string.IsNullOrEmpty(fullName) ? user.Email : fullName;
+        }
+        catch
+        {
+            return userId;
         }
     }
 

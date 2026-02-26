@@ -1,419 +1,312 @@
 # Implementation Plan
 
 [Overview]
-Implement a full-stack Friends system with two-way friend requests, friend lists, and real data integration across the app.
+Implement a full-stack, backend-persisted notifications system that generates notifications when key actions occur in the app.
 
-The Friends feature is a Phase 2 capability that adds social connections between users. Currently, the app has no concept of friendships — the friend profile page (`friend/[id].tsx`) uses mock data, the profile page shows a hardcoded `'Friends': '0'` stat, and the `find-friends.tsx` screen only has a superficial "Invite" button that doesn't persist anything.
+Notifications will be stored in a new Cosmos DB "Notifications" container, partitioned by `recipientUserId` for efficient single-partition reads. Notifications are created synchronously during the same API call that triggers the action (e.g., RSVP, friend request, hangout creation). Each notification targets the most relevant single user (e.g., the hangout creator for RSVPs, the added/removed person for group membership changes). The frontend will replace its current mock-data-driven `NotificationsContext` with real API calls — fetching, marking as read, and deleting notifications via new backend endpoints. The existing notifications UI (swipeable list, unread badge on home bell icon) is already well-built and will be preserved, just wired to real data.
 
-This implementation introduces:
-
-- A new `Friendships` Cosmos DB container with a dual-document pattern for efficient querying
-- A `FriendsController` with endpoints for sending/accepting/declining requests and managing friends
-- Frontend hooks, updated screens, and a new friends list screen
-- Seed data for development testing
-- Real data replacing all mock friend data throughout the app
-
-The dual-document pattern stores two mirrored documents per friendship (one per user as partition key), enabling single-partition reads for "my friends" queries while requiring two writes per mutation.
+**Notification types and their recipients:**
+| Action | Notification Type | Recipient |
+|---|---|---|
+| Hangout created | `hangout_created` | Each invited attendee (not the creator) |
+| Hangout invite (attendees added later) | `hangout_invite` | Each newly added attendee |
+| RSVP to hangout | `rsvp` | Hangout creator |
+| Group created | `group_created` | Each group member (not the creator) |
+| Group member added | `member_added` | The person who was added |
+| Group member removed | `member_removed` | The person who was removed |
+| Friend request sent | `friend_request` | The person receiving the request |
+| Friend request accepted | `friend_accepted` | The person whose request was accepted (the original sender) |
 
 [Types]
-New backend domain models, enums, DTOs, and frontend TypeScript types for the friends system.
+New backend domain model, enums, DTOs, and updated frontend TypeScript types for the notification system.
 
-### Backend Enums
+### Backend Enum: `NotificationType`
 
-**New file: `Backend/SocialCoordinationApp/Models/Enums/FriendshipStatus.cs`**
+**File:** `Backend/SocialCoordinationApp/Models/Enums/NotificationType.cs`
 
 ```csharp
-namespace SocialCoordinationApp.Models.Enums;
-
-public enum FriendshipStatus
+public enum NotificationType
 {
-    Pending,
-    Accepted
+    HangoutCreated,
+    HangoutInvite,
+    Rsvp,
+    GroupCreated,
+    MemberAdded,
+    MemberRemoved,
+    FriendRequest,
+    FriendAccepted
 }
 ```
 
-**New file: `Backend/SocialCoordinationApp/Models/Enums/FriendshipDirection.cs`**
+### Backend Domain Model: `NotificationRecord`
+
+**File:** `Backend/SocialCoordinationApp/Models/Domain/NotificationRecord.cs`
 
 ```csharp
-namespace SocialCoordinationApp.Models.Enums;
-
-public enum FriendshipDirection
+public class NotificationRecord
 {
-    Incoming,
-    Outgoing
+    [JsonPropertyName("id")] public string Id { get; set; }
+    [JsonPropertyName("recipientUserId")] public string RecipientUserId { get; set; }
+    [JsonPropertyName("type")] public NotificationType Type { get; set; }  // with StringEnumConverter
+    [JsonPropertyName("actorUserId")] public string ActorUserId { get; set; }
+    [JsonPropertyName("actorDisplayName")] public string ActorDisplayName { get; set; }
+    [JsonPropertyName("actorAvatarUrl")] public string? ActorAvatarUrl { get; set; }
+    [JsonPropertyName("title")] public string Title { get; set; }
+    [JsonPropertyName("message")] public string Message { get; set; }
+    [JsonPropertyName("relatedEntityId")] public string? RelatedEntityId { get; set; }  // hangout ID, group ID, or user ID
+    [JsonPropertyName("isRead")] public bool IsRead { get; set; } = false;
+    [JsonPropertyName("createdAt")] public DateTime CreatedAt { get; set; }
 }
 ```
 
-### Backend Domain Model
+### Backend DTO: `NotificationResponse`
 
-**New file: `Backend/SocialCoordinationApp/Models/Domain/FriendshipRecord.cs`**
+**File:** `Backend/SocialCoordinationApp/Models/DTOs/Responses/NotificationResponse.cs`
 
 ```csharp
-using System.Text.Json.Serialization;
-
-namespace SocialCoordinationApp.Models.Domain;
-
-public class FriendshipRecord
+public class NotificationResponse
 {
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("userId")]
-    public string UserId { get; set; } = string.Empty;       // partition key — the owner of this doc
-
-    [JsonPropertyName("friendId")]
-    public string FriendId { get; set; } = string.Empty;     // the other user
-
-    [JsonPropertyName("status")]
-    public string Status { get; set; } = "Pending";          // "Pending" | "Accepted"
-
-    [JsonPropertyName("direction")]
-    public string Direction { get; set; } = "Outgoing";      // "Incoming" | "Outgoing" (only relevant when Pending)
-
-    [JsonPropertyName("createdAt")]
+    public string Id { get; set; }
+    public string Type { get; set; }  // string representation of NotificationType
+    public string ActorUserId { get; set; }
+    public string ActorDisplayName { get; set; }
+    public string? ActorAvatarUrl { get; set; }
+    public string Title { get; set; }
+    public string Message { get; set; }
+    public string? RelatedEntityId { get; set; }
+    public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
-
-    [JsonPropertyName("updatedAt")]
-    public DateTime UpdatedAt { get; set; }
 }
 ```
 
-The `Id` field uses a composite key: `"{userId}_{friendId}"` to enforce uniqueness within a partition. The `UserId` field is the Cosmos partition key.
+### Backend DTO: `UnreadCountResponse`
 
-### Backend DTOs — Responses
-
-**New file: `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendResponse.cs`**
+**File:** `Backend/SocialCoordinationApp/Models/DTOs/Responses/UnreadCountResponse.cs`
 
 ```csharp
-namespace SocialCoordinationApp.Models.DTOs.Responses;
-
-public class FriendResponse
-{
-    public string UserId { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public string? ProfileImageUrl { get; set; }
-    public DateTime FriendsSince { get; set; }
-}
-```
-
-**New file: `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendRequestResponse.cs`**
-
-```csharp
-namespace SocialCoordinationApp.Models.DTOs.Responses;
-
-public class FriendRequestResponse
-{
-    public string UserId { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-    public string? ProfileImageUrl { get; set; }
-    public DateTime RequestedAt { get; set; }
-}
-```
-
-**New file: `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendshipStatusResponse.cs`**
-
-```csharp
-namespace SocialCoordinationApp.Models.DTOs.Responses;
-
-public class FriendshipStatusResponse
-{
-    /// <summary>
-    /// One of: "none", "pending_incoming", "pending_outgoing", "accepted"
-    /// </summary>
-    public string Status { get; set; } = "none";
-}
-```
-
-**New file: `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendCountResponse.cs`**
-
-```csharp
-namespace SocialCoordinationApp.Models.DTOs.Responses;
-
-public class FriendCountResponse
+public class UnreadCountResponse
 {
     public int Count { get; set; }
 }
 ```
 
-### Frontend Types
+### Frontend Type: Updated `Notification`
 
-**Modified file: `social-coordination-app-ux/src/types/index.ts`**
-
-Add these new types:
-
-```typescript
-export type FriendshipStatusType =
-    | 'none'
-    | 'pending_incoming'
-    | 'pending_outgoing'
-    | 'accepted';
-
-export interface FriendSummary {
-    userId: string;
-    displayName: string;
-    profileImageUrl: string | null;
-    friendsSince: string; // formatted date string
-}
-
-export interface FriendRequest {
-    userId: string;
-    displayName: string;
-    profileImageUrl: string | null;
-    requestedAt: string; // formatted date string
-}
-```
-
-Update the existing `FriendProfile` interface to align with real API data:
+**File:** `social-coordination-app-ux/src/types/index.ts`
+Update the existing `Notification` interface:
 
 ```typescript
-export interface FriendProfile {
+export interface Notification {
     id: string;
-    name: string;
-    profileImageUrl: string | null;
-    friendsSince: string;
-    mutualGroups: number;
-    mutualFriends: number;
-    bio?: string;
-    hangoutsTogether: number;
-    friendshipStatus: FriendshipStatusType;
+    type:
+        | 'hangout_created'
+        | 'hangout_invite'
+        | 'rsvp'
+        | 'group_created'
+        | 'member_added'
+        | 'member_removed'
+        | 'friend_request'
+        | 'friend_accepted';
+    actorUserId?: string;
+    actorDisplayName?: string;
+    actorAvatarUrl?: string | null;
+    title: string;
+    message: string;
+    time: string; // computed from createdAt on frontend
+    unread: boolean; // mapped from !isRead
+    relatedEntityId?: string;
+    createdAt?: string; // ISO date string from backend
 }
 ```
+
+Remove the `icon` and `color` fields — the frontend will derive icon/color from the `type` field instead.
 
 [Files]
-Complete listing of all files to be created, modified, or deleted.
+Complete list of files to create, modify, or delete across backend and frontend.
 
-### New Files — Backend
+### New Files to Create
 
-1. `Backend/SocialCoordinationApp/Models/Enums/FriendshipStatus.cs` — Friendship status enum
-2. `Backend/SocialCoordinationApp/Models/Enums/FriendshipDirection.cs` — Friendship direction enum
-3. `Backend/SocialCoordinationApp/Models/Domain/FriendshipRecord.cs` — Cosmos document model
-4. `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendResponse.cs` — Accepted friend DTO
-5. `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendRequestResponse.cs` — Pending request DTO
-6. `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendshipStatusResponse.cs` — Status check DTO
-7. `Backend/SocialCoordinationApp/Models/DTOs/Responses/FriendCountResponse.cs` — Friend count DTO
-8. `Backend/SocialCoordinationApp/Services/IFriendsService.cs` — Service interface
-9. `Backend/SocialCoordinationApp/Services/FriendsService.cs` — Service implementation
-10. `Backend/SocialCoordinationApp/Controllers/FriendsController.cs` — API controller
+**Backend:**
 
-### New Files — Frontend
+1. `Backend/SocialCoordinationApp/Models/Enums/NotificationType.cs` — New enum
+2. `Backend/SocialCoordinationApp/Models/Domain/NotificationRecord.cs` — New domain model
+3. `Backend/SocialCoordinationApp/Models/DTOs/Responses/NotificationResponse.cs` — New DTO
+4. `Backend/SocialCoordinationApp/Models/DTOs/Responses/UnreadCountResponse.cs` — New DTO
+5. `Backend/SocialCoordinationApp/Services/INotificationsService.cs` — New service interface
+6. `Backend/SocialCoordinationApp/Services/NotificationsService.cs` — New service implementation
+7. `Backend/SocialCoordinationApp/Controllers/NotificationsController.cs` — New controller
 
-11. `social-coordination-app-ux/src/hooks/useApiFriends.ts` — Hook for friends list + count
-12. `social-coordination-app-ux/src/hooks/useApiFriendRequests.ts` — Hook for friend request actions
-13. `social-coordination-app-ux/src/hooks/useApiFriendshipStatus.ts` — Hook for checking friendship status
-14. `social-coordination-app-ux/src/app/friends-list.tsx` — Friends list screen (manage friends, view requests, search)
+**Frontend:** 8. `social-coordination-app-ux/src/hooks/useApiNotifications.ts` — New hook for fetching/managing notifications
 
-### Modified Files — Backend
+### Existing Files to Modify
 
-15. `Backend/SocialCoordinationApp/Infrastructure/ICosmosContext.cs` — Add `FriendshipsContainer` property
-16. `Backend/SocialCoordinationApp/Infrastructure/CosmosContext.cs` — Initialize `Friendships` container with partition key `/userId`
-17. `Backend/SocialCoordinationApp/Extensions/ServiceCollectionExtensions.cs` — Register `IFriendsService`/`FriendsService`
-18. `Backend/SocialCoordinationApp/Services/SeedService.cs` — Add friendship seed data between existing seed users
+**Backend:** 9. `Backend/SocialCoordinationApp/Infrastructure/ICosmosContext.cs` — Add `NotificationsContainer` property 10. `Backend/SocialCoordinationApp/Infrastructure/CosmosContext.cs` — Add `NotificationsContainer` initialization 11. `Backend/SocialCoordinationApp/Extensions/ServiceCollectionExtensions.cs` — Register `INotificationsService` 12. `Backend/SocialCoordinationApp/Services/HangoutsService.cs` — Inject `INotificationsService`, create notifications on hangout create, RSVP, and add attendees 13. `Backend/SocialCoordinationApp/Services/IHangoutsService.cs` — No interface change needed (notifications are internal) 14. `Backend/SocialCoordinationApp/Services/GroupsService.cs` — Inject `INotificationsService`, create notifications on group create, member add, member remove 15. `Backend/SocialCoordinationApp/Services/FriendsService.cs` — Inject `INotificationsService`, create notifications on friend request sent and accepted
 
-### Modified Files — Frontend
+**Frontend:** 16. `social-coordination-app-ux/src/types/index.ts` — Update `Notification` interface 17. `social-coordination-app-ux/src/contexts/NotificationsContext.tsx` — Replace mock data with API-driven state, add fetch/poll logic 18. `social-coordination-app-ux/src/app/notifications.tsx` — Update to use new notification type fields (derive icon/color from type instead of `icon`/`color` props) 19. `social-coordination-app-ux/src/utils/api-mappers.ts` — Add `mapNotificationResponseToNotification()` mapper 20. `social-coordination-app-ux/src/data/mock-data.ts` — Remove `mockNotifications` export (no longer needed)
 
-19. `social-coordination-app-ux/src/types/index.ts` — Add `FriendshipStatusType`, `FriendSummary`, `FriendRequest` types; update `FriendProfile`
-20. `social-coordination-app-ux/src/utils/api-mappers.ts` — Add `mapFriendResponseToFriendSummary`, `mapFriendRequestResponseToFriendRequest` mappers
-21. `social-coordination-app-ux/src/app/(tabs)/profile.tsx` — Replace hardcoded `'Friends': '0'` with real friend count from `useApiFriends`
-22. `social-coordination-app-ux/src/app/friend/[id].tsx` — Replace all mock data with real API data; add friendship action buttons (send/accept/decline/remove)
-23. `social-coordination-app-ux/src/app/find-friends.tsx` — Replace "Invite" button with "Add Friend" (send friend request); show friendship status per search result
-24. `social-coordination-app-ux/src/app/_layout.tsx` — Register `friends-list` route
-25. `social-coordination-app-ux/src/data/mock-data.ts` — Wire "Manage Friends" settings item to navigate to friends-list screen (update `settingsSections`)
+### Files NOT Modified
 
-### Auto-generated (Do Not Manually Edit)
-
-26. `social-coordination-app-ux/src/clients/generatedClient.ts` — Regenerated via NSwag after backend changes
+- `social-coordination-app-ux/src/app/(tabs)/index.tsx` — Already reads from `NotificationsContext`; no changes needed since context interface stays the same
+- `social-coordination-app-ux/src/app/_layout.tsx` — Already wraps with `NotificationsProvider`; no changes needed
 
 [Functions]
-Detailed breakdown of all new and modified functions.
+New and modified functions across the backend services and frontend hooks/mappers.
 
-### New Functions — `FriendsService.cs`
+### New Functions
 
-1. **`SendFriendRequestAsync(string userId, string friendId)`** → `Task`
-    - Validates `userId != friendId`
-    - Validates friend user exists (reads from Users container)
-    - Checks no existing friendship/request between the two users
-    - Creates two `FriendshipRecord` documents: one with `Direction = Outgoing` (partition: userId) and one with `Direction = Incoming` (partition: friendId), both with `Status = Pending`
+**`INotificationsService` / `NotificationsService`:**
 
-2. **`AcceptFriendRequestAsync(string userId, string friendId)`** → `Task`
-    - Reads the incoming request doc (partition: userId, friendId: friendId)
-    - Validates it's Pending + Incoming
-    - Updates both docs to `Status = Accepted`, clears direction relevance
+- `CreateNotificationAsync(string recipientUserId, NotificationType type, string actorUserId, string actorDisplayName, string? actorAvatarUrl, string title, string message, string? relatedEntityId)` — Creates a single NotificationRecord in Cosmos DB
+- `CreateBulkNotificationsAsync(List<NotificationRecord> notifications)` — Creates multiple notifications (for hangout/group creation where multiple recipients exist)
+- `GetNotificationsAsync(string userId)` — Returns all notifications for a user, ordered by `createdAt` descending
+- `GetUnreadCountAsync(string userId)` — Returns count of unread notifications
+- `MarkAsReadAsync(string userId, string notificationId)` — Sets `isRead = true` on a single notification
+- `MarkAllAsReadAsync(string userId)` — Sets `isRead = true` on all of a user's notifications
+- `DeleteNotificationAsync(string userId, string notificationId)` — Deletes a single notification
 
-3. **`DeclineFriendRequestAsync(string userId, string friendId)`** → `Task`
-    - Reads the incoming request doc
-    - Validates it's Pending + Incoming
-    - Deletes both docs
+**`NotificationsController`:**
 
-4. **`RemoveFriendAsync(string userId, string friendId)`** → `Task`
-    - Reads the friendship doc (partition: userId)
-    - Validates it exists and is Accepted
-    - Deletes both docs
+- `GET api/notifications` → `GetNotifications()` — Returns `List<NotificationResponse>`
+- `GET api/notifications/unread-count` → `GetUnreadCount()` — Returns `UnreadCountResponse`
+- `POST api/notifications/{id}/read` → `MarkAsRead(string id)` — Returns `NoContent`
+- `POST api/notifications/read-all` → `MarkAllAsRead()` — Returns `NoContent`
+- `DELETE api/notifications/{id}` → `DeleteNotification(string id)` — Returns `NoContent`
 
-5. **`GetFriendsAsync(string userId)`** → `Task<List<FriendResponse>>`
-    - Queries Friendships container: `WHERE c.userId = @userId AND c.status = 'Accepted'`
-    - Batch looks up user records for display names and profile images
-    - Returns list of `FriendResponse`
+**Frontend `useApiNotifications` hook:**
 
-6. **`GetFriendRequestsAsync(string userId)`** → `Task<List<FriendRequestResponse>>`
-    - Queries: `WHERE c.userId = @userId AND c.status = 'Pending' AND c.direction = 'Incoming'`
-    - Looks up user details for each requester
-    - Returns list of `FriendRequestResponse`
+- `fetchNotifications(limit?, continuationToken?)` — Calls `GET api/notifications`, maps to frontend `Notification[]`, returns continuation token for load-more
+- `fetchUnreadCount()` — Calls `GET api/notifications/unread-count`
+- `markAsRead(id)` — Calls `POST api/notifications/{id}/read`
+- `markAllAsRead()` — Calls `POST api/notifications/read-all`
+- `deleteNotification(id)` — Calls `DELETE api/notifications/{id}`
 
-7. **`GetOutgoingRequestsAsync(string userId)`** → `Task<List<FriendRequestResponse>>`
-    - Queries: `WHERE c.userId = @userId AND c.status = 'Pending' AND c.direction = 'Outgoing'`
-    - Looks up user details
-    - Returns list of `FriendRequestResponse`
+**Frontend mapper (`api-mappers.ts`):**
 
-8. **`GetFriendshipStatusAsync(string userId, string friendId)`** → `Task<FriendshipStatusResponse>`
-    - Point read: doc id `"{userId}_{friendId}"` in partition `userId`
-    - Returns "none" if not found, "accepted" if accepted, "pending_incoming" or "pending_outgoing" based on direction
-
-9. **`GetFriendCountAsync(string userId)`** → `Task<FriendCountResponse>`
-    - Queries: `SELECT VALUE COUNT(1) FROM c WHERE c.userId = @userId AND c.status = 'Accepted'`
-    - Returns `FriendCountResponse`
-
-### New Functions — `FriendsController.cs`
-
-1. `POST /api/friends/request/{friendId}` → calls `SendFriendRequestAsync`
-2. `POST /api/friends/accept/{friendId}` → calls `AcceptFriendRequestAsync`
-3. `POST /api/friends/decline/{friendId}` → calls `DeclineFriendRequestAsync`
-4. `DELETE /api/friends/{friendId}` → calls `RemoveFriendAsync`
-5. `GET /api/friends` → calls `GetFriendsAsync`
-6. `GET /api/friends/requests` → calls `GetFriendRequestsAsync`
-7. `GET /api/friends/requests/outgoing` → calls `GetOutgoingRequestsAsync`
-8. `GET /api/friends/status/{userId}` → calls `GetFriendshipStatusAsync`
-9. `GET /api/friends/count` → calls `GetFriendCountAsync`
-
-### New Functions — Frontend Hooks
-
-**`useApiFriends.ts`**:
-
-- `fetchFriends()` — calls `api.friendsAll()` (GET /api/friends), maps response
-- `fetchFriendCount()` — calls `api.count()` (GET /api/friends/count)
-- `removeFriend(friendId)` — calls `api.friendsDELETE(friendId)`, refreshes list
-
-**`useApiFriendRequests.ts`**:
-
-- `fetchIncomingRequests()` — calls `api.requests()` (GET /api/friends/requests)
-- `fetchOutgoingRequests()` — calls `api.outgoing()` (GET /api/friends/requests/outgoing)
-- `sendFriendRequest(friendId)` — calls `api.request(friendId)` (POST /api/friends/request/{friendId})
-- `acceptFriendRequest(friendId)` — calls `api.accept(friendId)` (POST /api/friends/accept/{friendId})
-- `declineFriendRequest(friendId)` — calls `api.decline(friendId)` (POST /api/friends/decline/{friendId})
-
-**`useApiFriendshipStatus.ts`**:
-
-- `fetchStatus(targetUserId)` — calls `api.status(targetUserId)` (GET /api/friends/status/{userId})
-- Returns `FriendshipStatusType`
-
-### New Functions — API Mappers (`api-mappers.ts`)
-
-- `mapFriendResponseToFriendSummary(response: FriendResponse): FriendSummary` — maps API response to frontend type with formatted date
-- `mapFriendRequestResponseToFriendRequest(response: FriendRequestResponse): FriendRequest` — maps API response with formatted date
+- `mapNotificationResponseToNotification(response: NotificationResponse): Notification` — Maps backend DTO to frontend type, computing relative `time` from `createdAt`
 
 ### Modified Functions
 
-**`SeedService.cs` — `SeedAsync()`**: Add call to `SeedFriendshipsAsync()`.
+**`HangoutsService.CreateHangoutAsync()`:**
 
-**`SeedService.cs` — new `SeedFriendshipsAsync()`**: Creates friendship records between seed users:
+- After creating the hangout, call `INotificationsService.CreateBulkNotificationsAsync()` to notify all initial attendees (excluding the creator) with type `HangoutCreated`
 
-- Alex ↔ Lacey (Accepted)
-- Alex ↔ Jordan (Accepted)
-- Alex ↔ Matt (Accepted)
-- Alex ↔ Luke (Accepted)
-- Alex ↔ Jake (Accepted)
-- Matt → Alex pending request from Pietro (Pending: Pietro incoming, Matt outgoing — wait, let's use: Pietro sends to Alex, so Pietro=Outgoing, Alex=Incoming)
-- Pietro → Alex (Pending)
+**`HangoutsService.UpdateRSVPAsync()`:**
 
-**`profile.tsx`**: Replace `{ label: 'Friends', value: '0' }` with value from `useApiFriends().friendCount`.
+- After updating the RSVP, call `INotificationsService.CreateNotificationAsync()` to notify the hangout creator with type `Rsvp`. Include the RSVP status in the message (e.g., "John is going to 'Movie Night'")
 
-**`friend/[id].tsx`**:
+**`HangoutsService.AddAttendeesAsync()`:**
 
-- Remove all imports from `mock-data.ts` (mockFriendProfiles, mockFriendGroupsInCommon, etc.)
-- Add `useApiFriendshipStatus` hook to fetch relationship status
-- Add `useApiFriends` or direct API calls for friend data
-- Fetch real user data via API (`api.status(friendId)`, friend's user profile, mutual groups via comparing groups)
-- Show conditional action buttons based on friendship status: "Add Friend" (none), "Pending" (outgoing), "Accept/Decline" (incoming), "Remove Friend" (accepted)
+- After adding attendees, call `INotificationsService.CreateBulkNotificationsAsync()` to notify each newly added attendee with type `HangoutInvite`
 
-**`find-friends.tsx`**:
+**`GroupsService.CreateGroupAsync()`:**
 
-- Replace "Invite" button per search result with friendship-aware button
-- Track friendship statuses for displayed users
-- "Add Friend" sends friend request via `useApiFriendRequests().sendFriendRequest()`
-- Show "Pending" badge if request already sent, "Friends" badge if already friends
+- After creating the group, call `INotificationsService.CreateBulkNotificationsAsync()` to notify all initial members (excluding the creator) with type `GroupCreated`
+
+**`GroupsService.AddMemberAsync()`:**
+
+- After adding the member, call `INotificationsService.CreateNotificationAsync()` to notify the added member with type `MemberAdded`
+
+**`GroupsService.RemoveMemberAsync()`:**
+
+- After removing the member, call `INotificationsService.CreateNotificationAsync()` to notify the removed member with type `MemberRemoved`
+
+**`FriendsService.SendFriendRequestAsync()`:**
+
+- After creating the friendship records, call `INotificationsService.CreateNotificationAsync()` to notify the recipient with type `FriendRequest`
+
+**`FriendsService.AcceptFriendRequestAsync()`:**
+
+- After accepting, call `INotificationsService.CreateNotificationAsync()` to notify the original sender with type `FriendAccepted`
+
+**`NotificationsContext` (frontend):**
+
+- Replace `useState(() => [...mockNotifications])` with `useState<Notification[]>([])`
+- Add `useEffect` to call `fetchNotifications()` on mount
+- Add periodic polling (every 30 seconds) or refetch-on-focus to keep notifications fresh
+- Wire `markAsRead`, `markAllAsRead`, `deleteNotification` to call API then update local state optimistically
 
 [Classes]
-No new classes beyond the service and controller already described. All new backend types are simple POCOs/DTOs. The frontend uses functional components and hooks, not classes.
+New service classes and controller, plus modifications to existing service classes.
 
-### New Service Class: `FriendsService`
+### New Classes
 
-- **File**: `Backend/SocialCoordinationApp/Services/FriendsService.cs`
-- **Implements**: `IFriendsService`
-- **Constructor dependencies**: `ICosmosContext`, `ILogger<FriendsService>`
-- **Methods**: See [Functions] section above
+1. **`NotificationsService`** (`Backend/SocialCoordinationApp/Services/NotificationsService.cs`)
+    - Implements `INotificationsService`
+    - Injected dependencies: `ICosmosContext`, `ILogger<NotificationsService>`
+    - Handles all CRUD operations against the Notifications Cosmos container
+    - Uses `recipientUserId` as partition key for all queries
 
-### New Controller Class: `FriendsController`
+2. **`NotificationsController`** (`Backend/SocialCoordinationApp/Controllers/NotificationsController.cs`)
+    - Inherits from `BaseApiController`
+    - Route: `api/notifications`
+    - 5 endpoints: list, unread count, mark read, mark all read, delete
 
-- **File**: `Backend/SocialCoordinationApp/Controllers/FriendsController.cs`
-- **Extends**: `BaseApiController`
-- **Route**: `api/friends`
-- **Constructor dependencies**: `IFriendsService`
+### Modified Classes
+
+3. **`HangoutsService`** — Add `INotificationsService` to constructor injection. Add notification creation calls in `CreateHangoutAsync`, `UpdateRSVPAsync`, `AddAttendeesAsync`.
+
+4. **`GroupsService`** — Add `INotificationsService` to constructor injection. Add notification creation calls in `CreateGroupAsync`, `AddMemberAsync`, `RemoveMemberAsync`.
+
+5. **`FriendsService`** — Add `INotificationsService` to constructor injection. Add notification creation calls in `SendFriendRequestAsync`, `AcceptFriendRequestAsync`.
+
+6. **`CosmosContext`** — Add `NotificationsContainer` property and initialize it in `InitializeAsync()` with partition key `/recipientUserId`.
+
+7. **`ICosmosContext`** — Add `Container NotificationsContainer { get; }` property.
 
 [Dependencies]
 No new NuGet packages or npm packages are required.
 
-All necessary dependencies are already present:
+The implementation uses only existing dependencies:
 
-- Backend: `Microsoft.Azure.Cosmos`, `Microsoft.AspNetCore.Authentication.JwtBearer`, `Swashbuckle` — all already installed
-- Frontend: `axios`, `expo-router`, `@clerk/clerk-expo` — all already installed
-- Tooling: `nswag` — already available for API client regeneration
+- Backend: `Microsoft.Azure.Cosmos` (already installed), `Newtonsoft.Json` (already installed)
+- Frontend: `axios` (already used via generated client), `expo-router` (already installed)
 
-The only infrastructure change is creating a new Cosmos DB container (`Friendships`) which is handled automatically by `CosmosContext.InitializeAsync()`.
+The NSwag-generated TypeScript client will be regenerated to include the new `NotificationsController` endpoints, producing new methods on `SocialCoordinationApiClient`.
 
 [Testing]
-Manual testing via Swagger UI and the mobile app. No automated tests in current scope.
+Manual end-to-end testing approach with verification steps.
 
-### Backend Testing Strategy
+### Backend Verification
 
-1. Seed friendship data via `POST /api/seed` endpoint
-2. Verify endpoints via Swagger UI at `http://localhost:5219/swagger`:
-    - `GET /api/friends` — should return seeded friends list
-    - `GET /api/friends/count` — should return correct count
-    - `GET /api/friends/requests` — should return pending incoming requests
-    - `GET /api/friends/status/{userId}` — should return correct status per user
-    - `POST /api/friends/request/{friendId}` — send a new request
-    - `POST /api/friends/accept/{friendId}` — accept a pending request
-    - `DELETE /api/friends/{friendId}` — remove a friend
+1. Start backend and verify Swagger UI shows the new `/api/notifications` endpoints
+2. Use Swagger or curl to verify:
+    - `GET /api/notifications` returns empty array initially
+    - Create a hangout → verify notification appears for invited attendees
+    - Send a friend request → verify notification appears for recipient
+    - `POST /api/notifications/{id}/read` marks notification as read
+    - `POST /api/notifications/read-all` marks all as read
+    - `DELETE /api/notifications/{id}` removes notification
 
-### Frontend Testing Strategy
+### Frontend Verification
 
-1. Profile page: Verify "Friends" stat shows real count (not "0")
-2. Friends list screen: Verify friends appear, incoming requests show accept/decline buttons
-3. Find friends screen: Verify "Add Friend" button sends request, status updates
-4. Friend profile screen: Verify real data displayed, action buttons work based on friendship status
+1. Open notifications page — should show real notifications from API (empty if no actions taken)
+2. Perform actions (RSVP, send friend request, create group) and verify notifications appear
+3. Tap a notification — verify it navigates to the correct entity and marks as read
+4. Swipe to delete — verify it calls the API and removes from list
+5. "Mark all read" — verify all unread dots disappear and API is called
+6. Home screen bell icon badge — verify unread count reflects real data
 
-### Verification After API Client Regeneration
+### Seed Data
 
-- Search `generatedClient.ts` for `friends`, `FriendResponse`, `FriendRequestResponse`, `FriendshipStatusResponse`, `FriendCountResponse` to confirm all endpoints were generated
+- Optionally add notification seed data to `SeedService` to pre-populate test notifications for seed users
 
 [Implementation Order]
-Step-by-step implementation sequence to minimize conflicts and ensure each step builds on the previous.
+Step-by-step implementation sequence to minimize conflicts and ensure each layer builds on the previous one.
 
-1. **Backend enums** — Create `FriendshipStatus.cs` and `FriendshipDirection.cs` in `Models/Enums/`
-2. **Backend domain model** — Create `FriendshipRecord.cs` in `Models/Domain/`
-3. **Backend DTOs** — Create `FriendResponse.cs`, `FriendRequestResponse.cs`, `FriendshipStatusResponse.cs`, `FriendCountResponse.cs` in `Models/DTOs/Responses/`
-4. **Cosmos infrastructure** — Add `FriendshipsContainer` to `ICosmosContext` and `CosmosContext` (partition key `/userId`)
-5. **Backend service** — Create `IFriendsService.cs` and `FriendsService.cs` in `Services/`
-6. **Backend controller** — Create `FriendsController.cs` in `Controllers/`
-7. **DI registration** — Add `IFriendsService`/`FriendsService` to `ServiceCollectionExtensions.cs`
-8. **Seed data** — Add `SeedFriendshipsAsync()` to `SeedService.cs`
-9. **API client regeneration** — Start backend, download swagger spec, regenerate TypeScript client, verify
-10. **Frontend types** — Update `types/index.ts` with new friend types
-11. **Frontend mappers** — Add friend mapper functions to `api-mappers.ts`
-12. **Frontend hooks** — Create `useApiFriends.ts`, `useApiFriendRequests.ts`, `useApiFriendshipStatus.ts`
-13. **Profile page** — Update `profile.tsx` to show real friend count
-14. **Friends list screen** — Create `friends-list.tsx` with friends list, incoming requests, search
-15. **Route registration** — Add `friends-list` to `_layout.tsx`
-16. **Profile navigation** — Wire "Manage Friends" settings item to navigate to friends-list
-17. **Friend profile screen** — Update `friend/[id].tsx` to use real API data and friendship action buttons
-18. **Find friends screen** — Update `find-friends.tsx` with friend request buttons and status display
-19. **Memory bank update** — Update activeContext.md, progress.md, systemPatterns.md
+1. **Create backend enum and domain model** — `NotificationType.cs` and `NotificationRecord.cs`
+2. **Create backend DTOs** — `NotificationResponse.cs` and `UnreadCountResponse.cs`
+3. **Update Cosmos infrastructure** — Add `NotificationsContainer` to `ICosmosContext` and `CosmosContext` (with `DefaultTimeToLive = -1` for per-document TTL)
+4. **Create notifications service** — `INotificationsService.cs` and `NotificationsService.cs`
+5. **Register service in DI** — Update `ServiceCollectionExtensions.cs`
+6. **Create notifications controller** — `NotificationsController.cs` with all 5 endpoints
+7. **Integrate notifications into HangoutsService** — Add notification creation calls for hangout create, RSVP, add attendees
+8. **Integrate notifications into GroupsService** — Add notification creation calls for group create, member add, member remove
+9. **Integrate notifications into FriendsService** — Add notification creation calls for friend request send and accept
+10. **Regenerate TypeScript API client** — Start backend, download swagger spec, run NSwag
+11. **Update frontend types** — Update `Notification` interface in `types/index.ts`
+12. **Add notification mapper** — Add `mapNotificationResponseToNotification()` to `api-mappers.ts`
+13. **Create `useApiNotifications` hook** — New hook wrapping generated client methods
+14. **Rewrite `NotificationsContext`** — Replace mock data with real API calls, add polling
+15. **Update notifications screen** — Derive icon/color from notification type instead of `icon`/`color` props
+16. **Remove mock notifications** — Clean up `mockNotifications` from `mock-data.ts`
+17. **Update memory bank** — Update activeContext.md and progress.md

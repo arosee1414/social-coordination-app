@@ -7,9 +7,10 @@ import type {
     InvitedGroupInfoResponse,
     FriendResponse,
     FriendRequestResponse,
+    NotificationResponse,
 } from '@/src/clients/generatedClient';
 import { HangoutStatus as ApiHangoutStatus, RSVPStatus as ApiRSVPStatus } from '@/src/clients/generatedClient';
-import type { Hangout, RSVPStatus, HangoutStatus, Attendee, AttendeesByStatus, Group, GroupMember, InvitedGroup, Friend, FriendRequest } from '@/src/types';
+import type { Hangout, RSVPStatus, HangoutStatus, Attendee, AttendeesByStatus, Group, GroupMember, InvitedGroup, Friend, FriendRequest, Notification } from '@/src/types';
 
 /**
  * Convert API HangoutStatus enum to frontend HangoutStatus string
@@ -294,5 +295,44 @@ export function mapInvitedGroupInfoToInvitedGroup(response: InvitedGroupInfoResp
         icon: response.emoji ?? '👥',
         memberCount: response.memberCount ?? 0,
         membersPreview: [],
+    };
+}
+
+/**
+ * Format a relative time-ago string from an ISO date string
+ */
+function formatTimeAgo(dateString: string | undefined): string {
+    if (!dateString) return '';
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Map NotificationResponse to frontend Notification type
+ */
+export function mapNotificationResponseToNotification(response: NotificationResponse): Notification {
+    return {
+        id: response.id ?? '',
+        type: response.type ?? '',
+        title: response.title ?? '',
+        message: response.message ?? '',
+        time: formatTimeAgo(response.createdAt),
+        isRead: response.isRead ?? false,
+        recipientUserId: response.recipientUserId,
+        actorUserId: response.actorUserId,
+        hangoutId: response.hangoutId ?? null,
+        groupId: response.groupId ?? null,
+        createdAt: response.createdAt,
     };
 }

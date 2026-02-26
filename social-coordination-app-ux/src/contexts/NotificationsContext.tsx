@@ -1,74 +1,80 @@
-import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useMemo,
-    useState,
-} from 'react';
-import { mockNotifications } from '@/src/data/mock-data';
-import type { Notification } from '@/src/types';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
+import { Notification } from '../types';
+import { useApiNotifications } from '../hooks/useApiNotifications';
 
-interface NotificationsContextValue {
+type NotificationsContextType = {
     notifications: Notification[];
     unreadCount: number;
-    markAsRead: (id: string) => void;
-    markAllAsRead: () => void;
-    deleteNotification: (id: string) => void;
-    setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
-}
+    loading: boolean;
+    error: string | null;
+    hasMore: boolean;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
+    deleteNotification: (id: string) => Promise<void>;
+    refresh: () => Promise<void>;
+    fetchMore: () => Promise<void>;
+};
 
-const NotificationsContext = createContext<NotificationsContextValue | null>(
-    null,
-);
+const NotificationsContext = createContext<
+    NotificationsContextType | undefined
+>(undefined);
+
+const POLL_INTERVAL = 30000; // 30 seconds
 
 export function NotificationsProvider({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const [notifications, setNotifications] = useState<Notification[]>(() => [
-        ...mockNotifications,
-    ]);
+    const {
+        notifications,
+        unreadCount,
+        loading,
+        error,
+        hasMore,
+        fetchNotifications,
+        fetchMore,
+        fetchUnreadCount,
+        markAsRead,
+        markAllAsRead,
+        deleteNotification,
+    } = useApiNotifications();
 
-    const unreadCount = useMemo(
-        () => notifications.filter((n) => n.unread).length,
-        [notifications],
-    );
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const markAsRead = useCallback((id: string) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, unread: false } : n)),
-        );
-    }, []);
+    // Poll for new notifications and unread count
+    useEffect(() => {
+        intervalRef.current = setInterval(() => {
+            fetchNotifications();
+            fetchUnreadCount();
+        }, POLL_INTERVAL);
 
-    const markAllAsRead = useCallback(() => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-    }, []);
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, [fetchNotifications, fetchUnreadCount]);
 
-    const deleteNotification = useCallback((id: string) => {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, []);
-
-    const value = useMemo(
-        () => ({
-            notifications,
-            unreadCount,
-            markAsRead,
-            markAllAsRead,
-            deleteNotification,
-            setNotifications,
-        }),
-        [
-            notifications,
-            unreadCount,
-            markAsRead,
-            markAllAsRead,
-            deleteNotification,
-        ],
-    );
+    const refresh = async () => {
+        await Promise.all([fetchNotifications(), fetchUnreadCount()]);
+    };
 
     return (
-        <NotificationsContext.Provider value={value}>
+        <NotificationsContext.Provider
+            value={{
+                notifications,
+                unreadCount,
+                loading,
+                error,
+                hasMore,
+                markAsRead,
+                markAllAsRead,
+                deleteNotification,
+                refresh,
+                fetchMore,
+            }}
+        >
             {children}
         </NotificationsContext.Provider>
     );

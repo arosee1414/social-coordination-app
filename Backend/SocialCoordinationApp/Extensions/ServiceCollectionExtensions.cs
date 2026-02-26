@@ -54,6 +54,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGroupsService, GroupsService>();
         services.AddScoped<IHangoutsService, HangoutsService>();
         services.AddScoped<IFriendsService, FriendsService>();
+        services.AddScoped<INotificationsService, NotificationsService>();
 
         return services;
     }

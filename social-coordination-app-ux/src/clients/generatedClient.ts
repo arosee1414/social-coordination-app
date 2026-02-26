@@ -123,6 +123,28 @@ export interface ISocialCoordinationApiClient {
      */
     health(): Promise<void>;
     /**
+     * @param limit (optional) 
+     * @param continuationToken (optional) 
+     * @return Success
+     */
+    notificationsGET(limit: number | undefined, continuationToken: string | undefined): Promise<PaginatedNotificationsResponse>;
+    /**
+     * @return Success
+     */
+    unreadCount(): Promise<UnreadCountResponse>;
+    /**
+     * @return No Content
+     */
+    read(notificationId: string): Promise<void>;
+    /**
+     * @return No Content
+     */
+    readAll(): Promise<void>;
+    /**
+     * @return No Content
+     */
+    notificationsDELETE(notificationId: string): Promise<void>;
+    /**
      * @return Success
      */
     seed(): Promise<void>;
@@ -1634,6 +1656,279 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
         if (status === 200) {
             const _responseText = response.data;
             return Promise.resolve<void>(null as any);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param limit (optional) 
+     * @param continuationToken (optional) 
+     * @return Success
+     */
+    notificationsGET(limit: number | undefined, continuationToken: string | undefined, cancelToken?: CancelToken): Promise<PaginatedNotificationsResponse> {
+        let url_ = this.baseUrl + "/api/Notifications?";
+        if (limit === null)
+            throw new Error("The parameter 'limit' cannot be null.");
+        else if (limit !== undefined)
+            url_ += "limit=" + encodeURIComponent("" + limit) + "&";
+        if (continuationToken === null)
+            throw new Error("The parameter 'continuationToken' cannot be null.");
+        else if (continuationToken !== undefined)
+            url_ += "continuationToken=" + encodeURIComponent("" + continuationToken) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processNotificationsGET(_response);
+        });
+    }
+
+    protected processNotificationsGET(response: AxiosResponse): Promise<PaginatedNotificationsResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = PaginatedNotificationsResponse.fromJS(resultData200);
+            return Promise.resolve<PaginatedNotificationsResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<PaginatedNotificationsResponse>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    unreadCount( cancelToken?: CancelToken): Promise<UnreadCountResponse> {
+        let url_ = this.baseUrl + "/api/Notifications/unread-count";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processUnreadCount(_response);
+        });
+    }
+
+    protected processUnreadCount(response: AxiosResponse): Promise<UnreadCountResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = UnreadCountResponse.fromJS(resultData200);
+            return Promise.resolve<UnreadCountResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UnreadCountResponse>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    read(notificationId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notifications/{notificationId}/read";
+        if (notificationId === undefined || notificationId === null)
+            throw new Error("The parameter 'notificationId' must be defined.");
+        url_ = url_.replace("{notificationId}", encodeURIComponent("" + notificationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "PUT",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processRead(_response);
+        });
+    }
+
+    protected processRead(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    readAll( cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notifications/read-all";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "PUT",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processReadAll(_response);
+        });
+    }
+
+    protected processReadAll(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return No Content
+     */
+    notificationsDELETE(notificationId: string, cancelToken?: CancelToken): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notifications/{notificationId}";
+        if (notificationId === undefined || notificationId === null)
+            throw new Error("The parameter 'notificationId' must be defined.");
+        url_ = url_.replace("{notificationId}", encodeURIComponent("" + notificationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "DELETE",
+            url: url_,
+            headers: {
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processNotificationsDELETE(_response);
+        });
+    }
+
+    protected processNotificationsDELETE(response: AxiosResponse): Promise<void> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (const k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 204) {
+            const _responseText = response.data;
+            return Promise.resolve<void>(null as any);
+
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404  = _responseText;
+            result404 = ProblemDetails.fromJS(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -3165,6 +3460,141 @@ export interface IInvitedGroupInfoResponse {
     memberCount?: number;
 }
 
+export class NotificationResponse implements INotificationResponse {
+    id?: string | undefined;
+    recipientUserId?: string | undefined;
+    actorUserId?: string | undefined;
+    type?: NotificationType;
+    title?: string | undefined;
+    message?: string | undefined;
+    hangoutId?: string | undefined;
+    groupId?: string | undefined;
+    isRead?: boolean;
+    createdAt?: string | undefined;
+
+    constructor(data?: INotificationResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.recipientUserId = _data["recipientUserId"];
+            this.actorUserId = _data["actorUserId"];
+            this.type = _data["type"];
+            this.title = _data["title"];
+            this.message = _data["message"];
+            this.hangoutId = _data["hangoutId"];
+            this.groupId = _data["groupId"];
+            this.isRead = _data["isRead"];
+            this.createdAt = _data["createdAt"];
+        }
+    }
+
+    static fromJS(data: any): NotificationResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new NotificationResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["recipientUserId"] = this.recipientUserId;
+        data["actorUserId"] = this.actorUserId;
+        data["type"] = this.type;
+        data["title"] = this.title;
+        data["message"] = this.message;
+        data["hangoutId"] = this.hangoutId;
+        data["groupId"] = this.groupId;
+        data["isRead"] = this.isRead;
+        data["createdAt"] = this.createdAt;
+        return data;
+    }
+}
+
+export interface INotificationResponse {
+    id?: string | undefined;
+    recipientUserId?: string | undefined;
+    actorUserId?: string | undefined;
+    type?: NotificationType;
+    title?: string | undefined;
+    message?: string | undefined;
+    hangoutId?: string | undefined;
+    groupId?: string | undefined;
+    isRead?: boolean;
+    createdAt?: string | undefined;
+}
+
+export enum NotificationType {
+    HangoutCreated = "HangoutCreated",
+    HangoutInvite = "HangoutInvite",
+    Rsvp = "Rsvp",
+    GroupCreated = "GroupCreated",
+    MemberAdded = "MemberAdded",
+    MemberRemoved = "MemberRemoved",
+    FriendRequest = "FriendRequest",
+    FriendAccepted = "FriendAccepted",
+}
+
+export class PaginatedNotificationsResponse implements IPaginatedNotificationsResponse {
+    notifications?: NotificationResponse[] | undefined;
+    continuationToken?: string | undefined;
+    hasMore?: boolean;
+
+    constructor(data?: IPaginatedNotificationsResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["notifications"])) {
+                this.notifications = [] as any;
+                for (let item of _data["notifications"])
+                    this.notifications!.push(NotificationResponse.fromJS(item));
+            }
+            this.continuationToken = _data["continuationToken"];
+            this.hasMore = _data["hasMore"];
+        }
+    }
+
+    static fromJS(data: any): PaginatedNotificationsResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new PaginatedNotificationsResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.notifications)) {
+            data["notifications"] = [];
+            for (let item of this.notifications)
+                data["notifications"].push(item.toJSON());
+        }
+        data["continuationToken"] = this.continuationToken;
+        data["hasMore"] = this.hasMore;
+        return data;
+    }
+}
+
+export interface IPaginatedNotificationsResponse {
+    notifications?: NotificationResponse[] | undefined;
+    continuationToken?: string | undefined;
+    hasMore?: boolean;
+}
+
 export class ProblemDetails implements IProblemDetails {
     type?: string | undefined;
     title?: string | undefined;
@@ -3310,6 +3740,42 @@ export interface ISuggestedFriendResponse {
     mutualHangoutCount?: number;
     mutualGroupNames?: string[] | undefined;
     mutualHangoutNames?: string[] | undefined;
+}
+
+export class UnreadCountResponse implements IUnreadCountResponse {
+    unreadCount?: number;
+
+    constructor(data?: IUnreadCountResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.unreadCount = _data["unreadCount"];
+        }
+    }
+
+    static fromJS(data: any): UnreadCountResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UnreadCountResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["unreadCount"] = this.unreadCount;
+        return data;
+    }
+}
+
+export interface IUnreadCountResponse {
+    unreadCount?: number;
 }
 
 export class UpdateGroupRequest implements IUpdateGroupRequest {

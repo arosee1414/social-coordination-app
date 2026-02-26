@@ -14,6 +14,7 @@ public class CosmosContext : ICosmosContext
     public Container GroupsContainer { get; private set; } = null!;
     public Container HangoutsContainer { get; private set; } = null!;
     public Container FriendshipsContainer { get; private set; } = null!;
+    public Container NotificationsContainer { get; private set; } = null!;
 
     public CosmosContext(CosmosClient client, IOptions<CosmosConfiguration> config)
     {
@@ -45,5 +46,13 @@ public class CosmosContext : ICosmosContext
             new ContainerProperties("Friendships", "/userId")
         );
         FriendshipsContainer = friendshipsResponse.Container;
+
+        var notificationsResponse = await _database.CreateContainerIfNotExistsAsync(
+            new ContainerProperties("Notifications", "/recipientUserId")
+            {
+                DefaultTimeToLive = -1
+            }
+        );
+        NotificationsContainer = notificationsResponse.Container;
     }
 }

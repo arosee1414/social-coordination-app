@@ -18,6 +18,21 @@ import { createSharedStyles } from '@/src/constants/shared-styles';
 import { useNotifications } from '@/src/contexts/NotificationsContext';
 import type { Notification } from '@/src/types';
 
+function formatTimeAgo(dateString: string): string {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+}
+
 export default function NotificationsScreen() {
     const colors = useThemeColors();
     const shared = createSharedStyles(colors);
@@ -33,22 +48,28 @@ export default function NotificationsScreen() {
         (notification: Notification) => {
             markAsRead(notification.id);
 
-            if (!notification.relatedEntityId) return;
-
             switch (notification.type) {
-                case 'rsvp':
-                case 'invite':
-                case 'reminder':
-                case 'group':
-                    router.push(`/hangout/${notification.relatedEntityId}`);
+                case 'Rsvp':
+                case 'HangoutInvite':
+                case 'HangoutCreated':
+                    if (notification.hangoutId) {
+                        router.push(`/hangout/${notification.hangoutId}`);
+                    }
                     break;
-                case 'group_created':
-                    router.push(`/group/${notification.relatedEntityId}`);
+                case 'GroupCreated':
+                case 'MemberAdded':
+                case 'MemberRemoved':
+                    if (notification.groupId) {
+                        router.push(`/group/${notification.groupId}`);
+                    }
                     break;
-                case 'friend':
-                    router.push(
-                        `/friend/${notification.relatedEntityId}` as any,
-                    );
+                case 'FriendRequest':
+                case 'FriendAccepted':
+                    if (notification.actorUserId) {
+                        router.push(
+                            `/friend/${notification.actorUserId}` as any,
+                        );
+                    }
                     break;
             }
         },
@@ -95,38 +116,44 @@ export default function NotificationsScreen() {
     };
 
     const getNotificationIcon = (notification: Notification) => {
-        if (notification.icon) {
-            return (
-                <View
-                    style={[
-                        s.iconCircle,
-                        { backgroundColor: colors.surfaceTertiary },
-                    ]}
-                >
-                    <Text style={{ fontSize: 24 }}>{notification.icon}</Text>
-                </View>
-            );
+        let iconName: keyof typeof Ionicons.glyphMap = 'notifications';
+        let iconColor = colors.primary;
+
+        switch (notification.type) {
+            case 'HangoutInvite':
+            case 'HangoutCreated':
+                iconName = 'calendar';
+                iconColor = '#6366F1';
+                break;
+            case 'Rsvp':
+                iconName = 'checkmark-circle';
+                iconColor = '#10B981';
+                break;
+            case 'GroupCreated':
+                iconName = 'sparkles';
+                iconColor = '#F59E0B';
+                break;
+            case 'MemberAdded':
+                iconName = 'person-add';
+                iconColor = '#3B82F6';
+                break;
+            case 'MemberRemoved':
+                iconName = 'person-remove';
+                iconColor = '#EF4444';
+                break;
+            case 'FriendRequest':
+                iconName = 'people';
+                iconColor = '#8B5CF6';
+                break;
+            case 'FriendAccepted':
+                iconName = 'heart';
+                iconColor = '#EC4899';
+                break;
         }
-        if (notification.color) {
-            return (
-                <View
-                    style={[
-                        s.iconCircle,
-                        { backgroundColor: notification.color },
-                    ]}
-                >
-                    {notification.type === 'reminder' && (
-                        <Ionicons name='calendar' size={24} color='#fff' />
-                    )}
-                    {notification.type === 'group_created' && (
-                        <Ionicons name='sparkles' size={24} color='#fff' />
-                    )}
-                </View>
-            );
-        }
+
         return (
-            <View style={[s.iconCircle, { backgroundColor: colors.primary }]}>
-                <Ionicons name='notifications' size={24} color='#fff' />
+            <View style={[s.iconCircle, { backgroundColor: iconColor }]}>
+                <Ionicons name={iconName} size={24} color='#fff' />
             </View>
         );
     };
@@ -209,7 +236,7 @@ export default function NotificationsScreen() {
                                     s.notifItem,
                                     {
                                         borderBottomColor: colors.cardBorder,
-                                        backgroundColor: notification.unread
+                                        backgroundColor: !notification.isRead
                                             ? colors.unreadBg
                                             : colors.background,
                                     },
@@ -231,7 +258,7 @@ export default function NotificationsScreen() {
                                         >
                                             {notification.title}
                                         </Text>
-                                        {notification.unread && (
+                                        {!notification.isRead && (
                                             <View
                                                 style={[
                                                     s.unreadDot,

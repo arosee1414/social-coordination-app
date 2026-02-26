@@ -111,6 +111,18 @@ After any backend API contract change:
 4. Verify new methods in generated client
 5. Stop backend server
 
+## Notifications Architecture
+
+- **Storage**: Cosmos DB container `Notifications` with partition key `/recipientUserId`
+- **TTL**: Per-document TTL of 15 days (1296000 seconds), container has `DefaultTimeToLive = -1`
+- **Notification types**: HangoutCreated, HangoutInvite, Rsvp, GroupCreated, MemberAdded, MemberRemoved, FriendRequest, FriendAccepted
+- **Creation**: Synchronous, inline with service operations (HangoutsService, GroupsService, FriendsService)
+- **Error handling**: Try/catch around each notification creation — failures logged but don't block main operations
+- **Self-notification prevention**: `CreateNotificationAsync` skips if recipientUserId == actorUserId
+- **Pagination**: Cosmos DB continuation tokens, `ORDER BY c.createdAt DESC`
+- **Frontend polling**: 30-second interval for notifications + unread count
+- **Entity references**: Specific `hangoutId` and `groupId` fields (not generic) for future deep-linking
+
 ## Key Technical Decisions
 
 - PowerShell is the shell — use `;` not `&&` to chain commands

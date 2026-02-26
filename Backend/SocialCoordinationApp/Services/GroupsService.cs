@@ -11,11 +11,13 @@ public class GroupsService : IGroupsService
 {
     private readonly ICosmosContext _cosmosContext;
     private readonly ILogger<GroupsService> _logger;
+    private readonly INotificationsService _notificationsService;
 
-    public GroupsService(ICosmosContext cosmosContext, ILogger<GroupsService> logger)
+    public GroupsService(ICosmosContext cosmosContext, INotificationsService notificationsService, ILogger<GroupsService> logger)
     {
         _cosmosContext = cosmosContext;
         _logger = logger;
+        _notificationsService = notificationsService;
     }
 
     public async Task<GroupResponse> CreateGroupAsync(string userId, CreateGroupRequest request)
@@ -60,6 +62,26 @@ public class GroupsService : IGroupsService
             .CreateItemAsync(group, new PartitionKey(userId));
 
         _logger.LogInformation("Group {GroupId} created by user {UserId}", group.Id, userId);
+
+        // Send MemberAdded notifications to all initial members (excluding creator)
+        var creatorDisplayName = await GetUserDisplayNameAsync(userId);
+        foreach (var member in group.Members.Where(m => m.UserId != userId))
+        {
+            try
+            {
+                await _notificationsService.CreateNotificationAsync(
+                    recipientUserId: member.UserId,
+                    actorUserId: userId,
+                    type: NotificationType.MemberAdded,
+                    title: $"{creatorDisplayName} added you",
+                    message: $"to the group \"{group.Name}\"",
+                    groupId: group.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create MemberAdded notification for user {UserId}", member.UserId);
+            }
+        }
 
         return await MapToResponseAsync(response.Resource);
     }
@@ -166,6 +188,23 @@ public class GroupsService : IGroupsService
         _logger.LogInformation("User {MemberId} added to group {GroupId} by user {UserId}",
             request.UserId, groupId, userId);
 
+        // Send MemberAdded notification to the newly added member
+        try
+        {
+            var adderDisplayName = await GetUserDisplayNameAsync(userId);
+            await _notificationsService.CreateNotificationAsync(
+                recipientUserId: request.UserId,
+                actorUserId: userId,
+                type: NotificationType.MemberAdded,
+                title: $"{adderDisplayName} added you",
+                message: $"to the group \"{group.Name}\"",
+                groupId: group.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create MemberAdded notification for user {UserId}", request.UserId);
+        }
+
         return await MapToResponseAsync(response.Resource);
     }
 
@@ -197,6 +236,26 @@ public class GroupsService : IGroupsService
         _logger.LogInformation("User {MemberId} removed from group {GroupId} by user {UserId}",
             memberUserId, groupId, userId);
 
+        // Send MemberRemoved notification to the removed member (if removed by someone else)
+        if (memberUserId != userId)
+        {
+            try
+            {
+                var removerDisplayName = await GetUserDisplayNameAsync(userId);
+                await _notificationsService.CreateNotificationAsync(
+                    recipientUserId: memberUserId,
+                    actorUserId: userId,
+                    type: NotificationType.MemberRemoved,
+                    title: $"{removerDisplayName} removed you",
+                    message: $"from the group \"{group.Name}\"",
+                    groupId: group.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create MemberRemoved notification for user {UserId}", memberUserId);
+            }
+        }
+
         return await MapToResponseAsync(response.Resource);
     }
 
@@ -218,6 +277,21 @@ public class GroupsService : IGroupsService
             Emoji = g.Emoji,
             MemberCount = g.Members.Count
         }).ToList();
+    }
+
+    private async Task<string> GetUserDisplayNameAsync(string userId)
+    {
+        try
+        {
+            var response = await _cosmosContext.UsersContainer
+                .ReadItemAsync<UserRecord>(userId, new PartitionKey(userId));
+            var user = response.Resource;
+            return GetDisplayName(user);
+        }
+        catch
+        {
+            return userId;
+        }
     }
 
     private async Task<GroupRecord> GetGroupRecordAsync(string groupId)
