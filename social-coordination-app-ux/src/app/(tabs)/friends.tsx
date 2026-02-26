@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
+        alignItems: 'center',
     },
     tabBar: {
         flexDirection: 'row',
