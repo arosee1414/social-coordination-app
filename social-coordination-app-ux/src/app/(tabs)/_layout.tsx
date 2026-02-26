@@ -3,6 +3,7 @@ import React from 'react';
 
 import { HapticTab } from '@/src/components/haptic-tab';
 import { IconSymbol } from '@/src/components/ui/icon-symbol';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/theme';
 import { useThemeContext } from '@/src/contexts/ThemeContext';
 
@@ -55,13 +56,13 @@ export default function TabLayout() {
                 }}
             />
             <Tabs.Screen
-                name='search'
+                name='friends'
                 options={{
-                    title: 'Search',
+                    title: 'Friends',
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol
+                        <Ionicons
                             size={26}
-                            name='magnifyingglass'
+                            name='people-outline'
                             color={color}
                         />
                     ),

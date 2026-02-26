@@ -21,11 +21,12 @@
 
 ## Recently Completed
 
-- **Navigation restructuring**: Moved Notifications from bottom tab to stack route (accessible via bell icon on Home header). Replaced Notifications tab with new Search tab featuring friend search, discover users, and segmented control UI.
+- **Friends tab replaces Search tab**: Replaced the Search tab with a Friends tab featuring friend management (list, remove, accept/reject requests). Profile's "Manage Friends" button and Friends stat now navigate to the Friends tab.
+- **Navigation restructuring**: Moved Notifications from bottom tab to stack route (accessible via bell icon on Home header).
 
 ## What's Left to Build
 
-- **Profile page friend count**: `profile.tsx` needs `useApiFriendCount` integration and link to `/friends-list`
+- **`friends-list.tsx` cleanup**: Old stack screen still exists but is no longer referenced — can be removed
 - **Seed controller wiring**: Verify `SeedFriendshipsAsync` is called from SeedController
 - **Notifications**: Currently mock data — needs real backend
 - **Home feed**: Activity feed still uses mock data

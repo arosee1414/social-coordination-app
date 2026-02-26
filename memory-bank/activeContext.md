@@ -2,26 +2,27 @@
 
 ## Current Work Focus
 
-Navigation restructuring — Notifications tab → Search tab, notification bell on Home.
+Navigation restructuring — Search tab replaced with Friends tab, Manage Friends linked to tab.
 
 ## What Was Just Accomplished
 
-- **Moved Notifications from tab to stack route**: Notifications is no longer a bottom tab; it's a full-screen stack route (`/notifications`) accessible via a bell icon button in the Home tab header.
-- **Added notification bell to Home header**: Bell icon with red unread badge dot in top-right of Home screen header, navigates to `/notifications` stack screen. Uses `useNotifications()` for `unreadCount`.
-- **Replaced Notifications tab with Search tab**: The bottom tab bar now shows: Home, Hangouts, Groups, **Search**, Profile (replacing Notifications).
-- **Created new Search tab screen** (`src/app/(tabs)/search.tsx`): Adapted from Figma `SearchScreen` template:
-    - Header with "Search" title and "Find and manage friends" subtitle
-    - Search bar with search icon, clear button, pill-shaped input
-    - Segmented control tabs: "My Friends" (count) / "Discover"
-    - My Friends tab: Uses `useApiFriends()` for real friend data, filterable via search, each row navigates to `/friend/[id]`
-    - Discover tab: Uses `useApiUserSearch()` for user search API, "Find More Friends" CTA card linking to `/find-friends`
-    - Full theme support (light/dark), `useScrollToTop` for tab re-tap, consistent shared styles
-- **Notifications stack screen**: Has back button header (arrow-back + centered title + "Mark all read" link), slides in from right
+- **Replaced Search tab with Friends tab**: The bottom tab bar now shows: Home, Hangouts, Groups, **Friends**, Profile (replacing Search).
+- **Created new Friends tab** (`src/app/(tabs)/friends.tsx`): Adapted from `friends-list.tsx` stack screen for tab use:
+    - Header with "Friends" title, "Manage your friends and requests" subtitle, and person-add icon to navigate to `/find-friends`
+    - Friends/Requests underline tabs with counts
+    - Friends tab: Uses `useApiFriends()` for real friend data, each row shows avatar/name/friendsSince, ellipsis popover for Remove Friend
+    - Requests tab: Shows incoming (Confirm/Delete) and outgoing (Requested) friend requests
+    - Pull-to-refresh, `useScrollToTop` for tab re-tap, `useFocusEffect` to refetch on focus
+    - Full theme support (light/dark), consistent shared styles
+- **Updated Profile "Manage Friends" navigation**: Both the "Manage Friends" settings button and the Friends stat counter in Profile now navigate to `/(tabs)/friends` (previously went to `/friends-list` stack screen)
+- **Deleted Search tab**: Removed `src/app/(tabs)/search.tsx`
+- **Differentiated tab icons**: Friends tab uses `Ionicons` `people-outline` to distinguish from Groups tab's `person.2.fill`
+- **Previous**: Notifications moved from tab to stack route (bell icon on Home header)
 
 ## Key Decisions Made
 
-- **Notifications as stack, not tab**: Notifications moved from bottom tab to a stack screen accessible via bell icon on Home header. This frees up a tab slot for Search.
-- **Search tab replaces Notifications tab**: Tab order is Home, Hangouts, Groups, Search, Profile
+- **Friends tab replaces Search tab**: Tab order is Home, Hangouts, Groups, Friends, Profile. Friends tab has full friend management (list, remove, accept/reject requests).
+- **Notifications as stack, not tab**: Notifications moved from bottom tab to a stack screen accessible via bell icon on Home header.
 - **Explicit light/dark toggle** (not three-way system/light/dark): The toggle switches between explicit `light` and `dark` preferences. When set to `system`, it follows the OS setting, but the toggle itself resolves to on/off for dark mode.
 - **expo-secure-store persistence**: Theme preference survives app restarts via `expo-secure-store` (not AsyncStorage — the legacy native module was null)
 - **Preferences section placement**: Renders after Account/Support sections, before Sign Out
@@ -43,6 +44,7 @@ Navigation restructuring — Notifications tab → Search tab, notification bell
 
 ## Remaining Work
 
+- **`friends-list.tsx` cleanup**: The old stack screen `friends-list.tsx` still exists but is no longer referenced by any navigation. Can be removed in a future cleanup pass.
 - **Testing**: End-to-end testing of dark mode toggle persistence and visual correctness across all screens
 - **Error handling polish**: Some screens could benefit from retry logic on API failures
 

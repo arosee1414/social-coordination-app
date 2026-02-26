@@ -200,7 +200,9 @@ export default function ProfileScreen() {
                                     <TouchableOpacity
                                         key={index}
                                         onPress={() =>
-                                            router.push('/friends-list' as any)
+                                            router.push(
+                                                '/(tabs)/friends' as any,
+                                            )
                                         }
                                         activeOpacity={0.7}
                                     >
@@ -289,7 +291,7 @@ export default function ProfileScreen() {
                                             item.label === 'Manage Friends'
                                                 ? () =>
                                                       router.push(
-                                                          '/friends-list' as any,
+                                                          '/(tabs)/friends' as any,
                                                       )
                                                 : undefined
                                         }
