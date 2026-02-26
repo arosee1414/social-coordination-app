@@ -67,12 +67,137 @@ public class SeedService : ISeedService
         var groupsCreated = await SeedGroupsAsync();
         var hangoutsCreated = await SeedHangoutsAsync();
         var friendshipsCreated = await SeedFriendshipsAsync();
+        var notificationsCreated = await SeedNotificationsAsync();
 
         _logger.LogInformation(
-            "Seed complete: {Users} users, {Groups} groups, {Hangouts} hangouts, {Friendships} friendships created",
-            usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated);
+            "Seed complete: {Users} users, {Groups} groups, {Hangouts} hangouts, {Friendships} friendships, {Notifications} notifications created",
+            usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated, notificationsCreated);
 
-        return new SeedResult(usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated);
+        return new SeedResult(usersCreated, groupsCreated, hangoutsCreated, friendshipsCreated, notificationsCreated);
+    }
+
+    private async Task<int> SeedNotificationsAsync()
+    {
+        var now = DateTime.UtcNow;
+        const int ttl = 1296000; // 15 days
+
+        var notifications = new List<NotificationRecord>
+        {
+            // 1. HangoutInvite — Lacey invited Alex to Pizza Night (30 min ago, unread)
+            new()
+            {
+                Id = "seed-notif-01",
+                RecipientUserId = AlexId,
+                ActorUserId = LaceyId,
+                Type = NotificationType.HangoutInvite,
+                Title = "Lacey Rubin invited you",
+                Message = "to \"Pizza Night\"",
+                HangoutId = HangoutId2,
+                IsRead = false,
+                CreatedAt = now.AddMinutes(-30).ToString("o"),
+                Ttl = ttl
+            },
+            // 2. Rsvp — Jordan is maybe for Coffee & Catch Up (2 hours ago, unread)
+            new()
+            {
+                Id = "seed-notif-02",
+                RecipientUserId = AlexId,
+                ActorUserId = JordanId,
+                Type = NotificationType.Rsvp,
+                Title = "Jordan Moldowsky is maybe",
+                Message = "for \"Coffee & Catch Up\"",
+                HangoutId = HangoutId1,
+                IsRead = false,
+                CreatedAt = now.AddHours(-2).ToString("o"),
+                Ttl = ttl
+            },
+            // 3. Rsvp — Matt is going for Park Hangout (5 hours ago, unread)
+            new()
+            {
+                Id = "seed-notif-03",
+                RecipientUserId = AlexId,
+                ActorUserId = MattId,
+                Type = NotificationType.Rsvp,
+                Title = "Matt Korn is going",
+                Message = "for \"Park Hangout\"",
+                HangoutId = HangoutId4,
+                IsRead = false,
+                CreatedAt = now.AddHours(-5).ToString("o"),
+                Ttl = ttl
+            },
+            // 4. FriendRequest — Pietro sent Alex a friend request (1 day ago, unread)
+            new()
+            {
+                Id = "seed-notif-04",
+                RecipientUserId = AlexId,
+                ActorUserId = PietroId,
+                Type = NotificationType.FriendRequest,
+                Title = "Pietro Buonfrisco sent you a friend request",
+                Message = "Tap to respond",
+                IsRead = false,
+                CreatedAt = now.AddDays(-1).ToString("o"),
+                Ttl = ttl
+            },
+            // 5. MemberAdded — Lacey added Alex to Foodies Club (2 days ago, read)
+            new()
+            {
+                Id = "seed-notif-05",
+                RecipientUserId = AlexId,
+                ActorUserId = LaceyId,
+                Type = NotificationType.MemberAdded,
+                Title = "Lacey Rubin added you",
+                Message = "to the group \"Foodies Club\"",
+                GroupId = GroupId2,
+                IsRead = true,
+                CreatedAt = now.AddDays(-2).ToString("o"),
+                Ttl = ttl
+            },
+            // 6. FriendAccepted — Luke accepted Alex's friend request (3 days ago, read)
+            new()
+            {
+                Id = "seed-notif-06",
+                RecipientUserId = AlexId,
+                ActorUserId = LukeId,
+                Type = NotificationType.FriendAccepted,
+                Title = "Luke Rosenthal accepted your friend request",
+                Message = "You can now plan hangouts together",
+                IsRead = true,
+                CreatedAt = now.AddDays(-3).ToString("o"),
+                Ttl = ttl
+            },
+            // 7. HangoutInvite — Jordan invited Alex to Park Hangout (4 days ago, read)
+            new()
+            {
+                Id = "seed-notif-07",
+                RecipientUserId = AlexId,
+                ActorUserId = JordanId,
+                Type = NotificationType.HangoutInvite,
+                Title = "Jordan Moldowsky invited you",
+                Message = "to \"Park Hangout\"",
+                HangoutId = HangoutId4,
+                IsRead = true,
+                CreatedAt = now.AddDays(-4).ToString("o"),
+                Ttl = ttl
+            }
+        };
+
+        int created = 0;
+        foreach (var notification in notifications)
+        {
+            try
+            {
+                await _cosmosContext.NotificationsContainer.UpsertItemAsync(
+                    notification, new PartitionKey(notification.RecipientUserId));
+                created++;
+                _logger.LogInformation("Created notification: {NotifId} ({Title})", notification.Id, notification.Title);
+            }
+            catch (CosmosException ex)
+            {
+                _logger.LogWarning(ex, "Failed to seed notification {NotifId}", notification.Id);
+            }
+        }
+
+        return created;
     }
 
     private async Task<int> SeedUsersAsync()

@@ -14,6 +14,18 @@
 - **Theming**: Dark/light mode support with theme constants
 - **Seed data**: SeedController for development data population
 
+## Recently Completed
+
+### Notifications System (Full Stack) — Feb 25, 2026
+
+- Backend: NotificationType enum, NotificationRecord domain model, DTOs, NotificationsService, NotificationsController
+- Cosmos DB: Notifications container with partition key `/recipientUserId` and per-document TTL (15 days)
+- Service integrations: HangoutsService, GroupsService, FriendsService all create notifications
+- Seed data: 7 seed notifications for Alex (mix of unread/read, various types)
+- Frontend: Updated types, mapper, useApiNotifications hook, NotificationsContext with 30-second polling, notifications screen
+- API client regenerated and verified
+- Build: 0 errors, 0 warnings
+
 ## What's Left to Build
 
 - Notification deep-linking (tap to navigate to related hangout/group/friend)

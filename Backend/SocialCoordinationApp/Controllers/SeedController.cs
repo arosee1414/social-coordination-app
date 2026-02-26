@@ -34,7 +34,8 @@ public class SeedController : ControllerBase
             result.UsersCreated,
             result.GroupsCreated,
             result.HangoutsCreated,
-            result.FriendshipsCreated
+            result.FriendshipsCreated,
+            result.NotificationsCreated
         });
     }
 }

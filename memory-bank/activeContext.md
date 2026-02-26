@@ -1,5 +1,9 @@
 # Active Context
 
+## Current State (Feb 25, 2026)
+
+The full-stack notifications system has been implemented and is working end-to-end.
+
 ## Current Work Focus
 
 The notifications system has been fully implemented end-to-end (backend + frontend). This was the primary focus of the recent session.
