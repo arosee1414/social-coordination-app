@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     Animated,
     RefreshControl,
+    Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -18,6 +19,18 @@ import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
 import { groupBgColors } from '@/src/data/mock-data';
 import { useApiGroups } from '@/src/hooks/useApiGroups';
+
+const GRID_PADDING = 24;
+const GRID_GAP = 12;
+const NUM_COLUMNS = 2;
+
+function getCardWidth() {
+    const screenWidth = Dimensions.get('window').width;
+    return (
+        (screenWidth - GRID_PADDING * 2 - GRID_GAP * (NUM_COLUMNS - 1)) /
+        NUM_COLUMNS
+    );
+}
 
 export default function GroupsScreen() {
     const colorScheme = useColorScheme();
@@ -32,6 +45,8 @@ export default function GroupsScreen() {
 
     const spinnerOpacity = useRef(new Animated.Value(1)).current;
     const [showSpinner, setShowSpinner] = useState(true);
+
+    const cardWidth = getCardWidth();
 
     useEffect(() => {
         if (!loading) {
@@ -86,13 +101,7 @@ export default function GroupsScreen() {
                 }
             >
                 {groups.length > 0 ? (
-                    <View
-                        style={{
-                            paddingHorizontal: 24,
-                            paddingVertical: 24,
-                            gap: 12,
-                        }}
-                    >
+                    <View style={s.grid}>
                         {groups.map((group) => {
                             const bgTheme = groupBgColors[group.id];
                             const bg = bgTheme
@@ -107,45 +116,44 @@ export default function GroupsScreen() {
                                 <TouchableOpacity
                                     key={group.id}
                                     style={[
-                                        s.groupCard,
-                                        { backgroundColor: bg.from },
+                                        s.gridCard,
+                                        {
+                                            width: cardWidth,
+                                            height: cardWidth,
+                                            backgroundColor: bg.from,
+                                        },
                                     ]}
                                     onPress={() =>
                                         router.push(`/group/${group.id}` as any)
                                     }
                                     activeOpacity={0.7}
                                 >
-                                    <View style={s.groupRow}>
-                                        <Text style={s.groupIcon}>
-                                            {group.icon}
+                                    <Text style={s.gridIcon}>{group.icon}</Text>
+                                    <Text
+                                        style={[
+                                            s.gridName,
+                                            { color: colors.text },
+                                        ]}
+                                        numberOfLines={2}
+                                    >
+                                        {group.name}
+                                    </Text>
+                                    <View style={s.gridMemberRow}>
+                                        <Ionicons
+                                            name='people-outline'
+                                            size={14}
+                                            color={colors.textSecondary}
+                                        />
+                                        <Text
+                                            style={[
+                                                s.gridMemberText,
+                                                {
+                                                    color: colors.textSecondary,
+                                                },
+                                            ]}
+                                        >
+                                            {group.memberCount} members
                                         </Text>
-                                        <View style={{ flex: 1 }}>
-                                            <Text
-                                                style={[
-                                                    s.groupName,
-                                                    { color: colors.text },
-                                                ]}
-                                            >
-                                                {group.name}
-                                            </Text>
-                                            <View style={s.memberRow}>
-                                                <Ionicons
-                                                    name='people-outline'
-                                                    size={16}
-                                                    color={colors.textSecondary}
-                                                />
-                                                <Text
-                                                    style={[
-                                                        s.memberText,
-                                                        {
-                                                            color: colors.textSecondary,
-                                                        },
-                                                    ]}
-                                                >
-                                                    {group.memberCount} members
-                                                </Text>
-                                            </View>
-                                        </View>
                                     </View>
                                 </TouchableOpacity>
                             );
@@ -212,20 +220,43 @@ const s = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 8,
     },
-    groupCard: {
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        paddingHorizontal: GRID_PADDING,
+        paddingVertical: GRID_PADDING,
+        gap: GRID_GAP,
+    },
+    gridCard: {
         borderRadius: 16,
-        padding: 20,
+        padding: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 3,
         elevation: 1,
     },
-    groupRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-    groupIcon: { fontSize: 40 },
-    groupName: { fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
-    memberRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-    memberText: { fontSize: 14, fontWeight: '500' },
+    gridIcon: {
+        fontSize: 48,
+        marginBottom: 10,
+    },
+    gridName: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 6,
+    },
+    gridMemberRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    gridMemberText: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
     emptyState: {
         alignItems: 'center',
         paddingHorizontal: 24,

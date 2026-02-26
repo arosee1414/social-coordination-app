@@ -2,15 +2,15 @@
 
 ## Current Work Focus
 
-Profile tab cleanup — removed redundant Manage Friends button, reorganized settings into Preferences section.
+Groups tab UI rework — changed from vertical list to 2-column square card grid layout.
 
 ## What Was Just Accomplished
 
-- **Removed "Manage Friends" button from Profile**: Since there's now a dedicated Friends tab, the Manage Friends settings item was redundant. Removed it entirely along with the whole Account section from `settingsSections` in `mock-data.ts`.
-- **Moved Notifications to Preferences section**: The Notifications row now lives in the Preferences card on the Profile tab (navigates to `/notifications`), instead of being in the Account section.
-- **Moved Calendar Sync to Preferences section**: Calendar Sync row also moved into the Preferences card, appearing between Notifications and Dark Mode toggle.
-- **Profile Preferences card now contains**: Notifications → Calendar Sync → Dark Mode toggle (with hint text below).
-- **Remaining sections**: Support section (Help & Feedback) renders below Preferences, followed by Sign Out button.
+- **Reworked Groups tab to 2-column grid**: Replaced the single-column vertical list of rectangular group cards with a 2-column grid of square cards.
+- **Square card layout**: Each card uses `width = height = cardWidth` computed from screen width, padding, and gap to ensure perfect squares.
+- **Centered card content**: Icon (large emoji), group name (centered, up to 2 lines), and member count are vertically and horizontally centered within each card.
+- **Grid layout**: Uses `flexDirection: 'row'` + `flexWrap: 'wrap'` with `gap: 12` and `paddingHorizontal: 24` for consistent spacing.
+- **Preserved**: Header, empty state, loading spinner, pull-to-refresh, navigation, and background color logic all unchanged.
 
 ## Key Decisions Made
 
