@@ -16,7 +16,7 @@ import {
     RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
@@ -137,7 +137,20 @@ export default function HangoutsScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<HangoutTab>('upcoming');
     const [showFilterSheet, setShowFilterSheet] = useState(false);
-    const [filters, setFilters] = useState<HangoutFilters>(DEFAULT_FILTERS);
+    const searchParams = useLocalSearchParams<{ role?: string }>();
+    const [filters, setFilters] = useState<HangoutFilters>(() => {
+        if (searchParams.role === 'hosting') {
+            return { ...DEFAULT_FILTERS, role: 'hosting' };
+        }
+        return DEFAULT_FILTERS;
+    });
+
+    // React to incoming route params (e.g. from profile stats)
+    useEffect(() => {
+        if (searchParams.role === 'hosting') {
+            setFilters((prev) => ({ ...prev, role: 'hosting' }));
+        }
+    }, [searchParams.role]);
 
     const filteredHangouts = useMemo(() => {
         // First filter by tab

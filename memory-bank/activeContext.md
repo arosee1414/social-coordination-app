@@ -2,13 +2,15 @@
 
 ## Current Work Focus
 
-Hangout sort ordering improvements.
+Profile card stats navigation.
 
 ## What Was Just Accomplished
 
-- **Added chronological sorting to hangouts lists**:
-    - `hangouts.tsx` (Hangouts tab): Upcoming hangouts sort ascending by `startTime` (soonest first), Past hangouts sort descending (most recent first). Nulls pushed to bottom.
-    - `index.tsx` (Home screen): Upcoming hangouts section also sorted ascending by `startTime` for consistency.
+- **Made profile card stats interactive**:
+    - "Groups" stat now navigates to `/(tabs)/groups` when tapped
+    - "Plans Created" stat now navigates to `/(tabs)/hangouts` with `role=hosting` param, which pre-applies the "Hosting" filter
+    - `hangouts.tsx` reads `useLocalSearchParams` for a `role` param and initializes/updates filter state accordingly
+    - Pattern matches existing "Friends" stat → `/friends-list` navigation
 
 ## Key Decisions Made
 

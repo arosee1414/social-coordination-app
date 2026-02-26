@@ -173,6 +173,40 @@ export default function ProfileScreen() {
                                         </TouchableOpacity>
                                     );
                                 }
+                                if (stat.label === 'Groups') {
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() =>
+                                                router.push(
+                                                    '/(tabs)/groups' as any,
+                                                )
+                                            }
+                                            activeOpacity={0.7}
+                                        >
+                                            {content}
+                                        </TouchableOpacity>
+                                    );
+                                }
+                                if (stat.label === 'Plans Created') {
+                                    return (
+                                        <TouchableOpacity
+                                            key={index}
+                                            onPress={() =>
+                                                router.push({
+                                                    pathname:
+                                                        '/(tabs)/hangouts' as any,
+                                                    params: {
+                                                        role: 'hosting',
+                                                    },
+                                                })
+                                            }
+                                            activeOpacity={0.7}
+                                        >
+                                            {content}
+                                        </TouchableOpacity>
+                                    );
+                                }
                                 return content;
                             })}
                         </View>
