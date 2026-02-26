@@ -156,7 +156,7 @@ export interface ISocialCoordinationApiClient {
     /**
      * @return Success
      */
-    suggested(): Promise<UserResponse[]>;
+    suggested(): Promise<SuggestedFriendResponse[]>;
     /**
      * @return Success
      */
@@ -2026,7 +2026,7 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
     /**
      * @return Success
      */
-    suggested( cancelToken?: CancelToken): Promise<UserResponse[]> {
+    suggested( cancelToken?: CancelToken): Promise<SuggestedFriendResponse[]> {
         let url_ = this.baseUrl + "/api/users/suggested";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2050,7 +2050,7 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
         });
     }
 
-    protected processSuggested(response: AxiosResponse): Promise<UserResponse[]> {
+    protected processSuggested(response: AxiosResponse): Promise<SuggestedFriendResponse[]> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -2067,18 +2067,18 @@ export class SocialCoordinationApiClient implements ISocialCoordinationApiClient
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(UserResponse.fromJS(item));
+                    result200!.push(SuggestedFriendResponse.fromJS(item));
             }
             else {
                 result200 = <any>null;
             }
-            return Promise.resolve<UserResponse[]>(result200);
+            return Promise.resolve<SuggestedFriendResponse[]>(result200);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<UserResponse[]>(null as any);
+        return Promise.resolve<SuggestedFriendResponse[]>(null as any);
     }
 
     /**
@@ -3234,6 +3234,82 @@ export enum RSVPStatus {
     Going = "Going",
     NotGoing = "NotGoing",
     Maybe = "Maybe",
+}
+
+export class SuggestedFriendResponse implements ISuggestedFriendResponse {
+    userId?: string | undefined;
+    displayName?: string | undefined;
+    avatarUrl?: string | undefined;
+    mutualGroupCount?: number;
+    mutualHangoutCount?: number;
+    mutualGroupNames?: string[] | undefined;
+    mutualHangoutNames?: string[] | undefined;
+
+    constructor(data?: ISuggestedFriendResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.displayName = _data["displayName"];
+            this.avatarUrl = _data["avatarUrl"];
+            this.mutualGroupCount = _data["mutualGroupCount"];
+            this.mutualHangoutCount = _data["mutualHangoutCount"];
+            if (Array.isArray(_data["mutualGroupNames"])) {
+                this.mutualGroupNames = [] as any;
+                for (let item of _data["mutualGroupNames"])
+                    this.mutualGroupNames!.push(item);
+            }
+            if (Array.isArray(_data["mutualHangoutNames"])) {
+                this.mutualHangoutNames = [] as any;
+                for (let item of _data["mutualHangoutNames"])
+                    this.mutualHangoutNames!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SuggestedFriendResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new SuggestedFriendResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["displayName"] = this.displayName;
+        data["avatarUrl"] = this.avatarUrl;
+        data["mutualGroupCount"] = this.mutualGroupCount;
+        data["mutualHangoutCount"] = this.mutualHangoutCount;
+        if (Array.isArray(this.mutualGroupNames)) {
+            data["mutualGroupNames"] = [];
+            for (let item of this.mutualGroupNames)
+                data["mutualGroupNames"].push(item);
+        }
+        if (Array.isArray(this.mutualHangoutNames)) {
+            data["mutualHangoutNames"] = [];
+            for (let item of this.mutualHangoutNames)
+                data["mutualHangoutNames"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISuggestedFriendResponse {
+    userId?: string | undefined;
+    displayName?: string | undefined;
+    avatarUrl?: string | undefined;
+    mutualGroupCount?: number;
+    mutualHangoutCount?: number;
+    mutualGroupNames?: string[] | undefined;
+    mutualHangoutNames?: string[] | undefined;
 }
 
 export class UpdateGroupRequest implements IUpdateGroupRequest {

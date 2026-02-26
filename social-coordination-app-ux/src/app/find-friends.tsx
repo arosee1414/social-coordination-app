@@ -9,6 +9,7 @@ import {
     Image,
     ActivityIndicator,
     Alert,
+    ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +17,10 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { useApiUserSearch } from '../hooks/useApiUserSearch';
 import { useApiClient } from '../hooks/useApiClient';
+import {
+    useApiSuggestedFriends,
+    SuggestedFriend,
+} from '../hooks/useApiSuggestedFriends';
 import type { UserResponse } from '../clients/generatedClient';
 import { FriendshipStatusInfo } from '../hooks/useApiFriendshipStatus';
 
@@ -29,12 +34,33 @@ function getDisplayName(user: UserResponse): string {
     return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Unknown';
 }
 
+function getMutualContextLabel(suggestion: SuggestedFriend): string {
+    const parts: string[] = [];
+    if (suggestion.mutualGroupCount > 0) {
+        parts.push(
+            `${suggestion.mutualGroupCount} shared group${suggestion.mutualGroupCount > 1 ? 's' : ''}`,
+        );
+    }
+    if (suggestion.mutualHangoutCount > 0) {
+        parts.push(
+            `${suggestion.mutualHangoutCount} shared hangout${suggestion.mutualHangoutCount > 1 ? 's' : ''}`,
+        );
+    }
+    return parts.join(' · ');
+}
+
 export default function FindFriendsScreen() {
     const router = useRouter();
     const colors = useThemeColors();
     const apiClient = useApiClient();
     const [searchQuery, setSearchQuery] = useState('');
     const { results, loading, searchUsers } = useApiUserSearch();
+    const {
+        suggestions,
+        loading: suggestionsLoading,
+        refetch: refetchSuggestions,
+        removeSuggestion,
+    } = useApiSuggestedFriends();
     const [usersWithStatus, setUsersWithStatus] = useState<UserWithStatus[]>(
         [],
     );
@@ -105,7 +131,9 @@ export default function FindFriendsScreen() {
             if (results.length > 0) {
                 fetchStatuses(results);
             }
-        }, [results, fetchStatuses]),
+            // Also re-fetch suggestions on focus
+            refetchSuggestions();
+        }, [results, fetchStatuses, refetchSuggestions]),
     );
 
     const handleSendRequest = async (userId: string) => {
@@ -113,6 +141,7 @@ export default function FindFriendsScreen() {
         setActionLoading((prev) => ({ ...prev, [userId]: true }));
         try {
             await apiClient.request(userId);
+            // Update search results
             setUsersWithStatus((prev) =>
                 prev.map((u) =>
                     u.user.id === userId
@@ -126,6 +155,8 @@ export default function FindFriendsScreen() {
                         : u,
                 ),
             );
+            // Remove from suggestions since we sent a request
+            removeSuggestion(userId);
         } catch {
             Alert.alert(
                 'Error',
@@ -333,6 +364,155 @@ export default function FindFriendsScreen() {
         );
     };
 
+    const renderSuggestionItem = (suggestion: SuggestedFriend) => {
+        const isLoading = actionLoading[suggestion.userId];
+        const contextLabel = getMutualContextLabel(suggestion);
+
+        return (
+            <TouchableOpacity
+                key={suggestion.userId}
+                style={[
+                    styles.suggestionCard,
+                    {
+                        backgroundColor: colors.card,
+                        borderColor: colors.cardBorder,
+                    },
+                ]}
+                onPress={() => router.push(`/friend/${suggestion.userId}`)}
+                activeOpacity={0.7}
+            >
+                <View style={styles.suggestionHeader}>
+                    <View style={styles.avatarContainer}>
+                        {suggestion.avatarUrl ? (
+                            <Image
+                                source={{ uri: suggestion.avatarUrl }}
+                                style={styles.suggestionAvatar}
+                            />
+                        ) : (
+                            <View
+                                style={[
+                                    styles.suggestionAvatar,
+                                    styles.avatarFallback,
+                                    { backgroundColor: colors.indigo50 },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.suggestionAvatarText,
+                                        { color: colors.primary },
+                                    ]}
+                                >
+                                    {suggestion.displayName
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                    <View style={styles.suggestionInfo}>
+                        <Text
+                            style={[
+                                styles.suggestionName,
+                                { color: colors.text },
+                            ]}
+                            numberOfLines={1}
+                        >
+                            {suggestion.displayName}
+                        </Text>
+                        {contextLabel.length > 0 && (
+                            <Text
+                                style={[
+                                    styles.suggestionContext,
+                                    { color: colors.textSecondary },
+                                ]}
+                                numberOfLines={1}
+                            >
+                                {contextLabel}
+                            </Text>
+                        )}
+                    </View>
+                </View>
+                {isLoading ? (
+                    <View
+                        style={[
+                            styles.suggestionAddButton,
+                            { backgroundColor: colors.surfaceTertiary },
+                        ]}
+                    >
+                        <ActivityIndicator
+                            size='small'
+                            color={colors.textSecondary}
+                        />
+                    </View>
+                ) : (
+                    <TouchableOpacity
+                        style={[
+                            styles.suggestionAddButton,
+                            { backgroundColor: colors.primary },
+                        ]}
+                        onPress={() => handleSendRequest(suggestion.userId)}
+                    >
+                        <Ionicons
+                            name='person-add-outline'
+                            size={16}
+                            color='#FFFFFF'
+                        />
+                        <Text style={styles.addButtonText}>Add Friend</Text>
+                    </TouchableOpacity>
+                )}
+            </TouchableOpacity>
+        );
+    };
+
+    const showSuggestions =
+        searchQuery.trim().length < 2 &&
+        (suggestions.length > 0 || suggestionsLoading);
+
+    const renderSuggestionsSection = () => {
+        if (!showSuggestions) return null;
+
+        return (
+            <View style={styles.suggestionsSection}>
+                <View style={styles.suggestionsSectionHeader}>
+                    <Ionicons
+                        name='people-outline'
+                        size={20}
+                        color={colors.primary}
+                    />
+                    <Text
+                        style={[
+                            styles.suggestionsSectionTitle,
+                            { color: colors.text },
+                        ]}
+                    >
+                        People You May Know
+                    </Text>
+                </View>
+                <Text
+                    style={[
+                        styles.suggestionsSectionSubtext,
+                        { color: colors.textSecondary },
+                    ]}
+                >
+                    Based on your groups and hangouts
+                </Text>
+
+                {suggestionsLoading ? (
+                    <View style={styles.suggestionsLoading}>
+                        <ActivityIndicator
+                            size='small'
+                            color={colors.primary}
+                        />
+                    </View>
+                ) : (
+                    <View style={styles.suggestionsList}>
+                        {suggestions.map(renderSuggestionItem)}
+                    </View>
+                )}
+            </View>
+        );
+    };
+
     return (
         <SafeAreaView
             style={[styles.container, { backgroundColor: colors.background }]}
@@ -394,30 +574,42 @@ export default function FindFriendsScreen() {
                 </View>
             </View>
 
-            {/* Results */}
+            {/* Results / Suggestions */}
             {loading ? (
                 <View style={styles.centered}>
                     <ActivityIndicator size='large' color={colors.primary} />
                 </View>
             ) : searchQuery.trim().length < 2 ? (
-                <View style={styles.centered}>
-                    <Ionicons
-                        name='search-outline'
-                        size={48}
-                        color={colors.textSecondary}
-                    />
-                    <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                        Search for friends
-                    </Text>
-                    <Text
-                        style={[
-                            styles.emptySubtext,
-                            { color: colors.textSecondary },
-                        ]}
+                showSuggestions ? (
+                    <ScrollView
+                        contentContainerStyle={styles.scrollContent}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps='handled'
                     >
-                        Enter at least 2 characters to search
-                    </Text>
-                </View>
+                        {renderSuggestionsSection()}
+                    </ScrollView>
+                ) : (
+                    <View style={styles.centered}>
+                        <Ionicons
+                            name='search-outline'
+                            size={48}
+                            color={colors.textSecondary}
+                        />
+                        <Text
+                            style={[styles.emptyTitle, { color: colors.text }]}
+                        >
+                            Search for friends
+                        </Text>
+                        <Text
+                            style={[
+                                styles.emptySubtext,
+                                { color: colors.textSecondary },
+                            ]}
+                        >
+                            Enter at least 2 characters to search
+                        </Text>
+                    </View>
+                )
             ) : usersWithStatus.length === 0 && !loading ? (
                 <View style={styles.centered}>
                     <Ionicons
@@ -483,6 +675,10 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         paddingVertical: 0,
+    },
+    scrollContent: {
+        paddingHorizontal: 24,
+        paddingBottom: 24,
     },
     listContent: {
         paddingHorizontal: 24,
@@ -567,5 +763,68 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
         marginTop: 4,
+    },
+    // Suggestions section
+    suggestionsSection: {
+        marginTop: 8,
+    },
+    suggestionsSectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 4,
+    },
+    suggestionsSectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    suggestionsSectionSubtext: {
+        fontSize: 14,
+        marginBottom: 16,
+    },
+    suggestionsLoading: {
+        paddingVertical: 24,
+        alignItems: 'center',
+    },
+    suggestionsList: {
+        gap: 10,
+    },
+    suggestionCard: {
+        borderRadius: 12,
+        borderWidth: 1,
+        padding: 14,
+        gap: 12,
+    },
+    suggestionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    suggestionAvatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+    },
+    suggestionAvatarText: {
+        fontSize: 20,
+        fontWeight: '700',
+    },
+    suggestionInfo: {
+        flex: 1,
+    },
+    suggestionName: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    suggestionContext: {
+        fontSize: 13,
+        marginTop: 2,
+    },
+    suggestionAddButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 10,
+        gap: 6,
     },
 });

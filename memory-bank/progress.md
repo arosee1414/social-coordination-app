@@ -21,6 +21,7 @@
 
 ## Recently Completed
 
+- **Mutual friend suggestions**: Full-stack feature that suggests people the user shares groups or hangouts with but isn't friends with. Backend `GET /api/users/suggested` returns `SuggestedFriendResponse` with mutual group/hangout counts and names. Frontend `find-friends.tsx` shows a "People You May Know" section with suggestion cards when no search is active. New `useApiSuggestedFriends` hook handles data fetching with optimistic removal on friend request send.
 - **Friends tab replaces Search tab**: Replaced the Search tab with a Friends tab featuring friend management (list, remove, accept/reject requests). Profile's "Manage Friends" button and Friends stat now navigate to the Friends tab.
 - **Navigation restructuring**: Moved Notifications from bottom tab to stack route (accessible via bell icon on Home header).
 
@@ -37,7 +38,7 @@
 
 ## Current Status
 
-Friends feature is functionally complete. Hangout stats (Going/Maybe counts) now display accurately — backend returns separate `GoingCount` and `MaybeCount` on `HangoutSummaryResponse`, and frontend correctly distinguishes Pending (no response) from Maybe (responded "maybe"). The hangout detail page uses 3 response tabs: Going, Maybe, Can't Go.
+Friends feature is functionally complete, including mutual friend suggestions based on shared groups and hangouts. Hangout stats (Going/Maybe counts) now display accurately — backend returns separate `GoingCount` and `MaybeCount` on `HangoutSummaryResponse`, and frontend correctly distinguishes Pending (no response) from Maybe (responded "maybe"). The hangout detail page uses 3 response tabs: Going, Maybe, Can't Go.
 
 ## Known Issues
 

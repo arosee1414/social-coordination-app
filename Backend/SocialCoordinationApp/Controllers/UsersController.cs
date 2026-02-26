@@ -83,8 +83,8 @@ public class UsersController : BaseApiController
     }
 
     [HttpGet("suggested")]
-    [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<UserResponse>>> GetSuggestedUsers()
+    [ProducesResponseType(typeof(List<SuggestedFriendResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<SuggestedFriendResponse>>> GetSuggestedUsers()
     {
         var userId = GetUserId();
         var result = await _usersService.GetSuggestedUsersAsync(userId);

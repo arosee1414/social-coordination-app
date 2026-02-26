@@ -2,16 +2,17 @@
 
 ## Current Work Focus
 
-Improving keyboard avoidance on auth screens.
+Mutual friend suggestions feature — suggesting people you share groups/hangouts with but aren't friends with yet.
 
 ## What Was Just Accomplished
 
-- **Fixed keyboard avoidance on sign-in and sign-up pages**: Restructured both auth screens to properly handle keyboard avoidance:
-    - Replaced `SafeAreaView` with plain `View` (Stack header already handles top safe area, so `SafeAreaView` was causing double inset)
-    - Added `useHeaderHeight()` from `@react-navigation/elements` and set `keyboardVerticalOffset={headerHeight}` on `KeyboardAvoidingView` to account for the navigation header
-    - Changed `behavior` from `'height'` to `undefined` on Android (avoids conflicts)
-    - Removed `TouchableWithoutFeedback` wrapper (was interfering with ScrollView layout) and replaced with `Pressable` inside the `ScrollView` plus `keyboardDismissMode="on-drag"` for drag-to-dismiss
-    - Added `flexGrow: 1` to ScrollView content container
+- **Implemented mutual friend suggestions (full stack)**:
+    - **Backend**: Created `SuggestedFriendResponse` DTO with `UserId`, `DisplayName`, `AvatarUrl`, `MutualGroupCount`, `MutualHangoutCount`, `MutualGroupNames`, `MutualHangoutNames`
+    - **Backend**: Rewrote `GetSuggestedUsersAsync()` in `UsersService` to query both groups and hangouts the user belongs to, collect co-members/co-attendees, filter out existing friends and pending requests, score by total mutual connections, and return top 20 suggestions with context
+    - **Backend**: Updated `IUsersService` and `UsersController` to use the new `SuggestedFriendResponse` return type
+    - **API Client**: Regenerated `generatedClient.ts` — now includes `SuggestedFriendResponse` class with all fields
+    - **Frontend**: Created `useApiSuggestedFriends` hook that fetches suggestions on mount, provides `removeSuggestion()` for optimistic removal after sending a request, and `refetch()` for screen re-focus
+    - **Frontend**: Updated `find-friends.tsx` to show a "People You May Know" section when no search query is active, displaying suggestion cards with avatars, names, mutual context labels (e.g., "2 shared groups · 1 shared hangout"), and "Add Friend" buttons
 
 ## Key Decisions Made
 

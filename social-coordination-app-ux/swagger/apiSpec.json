@@ -1368,7 +1368,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+                    "$ref": "#/components/schemas/SuggestedFriendResponse"
                   }
                 }
               },
@@ -1376,7 +1376,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+                    "$ref": "#/components/schemas/SuggestedFriendResponse"
                   }
                 }
               },
@@ -1384,7 +1384,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+                    "$ref": "#/components/schemas/SuggestedFriendResponse"
                   }
                 }
               }
@@ -2051,6 +2051,46 @@
           "Maybe"
         ],
         "type": "string"
+      },
+      "SuggestedFriendResponse": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "avatarUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "mutualGroupCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mutualHangoutCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mutualGroupNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "mutualHangoutNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "UpdateGroupRequest": {
         "type": "object",

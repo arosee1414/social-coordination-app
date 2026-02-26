@@ -2,6 +2,8 @@ using Microsoft.Azure.Cosmos;
 using SocialCoordinationApp.Infrastructure;
 using SocialCoordinationApp.Models.Domain;
 using SocialCoordinationApp.Models.DTOs.Requests;
+using SocialCoordinationApp.Models.DTOs.Responses;
+using SocialCoordinationApp.Models.Enums;
 using UserResponse = SocialCoordinationApp.Models.DTOs.Responses.UserResponse;
 
 namespace SocialCoordinationApp.Services;
@@ -109,9 +111,9 @@ public class UsersService : IUsersService
         return users.Select(MapToResponse).ToList();
     }
 
-    public async Task<List<UserResponse>> GetSuggestedUsersAsync(string userId)
+    public async Task<List<SuggestedFriendResponse>> GetSuggestedUsersAsync(string userId)
     {
-        // Find all groups the current user is a member of
+        // 1. Find all groups the current user is a member of
         var groupsQuery = new QueryDefinition(
             "SELECT * FROM c WHERE ARRAY_CONTAINS(c.members, { 'userId': @userId }, true)")
             .WithParameter("@userId", userId);
@@ -119,22 +121,87 @@ public class UsersService : IUsersService
         var groups = await _cosmosContext.GroupsContainer
             .QueryItemsCrossPartitionAsync<GroupRecord>(groupsQuery);
 
-        // Collect all unique member user IDs (excluding self)
-        var memberUserIds = groups
-            .SelectMany(g => g.Members)
-            .Select(m => m.UserId)
-            .Where(id => id != userId)
+        // 2. Find all hangouts the current user is an attendee of
+        var hangoutsQuery = new QueryDefinition(
+            "SELECT * FROM c WHERE ARRAY_CONTAINS(c.attendees, { 'userId': @userId }, true)")
+            .WithParameter("@userId", userId);
+
+        var hangouts = await _cosmosContext.HangoutsContainer
+            .QueryItemsCrossPartitionAsync<HangoutRecord>(hangoutsQuery);
+
+        // 3. Build per-candidate mutual context
+        // candidateId -> (groupNames, hangoutTitles)
+        var candidateGroups = new Dictionary<string, List<string>>();
+        var candidateHangouts = new Dictionary<string, List<string>>();
+
+        foreach (var group in groups)
+        {
+            foreach (var member in group.Members)
+            {
+                if (member.UserId == userId) continue;
+                if (!candidateGroups.ContainsKey(member.UserId))
+                    candidateGroups[member.UserId] = new List<string>();
+                candidateGroups[member.UserId].Add(group.Name);
+            }
+        }
+
+        foreach (var hangout in hangouts)
+        {
+            foreach (var attendee in hangout.Attendees)
+            {
+                if (attendee.UserId == userId) continue;
+                if (!candidateHangouts.ContainsKey(attendee.UserId))
+                    candidateHangouts[attendee.UserId] = new List<string>();
+                candidateHangouts[attendee.UserId].Add(hangout.Title);
+            }
+        }
+
+        // 4. Union all candidate user IDs
+        var allCandidateIds = candidateGroups.Keys
+            .Union(candidateHangouts.Keys)
             .Distinct()
             .ToList();
 
-        if (memberUserIds.Count == 0)
-            return new List<UserResponse>();
+        if (allCandidateIds.Count == 0)
+            return new List<SuggestedFriendResponse>();
 
-        // Batch look up user records
+        // 5. Filter out existing friends and pending requests
+        var friendshipsQuery = new QueryDefinition(
+            "SELECT * FROM c WHERE c.userId = @userId")
+            .WithParameter("@userId", userId);
+
+        var friendships = await _cosmosContext.FriendshipsContainer
+            .QueryItemsAsync<FriendshipRecord>(friendshipsQuery, userId);
+
+        var excludedUserIds = new HashSet<string>(friendships.Select(f => f.FriendId));
+
+        var filteredCandidateIds = allCandidateIds
+            .Where(id => !excludedUserIds.Contains(id))
+            .ToList();
+
+        if (filteredCandidateIds.Count == 0)
+            return new List<SuggestedFriendResponse>();
+
+        // 6. Score and sort by total mutual connections, take top 20
+        var scored = filteredCandidateIds
+            .Select(id => new
+            {
+                UserId = id,
+                GroupCount = candidateGroups.ContainsKey(id) ? candidateGroups[id].Count : 0,
+                HangoutCount = candidateHangouts.ContainsKey(id) ? candidateHangouts[id].Count : 0,
+                GroupNames = candidateGroups.ContainsKey(id) ? candidateGroups[id] : new List<string>(),
+                HangoutNames = candidateHangouts.ContainsKey(id) ? candidateHangouts[id] : new List<string>(),
+            })
+            .OrderByDescending(x => x.GroupCount + x.HangoutCount)
+            .Take(20)
+            .ToList();
+
+        // 7. Batch-lookup user records
+        var userIdsToLookup = scored.Select(s => s.UserId).ToList();
         var parameters = new List<(string name, string value)>();
-        for (int i = 0; i < memberUserIds.Count; i++)
+        for (int i = 0; i < userIdsToLookup.Count; i++)
         {
-            parameters.Add(($"@id{i}", memberUserIds[i]));
+            parameters.Add(($"@id{i}", userIdsToLookup[i]));
         }
         var inClause = string.Join(", ", parameters.Select(p => p.name));
         var sql = $"SELECT * FROM c WHERE c.id IN ({inClause})";
@@ -148,7 +215,29 @@ public class UsersService : IUsersService
         var users = await _cosmosContext.UsersContainer
             .QueryItemsCrossPartitionAsync<UserRecord>(queryDefinition);
 
-        return users.Select(MapToResponse).ToList();
+        var userLookup = users.ToDictionary(u => u.Id);
+
+        // 8. Build response
+        return scored
+            .Where(s => userLookup.ContainsKey(s.UserId))
+            .Select(s =>
+            {
+                var user = userLookup[s.UserId];
+                var displayName = $"{user.FirstName} {user.LastName}".Trim();
+                if (string.IsNullOrEmpty(displayName)) displayName = user.Email;
+
+                return new SuggestedFriendResponse
+                {
+                    UserId = s.UserId,
+                    DisplayName = displayName,
+                    AvatarUrl = user.ProfileImageUrl,
+                    MutualGroupCount = s.GroupCount,
+                    MutualHangoutCount = s.HangoutCount,
+                    MutualGroupNames = s.GroupNames.Distinct().Take(3).ToList(),
+                    MutualHangoutNames = s.HangoutNames.Distinct().Take(3).ToList(),
+                };
+            })
+            .ToList();
     }
 
     private static UserResponse MapToResponse(UserRecord user)
