@@ -145,7 +145,6 @@ function RootLayoutNav(): React.JSX.Element {
                 options={{
                     headerShown: false,
                     animation: 'slide_from_right',
-                    gestureEnabled: false,
                 }}
             />
             <Stack.Screen

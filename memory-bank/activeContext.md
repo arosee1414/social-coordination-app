@@ -1,12 +1,12 @@
 # Active Context
 
-## Current State (Feb 25, 2026)
+## Current State (Feb 26, 2026)
 
-The full-stack notifications system has been implemented and is working end-to-end.
+The full-stack notifications system has been implemented and is working end-to-end. Minor UX fixes are being applied.
 
 ## Current Work Focus
 
-The notifications system has been fully implemented end-to-end (backend + frontend). This was the primary focus of the recent session.
+Post-implementation UX polish and bug fixes.
 
 ## Recent Changes
 
@@ -67,6 +67,10 @@ All calls are wrapped in try/catch to prevent blocking the main operation. Each 
     - Replaced `notification.icon`/`notification.color` with type-based icon/color derivation in `getNotificationIcon()`
     - Updated `handleNotificationPress()` to use `hangoutId`/`groupId`/`actorUserId` instead of `relatedEntityId`, with new backend type names
 - Removed `mockNotifications` from `mock-data.ts` (was using old interface fields)
+
+## Recent Fix (Feb 26, 2026)
+
+- **Find Friends swipe-back gesture**: Removed `gestureEnabled: false` from the `find-friends` Stack.Screen in `_layout.tsx`. The screen was previously only navigable back via the header button; now the standard iOS swipe-back gesture works.
 
 ## Next Steps
 
