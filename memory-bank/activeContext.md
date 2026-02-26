@@ -2,21 +2,25 @@
 
 ## Current Work Focus
 
-Added Account section with Security page (change password) to the profile screen.
+Fixed authentication flows — sign-in and sign-up pages.
 
 ## What Was Just Accomplished
 
-- **Added SECURITY section to profile page**: New section between Preferences and Support with a "Change Password" button (lock-closed icon + chevron) that navigates to `/security`. Only shown when `clerkUser.passwordEnabled` is true (hides for Google OAuth-only users).
-- **Created `security.tsx` stack screen**: Full change password page with:
-    - Current password, new password, and confirm new password fields
-    - Eye toggle icons for showing/hiding each password field
-    - Client-side validation (empty fields, min 8 chars, password match)
-    - Clerk `user.updatePassword()` integration for actual password change
-    - Success alert navigates back, errors displayed inline
-    - Keyboard-aware layout with scroll and dismiss
-    - Consistent styling using shared styles and theme colors
-- **Registered `/security` route** in `_layout.tsx` with `slide_from_right` animation
-- **OAuth-aware**: Security section conditionally rendered — Google-only users never see it
+- **Fixed sign-in flow in `sign-in.tsx`**: Rewrote `onSignInPress` to use the proper two-step Clerk sign-in flow:
+    1. First calls `signIn.create({ identifier })` to identify the user
+    2. Then calls `attemptFirstFactor({ strategy: 'password', password })` to authenticate
+    - Previously the code passed both `identifier` and `password` to `signIn.create()` which was failing silently with a generic error
+- **Improved sign-in error handling**: Added specific Clerk error code handling (`form_password_incorrect`, `form_password_pwned`, `session_exists`), default fallback now shows Clerk's own `longMessage`
+- **Fixed sign-up verification dialog in `sign-up.tsx`**:
+    - Added `Cancel` button so users can dismiss the dialog
+    - Added `verificationError` state displayed inside the dialog (errors were previously hidden behind it)
+    - Added `isVerifying` loading state to prevent double-taps
+    - Verify button disabled until 6-digit code is entered
+    - Shows Clerk's actual error messages on verification failure
+    - Used `useCallback` to avoid stale closure issues with the code state
+- **Added confirm password field to sign-up**: New "Confirm password" input with validation that passwords match before submitting
+- **Added password length validation**: Minimum 8 characters required on sign-up
+- **Better error messages everywhere**: Falls back to Clerk's `longMessage` instead of generic strings
 
 ## Key Decisions Made
 

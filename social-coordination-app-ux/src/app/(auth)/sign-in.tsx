@@ -40,8 +40,10 @@ export default function SignInPage() {
 
     const onSignInPress = async () => {
         if (!isLoaded) return;
+        setErrorMessage(null);
 
         try {
+            // Create the sign-in attempt with identifier only first
             const signInAttempt = await signIn.create({
                 identifier: emailAddress,
                 password,
@@ -50,14 +52,39 @@ export default function SignInPage() {
             if (signInAttempt.status === 'complete') {
                 await setActive({ session: signInAttempt.createdSessionId });
                 router.replace('/(tabs)');
+            } else if (signInAttempt.status === 'needs_first_factor') {
+                // Attempt password authentication as first factor
+                const firstFactorResult =
+                    await signInAttempt.attemptFirstFactor({
+                        strategy: 'password',
+                        password,
+                    });
+
+                if (firstFactorResult.status === 'complete') {
+                    await setActive({
+                        session: firstFactorResult.createdSessionId,
+                    });
+                    router.replace('/(tabs)');
+                } else if (firstFactorResult.status === 'needs_second_factor') {
+                    setErrorMessage(
+                        'Two-factor authentication is not yet supported in this app.',
+                    );
+                } else {
+                    console.error(JSON.stringify(firstFactorResult, null, 2));
+                    setErrorMessage('Failed to sign in. Please try again.');
+                }
             } else {
                 console.error(JSON.stringify(signInAttempt, null, 2));
+                setErrorMessage('Failed to sign in. Please try again.');
             }
         } catch (error) {
             if (isClerkAPIResponseError(error)) {
                 handleClerkApiErrors(error.errors[0]);
             } else {
                 console.error(JSON.stringify(error, null, 2));
+                setErrorMessage(
+                    'An unexpected error occurred. Please try again.',
+                );
             }
         }
     };
@@ -109,11 +136,29 @@ export default function SignInPage() {
                 break;
             case 'form_identifier_not_found':
                 setErrorMessage(
-                    "We couldn't find an account with that email and password. Please check your credentials and try again.",
+                    "We couldn't find an account with that email address. Please check your email and try again.",
+                );
+                break;
+            case 'form_password_incorrect':
+                setErrorMessage('Incorrect password. Please try again.');
+                break;
+            case 'form_password_pwned':
+                setErrorMessage(
+                    'This password has been found in a data breach. Please reset your password.',
+                );
+                break;
+            case 'session_exists':
+                setErrorMessage(
+                    'You are already signed in. Please restart the app.',
                 );
                 break;
             default:
-                setErrorMessage('Failed to sign in. Please try again.');
+                // Fall back to Clerk's own descriptive message when available
+                setErrorMessage(
+                    error.longMessage ??
+                        error.message ??
+                        'Failed to sign in. Please try again.',
+                );
         }
     };
 

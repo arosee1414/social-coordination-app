@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import React from 'react';
 import {
     Text,
@@ -35,9 +35,14 @@ export default function SignUpPage() {
 
     const [emailAddress, setEmailAddress] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [pendingVerification, setPendingVerification] = useState(false);
     const [code, setCode] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [verificationError, setVerificationError] = useState<string | null>(
+        null,
+    );
+    const [isVerifying, setIsVerifying] = useState(false);
 
     const onSelectAuth = async (strategy: Strategy) => {
         try {
@@ -84,6 +89,14 @@ export default function SignUpPage() {
             setErrorMessage('Please enter a password');
             return;
         }
+        if (password.length < 8) {
+            setErrorMessage('Password must be at least 8 characters');
+            return;
+        }
+        if (password !== confirmPassword) {
+            setErrorMessage('Passwords do not match');
+            return;
+        }
         if (!isLoaded) return;
 
         try {
@@ -91,41 +104,69 @@ export default function SignUpPage() {
             await signUp.prepareEmailAddressVerification({
                 strategy: 'email_code',
             });
+            setVerificationError(null);
+            setCode('');
             setPendingVerification(true);
         } catch (error) {
             if (isClerkAPIResponseError(error)) {
-                handleClerkApiErrors(error.errors[0]);
+                setErrorMessage(
+                    error.errors[0]?.longMessage ??
+                        error.errors[0]?.message ??
+                        'Failed to sign up. Please try again.',
+                );
             } else {
                 console.error(JSON.stringify(error, null, 2));
+                setErrorMessage(
+                    'An unexpected error occurred. Please try again.',
+                );
             }
         }
     };
 
-    const handleClerkApiErrors = (error: ClerkAPIError) => {
-        setErrorMessage(error.longMessage ?? null);
-    };
+    const onVerifyPress = useCallback(async () => {
+        if (!isLoaded || isVerifying) return;
+        setVerificationError(null);
+        setIsVerifying(true);
 
-    const onVerifyPress = async () => {
-        if (!isLoaded) return;
         try {
             const signUpAttempt = await signUp.attemptEmailAddressVerification({
                 code,
             });
+
             if (signUpAttempt.status === 'complete') {
                 setPendingVerification(false);
                 await setActive({ session: signUpAttempt.createdSessionId });
                 router.replace('/find-friends');
             } else {
                 console.error(JSON.stringify(signUpAttempt, null, 2));
+                setVerificationError(
+                    'Verification could not be completed. Please try again.',
+                );
             }
         } catch (error) {
             if (isClerkAPIResponseError(error)) {
-                handleClerkApiErrors(error.errors[0]);
+                const clerkError = error.errors[0];
+                setVerificationError(
+                    clerkError?.longMessage ??
+                        clerkError?.message ??
+                        'Invalid verification code. Please try again.',
+                );
             } else {
                 console.error(JSON.stringify(error, null, 2));
+                setVerificationError(
+                    'An unexpected error occurred. Please try again.',
+                );
             }
+        } finally {
+            setIsVerifying(false);
         }
-    };
+    }, [isLoaded, isVerifying, signUp, code, setActive, router]);
+
+    const onCancelVerification = useCallback(() => {
+        setPendingVerification(false);
+        setVerificationError(null);
+        setCode('');
+    }, []);
 
     return (
         <SafeAreaView
@@ -146,16 +187,31 @@ export default function SignUpPage() {
                         showsVerticalScrollIndicator={false}
                     >
                         <Dialog.Container visible={pendingVerification}>
-                            <Dialog.Title>
-                                A verification code has been sent to your email.
-                            </Dialog.Title>
+                            <Dialog.Title>Verify Your Email</Dialog.Title>
+                            <Dialog.Description>
+                                A verification code has been sent to{' '}
+                                {emailAddress}. Enter it below.
+                            </Dialog.Description>
                             <Dialog.CodeInput
                                 codeLength={6}
                                 onCodeChange={setCode}
                             />
+                            {verificationError && (
+                                <Dialog.Description
+                                    style={{ color: '#dc2626' }}
+                                >
+                                    {verificationError}
+                                </Dialog.Description>
+                            )}
+                            <Dialog.Button
+                                onPress={onCancelVerification}
+                                label='Cancel'
+                            />
                             <Dialog.Button
                                 onPress={onVerifyPress}
-                                label='Verify'
+                                label={isVerifying ? 'Verifying...' : 'Verify'}
+                                disabled={isVerifying || code.length < 6}
+                                bold
                             />
                         </Dialog.Container>
 
@@ -254,6 +310,31 @@ export default function SignUpPage() {
                                     secureTextEntry
                                     value={password}
                                     onChangeText={setPassword}
+                                />
+                            </View>
+
+                            <View style={s.inputWrapper}>
+                                <Ionicons
+                                    name='lock-closed-outline'
+                                    size={20}
+                                    color={colors.placeholder}
+                                    style={s.inputIcon}
+                                />
+                                <TextInput
+                                    style={[
+                                        s.input,
+                                        {
+                                            borderColor: colors.cardBorderHeavy,
+                                            backgroundColor:
+                                                colors.inputBackground,
+                                            color: colors.inputText,
+                                        },
+                                    ]}
+                                    placeholder='Confirm password'
+                                    placeholderTextColor={colors.placeholder}
+                                    secureTextEntry
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
                                 />
                             </View>
 
