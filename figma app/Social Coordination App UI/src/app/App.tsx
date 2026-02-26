@@ -19,6 +19,7 @@ import { ManageGroupMembersScreen } from './components/ManageGroupMembersScreen'
 import { NotificationsScreen } from './components/NotificationsScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import { FriendProfileScreen } from './components/FriendProfileScreen';
+import { SearchScreen } from './components/SearchScreen';
 import { BottomNav } from './components/BottomNav';
 import { HangoutsProvider } from './contexts/HangoutsContext';
 
@@ -39,8 +40,11 @@ export default function App() {
               <Route path="/home" element={<><HomeScreen /><BottomNav /></>} />
               <Route path="/hangouts" element={<><HangoutsListScreen /><BottomNav /></>} />
               <Route path="/groups" element={<><GroupsListScreen /><BottomNav /></>} />
-              <Route path="/notifications" element={<><NotificationsScreen /><BottomNav /></>} />
+              <Route path="/search" element={<><SearchScreen /><BottomNav /></>} />
               <Route path="/profile" element={<><ProfileScreen /><BottomNav /></>} />
+              
+              {/* Notifications (no bottom nav) */}
+              <Route path="/notifications" element={<NotificationsScreen />} />
               
               {/* Hangout flows */}
               <Route path="/create-hangout" element={<CreateHangoutScreen />} />

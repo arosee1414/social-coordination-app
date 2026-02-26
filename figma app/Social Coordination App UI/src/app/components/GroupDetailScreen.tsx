@@ -1,13 +1,14 @@
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft, Settings, UserPlus, Calendar, Edit2, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 const mockMembers = [
-  { name: 'Sarah Chen', avatar: '👩🏻', role: 'Admin' },
-  { name: 'Mike Johnson', avatar: '👨🏽', role: 'Member' },
-  { name: 'Emma Wilson', avatar: '👩🏼', role: 'Member' },
-  { name: 'David Kim', avatar: '👨🏻', role: 'Member' },
-  { name: 'Lisa Martinez', avatar: '👩🏽', role: 'Member' },
+  { id: 'sarah', name: 'Sarah Chen', avatar: '👩🏻', role: 'Admin' },
+  { id: 'mike', name: 'Mike Johnson', avatar: '👨🏽', role: 'Member' },
+  { id: 'emma', name: 'Emma Wilson', avatar: '👩🏼', role: 'Member' },
+  { id: 'david', name: 'David Kim', avatar: '👨🏻', role: 'Member' },
+  { id: 'lisa', name: 'Lisa Martinez', avatar: '👩🏽', role: 'Member' },
 ];
 
 export function GroupDetailScreen() {
@@ -112,15 +113,17 @@ export function GroupDetailScreen() {
           
           <div className="space-y-2">
             {mockMembers.map((member, index) => (
-              <div key={index} className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm">
-                  {member.avatar}
+              <Link key={index} to={`/friend/${member.id}`}>
+                <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl active:bg-gray-100 transition-colors">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm">
+                    {member.avatar}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-lg">{member.name}</div>
+                    <div className="text-sm text-gray-500">{member.role}</div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-lg">{member.name}</div>
-                  <div className="text-sm text-gray-500">{member.role}</div>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

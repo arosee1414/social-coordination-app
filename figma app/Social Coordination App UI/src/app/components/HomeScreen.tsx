@@ -1,5 +1,5 @@
-import { Link } from 'react-router';
-import { Plus, Clock, MapPin, Users as UsersIcon, Calendar, X, Globe, User, UserPlus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Plus, Clock, MapPin, Users as UsersIcon, Calendar, X, Globe, User, UserPlus, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { useHangouts } from '../contexts/HangoutsContext';
 
@@ -110,6 +110,7 @@ const mockRecentActivity = [
 ];
 
 export function HomeScreen() {
+  const navigate = useNavigate();
   const [isFabModalOpen, setIsFabModalOpen] = useState(false);
   const { hangouts } = useHangouts();
   const hasLiveHangouts = mockLiveHangouts.length > 0;
@@ -148,9 +149,19 @@ export function HomeScreen() {
   return (
     <div className="flex flex-col h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="px-6 pt-4 pb-3 bg-white">
-        <h1 className="text-3xl font-bold mb-1">Home</h1>
-        <p className="text-gray-500">Stay connected with your friends</p>
+      <div className="px-6 pt-4 pb-3 bg-white flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Home</h1>
+          <p className="text-gray-500">Stay connected with your friends</p>
+        </div>
+        <button
+          onClick={() => navigate('/notifications')}
+          className="p-2 active:bg-gray-100 rounded-full transition-colors relative"
+        >
+          <Bell className="w-6 h-6 text-gray-700" />
+          {/* Notification badge */}
+          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></div>
+        </button>
       </div>
 
       {/* Content */}
