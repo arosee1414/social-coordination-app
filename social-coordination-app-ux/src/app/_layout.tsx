@@ -148,6 +148,10 @@ function RootLayoutNav(): React.JSX.Element {
                     gestureEnabled: false,
                 }}
             />
+            <Stack.Screen
+                name='notifications'
+                options={{ headerShown: false, animation: 'slide_from_right' }}
+            />
         </Stack>
     );
 }

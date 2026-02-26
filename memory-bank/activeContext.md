@@ -2,20 +2,26 @@
 
 ## Current Work Focus
 
-Profile tab UI refinement — Instagram-style profile header layout.
+Navigation restructuring — Notifications tab → Search tab, notification bell on Home.
 
 ## What Was Just Accomplished
 
-- **Converted Profile header from card to centered layout matching friend profile page**: Removed the primary-colored card container and replaced with a centered, flat layout:
-    - Centered 96px avatar with initial-letter fallback (matching friend profile page pattern)
-    - Centered display name (24px bold) and email below
-    - Stats row (Plans Created, Groups, Friends) centered below email with horizontal padding
-    - All text uses theme-aware colors (`colors.text`, `colors.textSecondary`)
-    - No card background, shadow, or border radius — content floats on page background
-    - All stat tap navigation preserved (Plans Created → Hangouts hosting tab, Groups → Groups tab, Friends → Friends list)
+- **Moved Notifications from tab to stack route**: Notifications is no longer a bottom tab; it's a full-screen stack route (`/notifications`) accessible via a bell icon button in the Home tab header.
+- **Added notification bell to Home header**: Bell icon with red unread badge dot in top-right of Home screen header, navigates to `/notifications` stack screen. Uses `useNotifications()` for `unreadCount`.
+- **Replaced Notifications tab with Search tab**: The bottom tab bar now shows: Home, Hangouts, Groups, **Search**, Profile (replacing Notifications).
+- **Created new Search tab screen** (`src/app/(tabs)/search.tsx`): Adapted from Figma `SearchScreen` template:
+    - Header with "Search" title and "Find and manage friends" subtitle
+    - Search bar with search icon, clear button, pill-shaped input
+    - Segmented control tabs: "My Friends" (count) / "Discover"
+    - My Friends tab: Uses `useApiFriends()` for real friend data, filterable via search, each row navigates to `/friend/[id]`
+    - Discover tab: Uses `useApiUserSearch()` for user search API, "Find More Friends" CTA card linking to `/find-friends`
+    - Full theme support (light/dark), `useScrollToTop` for tab re-tap, consistent shared styles
+- **Notifications stack screen**: Has back button header (arrow-back + centered title + "Mark all read" link), slides in from right
 
 ## Key Decisions Made
 
+- **Notifications as stack, not tab**: Notifications moved from bottom tab to a stack screen accessible via bell icon on Home header. This frees up a tab slot for Search.
+- **Search tab replaces Notifications tab**: Tab order is Home, Hangouts, Groups, Search, Profile
 - **Explicit light/dark toggle** (not three-way system/light/dark): The toggle switches between explicit `light` and `dark` preferences. When set to `system`, it follows the OS setting, but the toggle itself resolves to on/off for dark mode.
 - **expo-secure-store persistence**: Theme preference survives app restarts via `expo-secure-store` (not AsyncStorage — the legacy native module was null)
 - **Preferences section placement**: Renders after Account/Support sections, before Sign Out

@@ -15,6 +15,7 @@ import { useScrollToTop } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '@/src/hooks/useThemeColors';
 import { createSharedStyles } from '@/src/constants/shared-styles';
+import { useNotifications } from '@/src/contexts/NotificationsContext';
 import {
     mockRecentActivity,
     mockReminderBanner,
@@ -33,6 +34,7 @@ export default function HomeScreen() {
     const shared = createSharedStyles(colors);
     const router = useRouter();
     const { hangouts, loading, updateRSVP, refetch } = useHangouts();
+    const { unreadCount } = useNotifications();
     const [refreshing, setRefreshing] = useState(false);
 
     const scrollRef = useRef<ScrollView>(null);
@@ -125,11 +127,41 @@ export default function HomeScreen() {
             edges={['top', 'left', 'right']}
         >
             {/* Header */}
-            <View style={shared.screenHeader}>
-                <Text style={shared.screenTitle}>Home</Text>
-                <Text style={shared.screenSubtitle}>
-                    Stay connected with your friends
-                </Text>
+            <View
+                style={[
+                    shared.screenHeader,
+                    {
+                        flexDirection: 'row',
+                        alignItems: 'flex-start',
+                        justifyContent: 'space-between',
+                    },
+                ]}
+            >
+                <View style={{ flex: 1 }}>
+                    <Text style={shared.screenTitle}>Home</Text>
+                    <Text style={shared.screenSubtitle}>
+                        Stay connected with your friends
+                    </Text>
+                </View>
+                <TouchableOpacity
+                    onPress={() => router.push('/notifications' as any)}
+                    style={homeStyles.bellButton}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons
+                        name='notifications-outline'
+                        size={24}
+                        color={colors.text}
+                    />
+                    {unreadCount > 0 && (
+                        <View
+                            style={[
+                                homeStyles.bellBadge,
+                                { backgroundColor: colors.error },
+                            ]}
+                        />
+                    )}
+                </TouchableOpacity>
             </View>
 
             {/* Content — always rendered to avoid layout shift */}
@@ -246,6 +278,19 @@ export default function HomeScreen() {
 }
 
 const homeStyles = StyleSheet.create({
+    bellButton: {
+        padding: 8,
+        marginTop: 4,
+        position: 'relative',
+    },
+    bellBadge: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
     emptyState: {
         alignItems: 'center',
         paddingHorizontal: 24,

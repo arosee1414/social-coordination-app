@@ -19,6 +19,10 @@
 - **Theme System**: Light/dark mode with comprehensive color tokens, user-controlled dark mode toggle on Profile tab (persisted via AsyncStorage through ThemeContext)
 - **Navigation**: Expo Router file-based routing with tabs, modals, and deep linking
 
+## Recently Completed
+
+- **Navigation restructuring**: Moved Notifications from bottom tab to stack route (accessible via bell icon on Home header). Replaced Notifications tab with new Search tab featuring friend search, discover users, and segmented control UI.
+
 ## What's Left to Build
 
 - **Profile page friend count**: `profile.tsx` needs `useApiFriendCount` integration and link to `/friends-list`

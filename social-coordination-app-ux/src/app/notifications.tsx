@@ -136,18 +136,22 @@ export default function NotificationsScreen() {
             style={shared.screenContainer}
             edges={['top', 'left', 'right']}
         >
-            <View style={shared.screenHeaderBordered}>
-                <View style={s.headerRow}>
-                    <Text style={shared.screenTitle}>Notifications</Text>
-                    <TouchableOpacity onPress={markAllAsRead}>
-                        <Text style={[s.markRead, { color: colors.primary }]}>
-                            Mark all read
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-                <Text style={shared.screenSubtitle}>
-                    Stay updated on your hangouts
+            <View style={[shared.stackHeader, { position: 'relative' }]}>
+                <Text style={[s.stackTitleAbsolute, { color: colors.text }]}>
+                    Notifications
                 </Text>
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                    style={{ zIndex: 1 }}
+                >
+                    <Ionicons name='arrow-back' size={24} color={colors.text} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={markAllAsRead} style={{ zIndex: 1 }}>
+                    <Text style={[s.markRead, { color: colors.primary }]}>
+                        Mark all read
+                    </Text>
+                </TouchableOpacity>
             </View>
 
             <ScrollView ref={scrollRef} style={{ flex: 1 }}>
@@ -267,11 +271,13 @@ export default function NotificationsScreen() {
 }
 
 const s = StyleSheet.create({
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 8,
+    stackTitleAbsolute: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        fontSize: 20,
+        fontWeight: '700',
     },
     markRead: { fontSize: 14, fontWeight: '600' },
     iconCircle: {
