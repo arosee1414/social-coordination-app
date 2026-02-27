@@ -104,22 +104,22 @@ public class SeedService : ISeedService
                 RecipientUserId = AlexId,
                 ActorUserId = JordanId,
                 Type = NotificationType.Rsvp,
-                Title = "Jordan Moldowsky is maybe",
-                Message = "for \"Coffee & Catch Up\"",
+                Title = "Jordan Moldowsky might go to",
+                Message = "\"Coffee & Catch Up\"",
                 HangoutId = HangoutId1,
                 IsRead = false,
                 CreatedAt = now.AddHours(-2).ToString("o"),
                 Ttl = ttl
             },
-            // 3. Rsvp — Matt is going for Park Hangout (5 hours ago, unread)
+            // 3. Rsvp — Matt is going to Park Hangout (5 hours ago, unread)
             new()
             {
                 Id = "seed-notif-03",
                 RecipientUserId = AlexId,
                 ActorUserId = MattId,
                 Type = NotificationType.Rsvp,
-                Title = "Matt Korn is going",
-                Message = "for \"Park Hangout\"",
+                Title = "Matt Korn is going to",
+                Message = "\"Park Hangout\"",
                 HangoutId = HangoutId4,
                 IsRead = false,
                 CreatedAt = now.AddHours(-5).ToString("o"),

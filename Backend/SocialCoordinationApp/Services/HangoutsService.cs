@@ -302,17 +302,17 @@ public class HangoutsService : IHangoutsService
                 var rsvpUserName = await GetUserDisplayNameAsync(userId);
                 var statusText = request.Status switch
                 {
-                    RSVPStatus.Going => "is going",
-                    RSVPStatus.Maybe => "is maybe",
-                    RSVPStatus.NotGoing => "can't make it",
-                    _ => "updated their RSVP"
+                    RSVPStatus.Going => "is going to",
+                    RSVPStatus.Maybe => "might go to",
+                    RSVPStatus.NotGoing => "can't make it to",
+                    _ => "updated their RSVP for"
                 };
                 await _notificationsService.CreateNotificationAsync(
                     recipientUserId: hangout.CreatedByUserId,
                     actorUserId: userId,
                     type: NotificationType.Rsvp,
                     title: $"{rsvpUserName} {statusText}",
-                    message: $"for \"{hangout.Title}\"",
+                    message: $"\"{hangout.Title}\"",
                     hangoutId: hangout.Id);
             }
             catch (Exception ex)

@@ -86,6 +86,12 @@ Replaced mock recent activity on the home screen with real notifications from th
 - **Text layout redesign**: Changed from horizontal icon+text layout to vertical layout — icon & timestamp in a header row, then title (bold, 2-line max) and message (secondary, 1-line) below. This avoids truncation of longer notification text.
 - **Mark as read on tap**: Tapping a recent activity card now calls `markAsRead(notification.id)` before navigating, reducing the unread badge count.
 
+## RSVP Timestamp Relative Time (Feb 26, 2026)
+
+- Changed RSVP response timestamps on hangout detail screen from absolute time (e.g., "3:42 PM") to relative time-ago format (e.g., "30m ago", "4h ago", "Yesterday", "3d ago").
+- Single-line change in `api-mappers.ts`: `mapAttendeeToDisplayAttendee` now uses `formatTimeAgo()` instead of `formatTime()` for the `respondedAt` field.
+- Reuses the existing `formatTimeAgo` helper already used for notifications.
+
 ## Next Steps
 
 - Consider adding push notifications via Expo or similar

@@ -197,7 +197,7 @@ export function mapAttendeeToDisplayAttendee(attendee: HangoutAttendeeResponse):
         userId: attendee.userId ?? '',
         name: attendee.displayName || attendee.userId || 'Unknown',
         avatar: attendee.profileImageUrl ?? null,
-        time: attendee.respondedAt ? formatTime(attendee.respondedAt) : undefined,
+        time: attendee.respondedAt ? formatTimeAgo(attendee.respondedAt.toISOString()) : undefined,
         fromGroup: null,
     };
 }
